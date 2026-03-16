@@ -6,12 +6,13 @@
 
 ## 📋 Table des Matières
 
-* [Vision du Projet](https://www.google.com/search?q=%23-vision-du-projet)
-* [Fonctionnalités Clés](https://www.google.com/search?q=%23-fonctionnalit%C3%A9s-cl%C3%A9s)
-* [Architecture Technique](https://www.google.com/search?q=%23-architecture-technique)
-* [Stack Technologique](https://www.google.com/search?q=%23-stack-technologique)
-* [Installation](https://www.google.com/search?q=%23-installation)
-* [Roadmap](https://www.google.com/search?q=%23-roadmap)
+* [Vision du Projet]()
+* [Fonctionnalités Clés]()
+* [Architecture Technique]()
+* [Stack Technologique]()
+* [Installation]()
+* [Roadmap]()
+* [Contribution]()
 
 ---
 
@@ -95,3 +96,16 @@ mvn spring-boot:run
 * [ ] Implémentation du service de clonage automatique via JGit.
 * [ ] Intégration de l'IA pour l'analyse automatique des tâches.
 * [ ] Frontend avec Next.js/Tailwind CSS.
+
+## 🤝 Contribution
+Ce projet est **Open Source** ! Les contributions de toutes sortes sont les bienvenues :
+* 🐛 **Signaler des bugs :** Ouvrez une "Issue" pour expliquer le problème.
+* ✨ **Proposer des fonctionnalités :** Vous avez une idée pour l'analyse IA ? Partagez-la !
+* 📝 **Documentation :** Améliorer ce README ou les commentaires du code.
+
+### Comment contribuer ?
+1. Forkez le projet.
+2. Créez votre branche de fonctionnalité (`git checkout -b feature/AmazingFeature`).
+3. Commitez vos changements (`git commit -m 'Add some AmazingFeature'`).
+4. Pushez sur la branche (`git push origin feature/AmazingFeature`).
+5. Ouvrez une **Pull Request**.
