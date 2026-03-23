@@ -9,5 +9,5 @@ public class AiMentorApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AiMentorApplication.class, args);
 	}
-
+	
 }
