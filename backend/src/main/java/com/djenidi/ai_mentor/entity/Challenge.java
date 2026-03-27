@@ -1,28 +1,31 @@
 package com.djenidi.ai_mentor.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
 @Entity
 @Table(name = "challenges")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Challenge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false)
     private String title;
+
+    @Column(nullable = false, unique = true)
+    private String slug;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
@@ -34,6 +37,18 @@ public class Challenge {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ChallengeType type;
+
+    // === RELATIONS ===
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Submission> submissions = new ArrayList<>();
+
+    // === DONNÉES ===
 
     @Builder.Default
     @ElementCollection
@@ -59,6 +74,8 @@ public class Challenge {
     @Builder.Default
     @Column(nullable = false)
     private Boolean isPremium = false;
+
+    // === LIFECYCLE ===
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
