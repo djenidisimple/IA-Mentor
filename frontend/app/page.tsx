@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { Menu, X, ChevronRight, GitBranch, Code, Shield, Zap, Cpu, Lock, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DevReviewLanding() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -38,17 +39,20 @@ export default function DevReviewLanding() {
           <div className="hidden md:flex items-center gap-4">
             {!isLoggedIn ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  className="text-[#F2E9E2] hover:text-[#D64933] font-mono tracking-wider rounded-none"
+                <Link
+                  href="/login" 
+                  className="text-[#F2E9E2] hover:text-[#D64933] font-mono tracking-wider rounded-none h-10 flex justify-center items-center"
                 >
                   Connexion
-                </Button>
-                <Button 
-                  className="bg-[#D64933] hover:bg-[#B33A22] text-[#F2E9E2] px-8 py-6 font-mono font-bold tracking-wider rounded-none transition-all duration-300 hover:skew-x-[-2deg]"
+                </Link>
+                <Link
+                  href="/register"
+                  className="bg-[#D64933] hover:bg-[#B33A22] text-[#F2E9E2] px-8 py-6 font-mono font-bold tracking-wider rounded-md transition-all duration-300 hover:skew-x-[-2deg] h-10 
+                    flex justify-center items-center
+                  "
                 >
                   S'INSCRIRE
-                </Button>
+                </Link>
               </>
             ) : (
               <div className="flex items-center gap-3">
