@@ -399,38 +399,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#1A1919] text-[#F2E9E2]">
       <div className="max-w-3xl mx-auto px-4 py-8 pt-20">
         
-        {/* Header */}
-        <div className="mb-8">
-          <div className="inline-flex border-l-4 border-[#D64933] pl-4 py-1 mb-4">
-            <span className="text-[#E8C547] text-xs font-mono font-bold tracking-[2px]">
-              FEED SOCIAL
-            </span>
-          </div>
-          <h1 className="text-3xl font-black tracking-[-2px]">
-            DERNIERS <span className="text-[#D64933]">CHALLENGES</span>
-          </h1>
-          <p className="text-[#B8B0A0] font-mono text-sm mt-2 flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            {submissions.length} réalisations partagées par la communauté
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#0F0E0E] border-l-4 border-[#D64933] p-3">
-            <div className="text-2xl font-black text-[#D64933]">128</div>
-            <div className="text-[10px] font-mono text-[#666]">CHALLENGES COMPLÉTÉS</div>
-          </div>
-          <div className="bg-[#0F0E0E] border-l-4 border-[#E8C547] p-3">
-            <div className="text-2xl font-black text-[#E8C547]">45</div>
-            <div className="text-[10px] font-mono text-[#666]">DÉVELOPPEURS ACTIFS</div>
-          </div>
-          <div className="bg-[#0F0E0E] border-l-4 border-[#4ECDC4] p-3">
-            <div className="text-2xl font-black text-[#4ECDC4]">892</div>
-            <div className="text-[10px] font-mono text-[#666]">LIKES DONNÉS</div>
-          </div>
-        </div>
-
         {/* Feed */}
         <div className="space-y-6">
           {submissions.map((submission, index) => (
