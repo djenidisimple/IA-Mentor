@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -27,9 +27,8 @@ public class CreateChallengeRequest {
     @NotNull(message = "La catégorie est obligatoire")
     private Long categoryId;
 
-    private List<String> technologies;
-
-    private List<String> criteresIA;
+    private Set<String> technologies;
+    private Set<String> criteresIA;
 
     @NotNull(message = "Les points sont obligatoires")
     @Min(value = 1, message = "Les points doivent être supérieurs à 0")

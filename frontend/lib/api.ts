@@ -1,3 +1,5 @@
+import { ApiResponse } from '@/types/challenge.types'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 export async function apiFetch<T>(
@@ -19,10 +21,12 @@ export async function apiFetch<T>(
     headers,
   })
 
+  const jsonResponse = await response.json().catch(() => ({}))
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    throw new Error(error.message || 'Erreur serveur')
+    throw new Error(jsonResponse.message || 'Erreur serveur')
   }
 
-  return response.json()
+  // On retourne uniquement le champ data car c'est ce que les services attendent
+  return (jsonResponse as ApiResponse<T>).data
 }

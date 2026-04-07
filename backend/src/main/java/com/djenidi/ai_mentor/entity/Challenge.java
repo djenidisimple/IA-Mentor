@@ -3,6 +3,9 @@ package com.djenidi.ai_mentor.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -57,7 +60,7 @@ public class Challenge {
         joinColumns = @JoinColumn(name = "challenge_id")
     )
     @Column(name = "technology")
-    private List<String> technologies = new ArrayList<>();
+    private Set<String> technologies = new LinkedHashSet<>();
 
     @Builder.Default
     @ElementCollection
@@ -66,7 +69,7 @@ public class Challenge {
         joinColumns = @JoinColumn(name = "challenge_id")
     )
     @Column(name = "critere", columnDefinition = "TEXT")
-    private List<String> criteresIA = new ArrayList<>();
+    private Set<String> criteresIA = new LinkedHashSet<>();
 
     @Column(nullable = false)
     private Integer points;

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,31 +26,31 @@ public class ChallengeService {
     private final CategoryRepository categoryRepository;
 
     public List<ChallengeResponse> getAllChallenges() {
-        return challengeRepository.findAll().stream()
+        return challengeRepository.findAllWithDetails().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public ChallengeResponse getChallengeBySlug(String slug) {
-        Challenge challenge = challengeRepository.findBySlug(slug)
+        Challenge challenge = challengeRepository.findBySlugWithDetails(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge", "slug", slug));
         return toResponse(challenge);
     }
 
     public List<ChallengeResponse> getChallengesByCategory(String categorySlug) {
-        return challengeRepository.findByCategorySlug(categorySlug).stream()
+        return challengeRepository.findByCategorySlugWithDetails(categorySlug).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public List<ChallengeResponse> getChallengesByLevel(ChallengeLevel level) {
-        return challengeRepository.findByLevel(level).stream()
+        return challengeRepository.findByLevelWithDetails(level).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public List<ChallengeResponse> getChallengesByType(ChallengeType type) {
-        return challengeRepository.findByType(type).stream()
+        return challengeRepository.findByTypeWithDetails(type).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -72,8 +73,8 @@ public class ChallengeService {
                 .level(request.getLevel())
                 .type(request.getType())
                 .category(category)
-                .technologies(request.getTechnologies() != null ? request.getTechnologies() : List.of())
-                .criteresIA(request.getCriteresIA() != null ? request.getCriteresIA() : List.of())
+                .technologies(request.getTechnologies() != null ? request.getTechnologies() : Set.of())
+                .criteresIA(request.getCriteresIA() != null ? request.getCriteresIA() : Set.of())
                 .points(request.getPoints())
                 .isPremium(request.getIsPremium() != null ? request.getIsPremium() : false)
                 .build();

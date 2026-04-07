@@ -5,7 +5,7 @@ import com.djenidi.ai_mentor.entity.ChallengeType;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -22,8 +22,8 @@ public class ChallengeResponse {
     private ChallengeType type;
     private String categoryName;
     private String categorySlug;
-    private List<String> technologies;
-    private List<String> criteresIA;
+    private Set<String> technologies;
+    private Set<String> criteresIA;
     private Integer points;
     private Boolean isPremium;
     private LocalDateTime createdAt;
