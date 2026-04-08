@@ -1,0 +1,107 @@
+"use client";
+
+import React, { useState } from "react";
+import { Challenge } from "@/types/challenge.types";
+import ChallengeStepper, { ChallengeStep } from "./ChallengeStepper";
+import ChallengeBrief from "./ChallengeBrief";
+import ChallengeTechnicalSpecs from "./ChallengeTechnicalSpecs";
+import ChallengeSubmissionForm from "./ChallengeSubmissionForm";
+import ChallengeAIFeedback from "./ChallengeAIFeedback";
+import ChallengeDetailHeader from "./ChallengeDetailHeader";
+import ChallengeDetailSidebar from "./ChallengeDetailSidebar";
+import { Calendar, Terminal, ChevronRight } from "lucide-react";
+
+interface ChallengeStepLayoutProps {
+  challenge: Challenge;
+}
+
+export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutProps) {
+  const [currentStep, setCurrentStep] = useState<ChallengeStep>(1);
+
+  const handleStartChallenge = () => {
+    setCurrentStep(2); // Go to submission
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] font-['Inter'] relative flex flex-col">
+      {/* 1. Header (Fixed/Statique en haut) */}
+      <ChallengeDetailHeader challenge={challenge} onStart={handleStartChallenge} />
+
+      {/* 2. Stepper Navigation */}
+      <ChallengeStepper currentStep={currentStep} setStep={setCurrentStep} />
+
+      {/* 3. Dynamic Content Area */}
+      <div className="flex-1 max-w-[1600px] mx-auto px-6 lg:px-8 pb-20 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Main Content (Left) */}
+          <div className="lg:col-span-2">
+            {currentStep === 1 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <ChallengeBrief challenge={challenge} />
+                <ChallengeTechnicalSpecs challenge={challenge} />
+                
+                {/* Primary Action Button */}
+                <div className="flex justify-center pt-8">
+                  <button 
+                    onClick={handleStartChallenge}
+                    className="group relative inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-5 rounded-2xl font-mono text-sm font-bold hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                  >
+                    <Terminal size={18} />
+                    <span>Lancer le Challenge</span>
+                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <ChallengeSubmissionForm challengeId={challenge.id} />
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <ChallengeAIFeedback />
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="bg-white border border-gray-100 rounded-xl p-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <p className="font-mono text-gray-400">Community reviews coming soon...</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar (Right) */}
+          <aside className="lg:col-span-1">
+            <div className="sticky top-8 space-y-6">
+              <ChallengeDetailSidebar challenge={challenge} />
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* 4. Footer */}
+      <footer className="border-t border-gray-100 bg-white/50 backdrop-blur-sm mt-auto">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+            <div className="flex gap-4">
+              <span>UID: {String(challenge.id).toUpperCase()}</span>
+              <span className="hidden md:inline text-gray-200">|</span>
+              <span className="hidden md:inline">Phase: {currentStep}/4</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5">
+                <Calendar size={12} className="text-gray-300" />
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="text-gray-900 font-bold">REL_v1.0</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
