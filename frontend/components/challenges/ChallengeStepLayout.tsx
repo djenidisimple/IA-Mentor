@@ -32,55 +32,50 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
 
       {/* 3. Dynamic Content Area */}
       <div className="flex-1 max-w-[1600px] mx-auto px-6 lg:px-8 pb-20 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Content (Left) */}
-          <div className="lg:col-span-2">
-            {currentStep === 1 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <ChallengeBrief challenge={challenge} />
-                <ChallengeTechnicalSpecs challenge={challenge} />
-                
-                {/* Primary Action Button */}
-                <div className="flex justify-center pt-8">
-                  <button 
-                    onClick={handleStartChallenge}
-                    className="group relative inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-5 rounded-2xl font-mono text-sm font-bold hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
-                  >
-                    <Terminal size={18} />
-                    <span>Lancer le Challenge</span>
-                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+        {currentStep === 1 ? (
+          /* Step 1: Layout avec Sidebar */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="lg:col-span-2 space-y-10">
+              <ChallengeBrief challenge={challenge} />
+              <ChallengeTechnicalSpecs challenge={challenge} />
+              
+              {/* Primary Action Button */}
+              <div className="flex justify-center pt-8">
+                <button 
+                  onClick={handleStartChallenge}
+                  className="group relative inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-5 rounded-2xl font-mono text-sm font-bold hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                >
+                  <Terminal size={18} />
+                  <span>Lancer le Challenge</span>
+                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
-            )}
+            </div>
 
-            {currentStep === 2 && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <ChallengeSubmissionForm challengeId={challenge.id} />
+            <aside className="lg:col-span-1">
+              <div className="sticky top-8 space-y-6">
+                <ChallengeDetailSidebar challenge={challenge} />
               </div>
+            </aside>
+          </div>
+        ) : (
+          /* Autres étapes: Layout centré et large */
+          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {currentStep === 2 && (
+              <ChallengeSubmissionForm challengeId={challenge.id} />
             )}
 
             {currentStep === 3 && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <ChallengeAIFeedback />
-              </div>
+              <ChallengeAIFeedback />
             )}
 
             {currentStep === 4 && (
-              <div className="bg-white border border-gray-100 rounded-xl p-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-white border border-gray-100 rounded-xl p-20 text-center">
                 <p className="font-mono text-gray-400">Community reviews coming soon...</p>
               </div>
             )}
           </div>
-
-          {/* Sidebar (Right) */}
-          <aside className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
-              <ChallengeDetailSidebar challenge={challenge} />
-            </div>
-          </aside>
-        </div>
+        )}
       </div>
 
       {/* 4. Footer */}
