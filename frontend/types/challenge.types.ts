@@ -1,4 +1,4 @@
-export type ChallengeLevel = 'DEBUTANT' | 'INTERMEDIAIRE' | 'AVANCE'
+export type ChallengeLevel = 'DEBUTANT' | 'INTERMEDIAIRE' | 'AVANCE' | 'EASY' | 'MEDIUM' | 'HARD'
 export type ChallengeType = 'FRONTEND' | 'BACKEND' | 'FULLSTACK'
 
 export interface Challenge {
