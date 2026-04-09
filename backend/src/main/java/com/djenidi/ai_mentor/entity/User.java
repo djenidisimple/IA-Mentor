@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,12 +34,14 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     // Pour l'auth GitHub OAuth2 (Phase 2)
     @Column(unique = true)
     private String githubId;
+
+    private String name;
 
     private String avatarUrl;
 
@@ -108,5 +111,29 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public static User fromGithubOAuth2(OAuth2User oAuth2User) {
+        String githubId = oAuth2User.getAttribute("id").toString();
+        String login = oAuth2User.getAttribute("login");
+        String email = oAuth2User.getAttribute("email");
+        String avatarUrl = oAuth2User.getAttribute("avatar_url");
+
+        // Si l'email n'est pas public sur GitHub, on en génère un fictif
+        // (GitHub fournit toujours un email via l'API si scope "user:email")
+        if (email == null || email.isEmpty()) {
+            email = login + "@github.user";
+        }
+
+        return User.builder()
+                .githubId(githubId)
+                .username(login)
+                .email(email)
+                .avatarUrl(avatarUrl)
+                .password(null)
+                .role(Role.USER)
+                .points(0)
+                .isPremium(false)
+                .build();
     }
 }
