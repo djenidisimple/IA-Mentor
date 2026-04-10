@@ -32,3 +32,18 @@ export interface ApiResponse<T> {
   message?: string
   timestamp: string
 }
+
+export type SubmissionStatus = 'EN_COURS' | 'SOUMIS' | 'TERMINE' | 'ECHEC'
+
+export interface SubmissionResponse {
+  id: number
+  userId: number
+  challengeId: number
+  githubUrl?: string
+  status: SubmissionStatus
+  score?: number
+  aiFeedback?: string
+  startedAt: string
+  submittedAt?: string
+  completedAt?: string
+}

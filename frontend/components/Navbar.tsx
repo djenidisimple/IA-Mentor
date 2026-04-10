@@ -135,8 +135,8 @@ export default function Navbar() {
                 <div className="flex flex-col">
                   <span className="text-2xl font-['Syne'] font-bold tracking-tighter leading-none">
                     <span className="text-black">dev</span>
-                    <span className="text-red-500">.</span>
-                    <span className="text-blue-500">gallery</span>
+                    <span className="text-blue-500">Review</span>
+                    <span className="text-amber-500 ml-1">AI</span>
                   </span>
                   <span className="text-[8px] text-gray-400 tracking-[0.3em] uppercase font-medium">
                     Bauhaus Edition
@@ -221,9 +221,9 @@ export default function Navbar() {
             {/* Right Section */}
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
-                <div className="hidden md:flex items-center gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
                   {/* XP/Status Indicator */}
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100">
+                  <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100">
                     <Crown className="w-3.5 h-3.5 text-yellow-500" />
                     <span className="text-[10px] font-semibold text-gray-600 tracking-wider">
                       {user?.points || '0'} PTS
@@ -234,18 +234,22 @@ export default function Navbar() {
                   <div className="relative">
                     <button 
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="group flex items-center gap-3 pl-3 border-l border-gray-200"
+                      className="group flex items-center gap-2 md:gap-3 pl-0 md:pl-3 md:border-l border-gray-200"
                     >
                       {/* Avatar with geometric style */}
                       <div className="relative">
-                        <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold"
+                        <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold overflow-hidden"
                              style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}>
-                          {user?.username?.[0]?.toUpperCase() || 'U'}
+                          {user?.avatarUrl ? (
+                            <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            user?.username?.[0]?.toUpperCase() || 'U'
+                          )}
                         </div>
                         <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-white" />
                       </div>
                       
-                      <div className="text-left">
+                      <div className="hidden md:block text-left">
                         <span className="text-xs font-semibold text-black tracking-wide block leading-tight">
                           {user?.username}
                         </span>
@@ -487,7 +491,7 @@ export default function Navbar() {
               {/* Footer */}
               <div className="p-8">
                 <div className="flex items-center justify-between text-[9px] text-gray-400 tracking-wider">
-                  <span>© 2024 DevGallery</span>
+                  <span>© 2024 devReview AI</span>
                   <span>Bauhaus Edition</span>
                 </div>
               </div>

@@ -1,30 +1,29 @@
 import { apiFetch } from './api'
-import {
-  Submission,
-  StartChallengeRequest,
-  SubmitChallengeRequest
-} from '@/types/submission.types'
+import { SubmissionResponse } from '@/types/challenge.types'
 
 export const submissionsApi = {
 
-  start: (data: StartChallengeRequest) =>
-    apiFetch<Submission>('/api/submissions/start', {
+  start: (challengeId: number) =>
+    apiFetch<SubmissionResponse>('/api/submissions/start', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ challengeId }),
     }),
 
-  submit: (data: SubmitChallengeRequest) =>
-    apiFetch<Submission>('/api/submissions/submit', {
+  submit: (challengeId: number, githubUrl: string) =>
+    apiFetch<SubmissionResponse>('/api/submissions/submit', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ challengeId, githubUrl }),
     }),
 
   getMyActivity: () =>
-    apiFetch<Submission[]>('/api/submissions/user/me'),
+    apiFetch<SubmissionResponse[]>('/api/submissions/user/me'),
 
   getMyInProgress: () =>
-    apiFetch<Submission[]>('/api/submissions/user/me/in-progress'),
+    apiFetch<SubmissionResponse[]>('/api/submissions/user/me/in-progress'),
 
   getMyCompleted: () =>
-    apiFetch<Submission[]>('/api/submissions/user/me/completed'),
+    apiFetch<SubmissionResponse[]>('/api/submissions/user/me/completed'),
+
+  getSubmission: (id: number) =>
+    apiFetch<SubmissionResponse>(`/api/submissions/${id}`),
 }

@@ -20,10 +20,18 @@ export async function apiFetch<T>(
   // Normaliser l'endpoint
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   
-  // Récupérer le token de manière sécurisée
+  // Récupérer le token depuis le store Zustand (auth-storage)
   let token: string | null = null
   if (typeof window !== 'undefined') {
-    token = localStorage.getItem('token')
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      try {
+        const parsed = JSON.parse(authStorage)
+        token = parsed.state?.token || null
+      } catch (e) {
+        console.error('Failed to parse auth-storage', e)
+      }
+    }
   }
 
   const headers: HeadersInit = {
@@ -59,6 +67,12 @@ export async function apiFetch<T>(
 
     // Gérer les erreurs HTTP
     if (!response.ok) {
+      if (response.status === 401 && typeof window !== 'undefined') {
+        // Token expiré ou invalide, déconnexion forcée
+        localStorage.removeItem('auth-storage')
+        window.location.href = '/login?error=Session_Expired'
+      }
+      
       throw new ApiError(
         jsonResponse.message || `HTTP error ${response.status}`,
         response.status,
