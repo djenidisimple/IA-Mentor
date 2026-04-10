@@ -29,9 +29,9 @@ function OAuth2CallbackHandler() {
       // We extract what we can from the token, the rest defaults
       const user: User = {
         id: Date.now(), // Fallback ID if not in token
-        username: decodedPayload.sub || 'github_user', // "sub" is usually the email or username
-        email: decodedPayload.sub || '',
-        avatarUrl: '',
+        username: decodedPayload.username || decodedPayload.name || decodedPayload.sub || 'github_user',
+        email: decodedPayload.email || decodedPayload.sub || '',
+        avatarUrl: decodedPayload.avatarUrl || decodedPayload.picture || '',
         points: 0,
         isPremium: false,
         role: decodedPayload.role || 'USER',

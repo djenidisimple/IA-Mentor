@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
@@ -11,7 +11,6 @@ import {
   Eye, 
   EyeOff,
   CheckCircle2,
-  Shield,
   User as UserIcon,
   Mail,
   Lock,
@@ -21,16 +20,11 @@ import { authApi } from '@/lib/auth'
 import { useAuthStore } from '@/lib/store/authStore'
 import { User } from '@/types/auth.types'
 import GithubIcon from '@/components/icon/GithubIcon'
-import LoadingScreen from '@/components/ui/LoadingScreen'
-import LandingStyles from "@/components/landing/LandingStyles";
-import { AppIcon } from "@/components/icon";
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { setAuth, isAuthenticated, token } = useAuthStore()
+  const { setAuth } = useAuthStore()
   
-  const [isChecking, setIsChecking] = useState(true)
-  const [isRedirecting, setIsRedirecting] = useState(false)
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -40,22 +34,6 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isAuthenticated && token && !isRedirecting) {
-      setIsRedirecting(true)
-      router.replace('/home')
-      return
-    }
-    setIsChecking(false)
-  }, [isAuthenticated, token, router, isRedirecting])
-
-  useEffect(() => {
-    if (isAuthenticated && token && !isRedirecting) {
-      setIsRedirecting(true)
-      router.replace('/home')
-    }
-  }, [isAuthenticated, token, router, isRedirecting])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -74,7 +52,7 @@ export default function RegisterPage() {
         id: Date.now(),
         username: response.username,
         email: response.email,
-        avatarUrl: '',
+        avatarUrl: (response as any).avatarUrl || (response as any).picture || '',
         points: 0,
         isPremium: false,
         role: response.role || 'USER',
@@ -94,34 +72,8 @@ export default function RegisterPage() {
     }
   }
 
-  if (isChecking) {
-    return <LoadingScreen />
-  }
-
   return (
-    <div className="min-h-screen bg-[#FBFBF9] text-gray-900 relative flex flex-col font-inter selection:bg-blue-500/10 selection:text-blue-600">
-      <LandingStyles />
-      
-      {/* Background Decor - Blueprint Style */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 geometric-bg opacity-40" />
-        <div className="absolute inset-0 grid-overlay" />
-        <div className="absolute inset-0 blueprint-grid opacity-20" />
-      </div>
-
-      <nav className="fixed top-0 left-0 right-0 z-50 py-6">
-        <div className="max-w-[1600px] mx-auto px-5 md:px-8 flex items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-white border-1.5 border-gray-100 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
-              <AppIcon className="text-gray-900 w-6 h-6" />
-            </div>
-            <span className="font-syne text-xl font-bold tracking-tighter text-gray-900 uppercase">
-              IA-M<span className="char-red">e</span>n<span className="char-blue">t</span>o<span className="char-amber">r</span>
-            </span>
-          </Link>
-        </div>
-      </nav>
-
+    <div className="min-h-screen relative flex flex-col font-inter selection:bg-blue-500/10 selection:text-blue-600">
       <main className="flex-1 flex flex-col items-center justify-center relative z-10 px-5 pt-20 pb-10">
         
         <div className="w-full max-w-md">
@@ -134,7 +86,7 @@ export default function RegisterPage() {
                  <span className="char-amber">I</span>n<span className="char-red">i</span>tialisez votre <span className="char-blue">P</span>ro<span className="char-emerald">f</span>il
                </h1>
                <p className="font-grotesk text-gray-500 max-w-sm mx-auto">
-                 Rejoignez l'atelier et commencez votre mentoring technique.
+                 Rejoignez l&apos;atelier et commencez votre mentoring technique.
                </p>
             </div>
 

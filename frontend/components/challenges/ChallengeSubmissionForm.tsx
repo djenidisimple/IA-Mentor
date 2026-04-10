@@ -1,16 +1,28 @@
 "use client";
 
 import React, { useState } from "react";
-import { Send, GitBranch, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Send, GitBranch, MessageSquare, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { submissionsApi } from "@/lib/submissions";
 
 export default function ChallengeSubmissionForm({ challengeId }: { challengeId: number }) {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [githubUrl, setGithubUrl] = useState('');
+  const [comment, setComment] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
-    // Simulation d'envoi
-    setTimeout(() => setStatus('success'), 1500);
+    setError(null);
+    
+    try {
+      await submissionsApi.submit(challengeId, githubUrl);
+      setStatus('success');
+    } catch (err: any) {
+      console.error("Submission failed:", err);
+      setError(err.message || "Échec de la soumission. Veuillez vérifier l'URL de votre repository.");
+      setStatus('idle');
+    }
   };
 
   if (status === 'success') {
@@ -44,6 +56,8 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
             <input 
               required
               type="url" 
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
               placeholder="https://github.com/username/repo"
               className="w-full bg-gray-50 border border-gray-100 rounded-lg py-2.5 pl-9 pr-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
             />
@@ -55,13 +69,21 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
           <div className="relative">
             <MessageSquare className="absolute left-3 top-3 text-gray-300" size={14} />
             <textarea 
-              required
               rows={3}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
               placeholder="Détails techniques, difficultés rencontrées..."
               className="w-full bg-gray-50 border border-gray-100 rounded-lg py-2.5 pl-9 pr-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-400 transition-all resize-none"
             />
           </div>
         </div>
+        
+        {error && (
+          <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg border border-red-100 text-[10px] font-mono">
+            <AlertCircle size={14} />
+            <span>{error}</span>
+          </div>
+        )}
 
         <button 
           type="submit"
@@ -69,7 +91,10 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
           className="w-full bg-gray-900 hover:bg-black text-white font-mono text-xs uppercase tracking-widest py-3 rounded-lg transition-all flex items-center justify-center gap-2 group"
         >
           {status === 'submitting' ? (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Analyse...</span>
+            </div>
           ) : (
             <>
               Soumettre le projet

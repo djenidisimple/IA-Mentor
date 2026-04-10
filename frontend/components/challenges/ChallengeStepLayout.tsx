@@ -9,7 +9,8 @@ import ChallengeSubmissionForm from "./ChallengeSubmissionForm";
 import ChallengeAIFeedback from "./ChallengeAIFeedback";
 import ChallengeDetailHeader from "./ChallengeDetailHeader";
 import ChallengeDetailSidebar from "./ChallengeDetailSidebar";
-import { Calendar, Terminal, ChevronRight } from "lucide-react";
+import { Calendar, Terminal, ChevronRight, Loader2, AlertCircle } from "lucide-react";
+import { submissionsApi } from "@/lib/submissions";
 
 interface ChallengeStepLayoutProps {
   challenge: Challenge;
@@ -17,9 +18,21 @@ interface ChallengeStepLayoutProps {
 
 export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutProps) {
   const [currentStep, setCurrentStep] = useState<ChallengeStep>(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleStartChallenge = () => {
-    setCurrentStep(2); // Go to submission
+  const handleStartChallenge = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await submissionsApi.start(challenge.id);
+      setCurrentStep(2); // Go to submission only if API call succeeds
+    } catch (err: any) {
+      console.error("Failed to start challenge:", err);
+      setError(err.message || "Erreur lors du démarrage du challenge. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,14 +53,25 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
               <ChallengeTechnicalSpecs challenge={challenge} />
               
               {/* Primary Action Button */}
-              <div className="flex justify-center pt-8">
+              <div className="flex flex-col items-center gap-4 pt-8">
+                {error && (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg border border-red-100 text-xs font-mono mb-2">
+                    <AlertCircle size={14} />
+                    <span>{error}</span>
+                  </div>
+                )}
                 <button 
                   onClick={handleStartChallenge}
-                  className="group relative inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-5 rounded-2xl font-mono text-sm font-bold hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
+                  disabled={loading}
+                  className="group relative inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-5 rounded-2xl font-mono text-sm font-bold hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  <Terminal size={18} />
-                  <span>Lancer le Challenge</span>
-                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  {loading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Terminal size={18} />
+                  )}
+                  <span>{loading ? "Initialisation..." : "Lancer le Challenge"}</span>
+                  {!loading && <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />}
                 </button>
               </div>
             </div>

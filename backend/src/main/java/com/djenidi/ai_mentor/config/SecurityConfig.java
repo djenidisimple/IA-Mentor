@@ -3,6 +3,7 @@ package com.djenidi.ai_mentor.config;
 import com.djenidi.ai_mentor.security.CustomOAuth2UserService;
 import com.djenidi.ai_mentor.security.JwtAuthenticationFilter;
 import com.djenidi.ai_mentor.security.OAuth2SuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,8 +60,19 @@ public class SecurityConfig {
                 )
                 .successHandler(oAuth2SuccessHandler)
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"success\":false,\"message\":\"Session expirée ou invalide\"}");
+                    } else {
+                        response.sendRedirect("/login");
+                    }
+                })
+            );
 
         return http.build();
     }

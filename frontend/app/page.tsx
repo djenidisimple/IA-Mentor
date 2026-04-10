@@ -25,7 +25,6 @@ import {
   Target
 } from "lucide-react";
 import Link from "next/link";
-import LandingStyles from "@/components/landing/LandingStyles";
 import { AppIcon, GithubIcon } from "@/components/icon";
 
 export default function LandingPage(): React.ReactElement {
@@ -42,14 +41,7 @@ export default function LandingPage(): React.ReactElement {
 
   return (
     <div className="min-h-screen bg-[#FBFBF9] text-gray-900 relative overflow-x-hidden selection:bg-blue-500/10 selection:text-blue-600">
-      <LandingStyles />
-      
-      {/* Background Decor - Blueprint Style */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 geometric-bg opacity-40" />
-        <div className="absolute inset-0 grid-overlay" />
-        <div className="absolute inset-0 blueprint-grid opacity-10" />
-      </div>
+
 
       <div className="relative z-10">
         {/* Navigation - Architectural Style */}
@@ -62,7 +54,7 @@ export default function LandingPage(): React.ReactElement {
                 <AppIcon className="text-gray-900 w-6 h-6" />
               </div>
               <span className="font-syne text-xl font-bold tracking-tighter text-gray-900 uppercase">
-                IA-M<span className="char-red">e</span>n<span className="char-blue">t</span>o<span className="char-amber">r</span>
+                <span className="text-gray-900">dev</span><span className="text-blue-600">Review</span> <span className="text-amber-500">AI</span>
               </span>
             </Link>
 
@@ -472,7 +464,7 @@ export default function LandingPage(): React.ReactElement {
                   <div className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center shadow-sm">
                     <AppIcon className="text-gray-900 w-6 h-6" />
                   </div>
-                  <span className="font-syne text-xl font-bold tracking-tighter uppercase">IA-M<span className="char-red">e</span>n<span className="char-blue">t</span>o<span className="char-amber">r</span></span>
+                  <span className="font-syne text-xl font-bold tracking-tighter uppercase"><span className="text-gray-900">dev</span><span className="text-blue-600">Review</span> <span className="text-amber-500">AI</span></span>
                 </Link>
                 <p className="font-grotesk text-gray-500 max-w-sm leading-relaxed text-sm">
                   Artificial intelligence at the service of human expertise in software engineering. Powered by technical curiosity.
@@ -500,7 +492,7 @@ export default function LandingPage(): React.ReactElement {
 
             <div className="flex flex-col md:flex-row items-center justify-between pt-12 border-t border-gray-100 gap-6">
               <p className="text-gray-400 font-mono text-[9px] font-bold uppercase tracking-widest">
-                © 2024 IA-Mentor. v4.2.0_alpha. Built for technical excellence.
+                © 2024 devReview AI. v4.2.0_alpha. Built for technical excellence.
               </p>
               <div className="flex items-center gap-8">
                 <Link href="#" className="text-gray-400 hover:text-gray-900 transition-colors"><GithubIcon size={18} /></Link>
