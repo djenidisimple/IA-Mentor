@@ -6,6 +6,7 @@ import com.djenidi.ai_mentor.entity.User;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import com.djenidi.ai_mentor.repository.UserRepository;
+import com.djenidi.ai_mentor.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,24 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SubmissionRepository submissionRepository;
+    private final JwtService jwtService;
+
+    /**
+     * Récupère un utilisateur à partir d'un token JWT
+     */
+    public User getUserFromToken(String token) {
+        String username = jwtService.extractUsername(token);
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "username", username));
+    }
+
+    /**
+     * Récupère un utilisateur par email
+     */
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "email", email));
+    }
 
     public UserProfileResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)

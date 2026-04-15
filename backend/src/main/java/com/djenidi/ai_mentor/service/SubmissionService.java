@@ -110,6 +110,39 @@ public class SubmissionService {
         return toResponse(submission);
     }
 
+    /**
+     * Mock review performed by the AI: sets aiFeedback, score and marks submission REVIEWED
+     */
+    @Transactional
+    public SubmissionResponse reviewSubmission(Long submissionId) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
+
+        if (submission.getStatus() != SubmissionStatus.SUBMITTED) {
+            throw new IllegalStateException("Only submitted challenges can be reviewed");
+        }
+
+        // Mock AI analysis — simple deterministic feedback and score
+        String feedback = "Review résumé: Le code respecte les consignes. Suggestions: optimiser les fonctions critiques et ajouter des tests unitaires.";
+        int score = Math.max(0, Math.min(100, 70 + (submission.getChallenge() != null && submission.getChallenge().getPoints() != null ? submission.getChallenge().getPoints() / 2 : 0)));
+
+        submission.setAiFeedback(feedback);
+        submission.setScore(score);
+        submission.setStatus(SubmissionStatus.REVIEWED);
+        submission.setReviewedAt(LocalDateTime.now());
+
+        return toResponse(submissionRepository.save(submission));
+    }
+
+    /**
+     * Récupérer toutes les soumissions (admin)
+     */
+    public List<SubmissionResponse> getAllSubmissions() {
+        return submissionRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     // === HELPER ===
 
     private SubmissionResponse toResponse(Submission submission) {

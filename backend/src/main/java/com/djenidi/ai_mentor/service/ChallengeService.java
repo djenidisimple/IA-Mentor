@@ -100,10 +100,10 @@ public class ChallengeService {
                 .description(challenge.getDescription())
                 .level(challenge.getLevel())
                 .type(challenge.getType())
-                .categoryName(challenge.getCategory().getName())
-                .categorySlug(challenge.getCategory().getSlug())
-                .technologies(challenge.getTechnologies())
-                .criteresIA(challenge.getCriteresIA())
+                .categoryName(challenge.getCategory() != null ? challenge.getCategory().getName() : null)
+                .categorySlug(challenge.getCategory() != null ? challenge.getCategory().getSlug() : null)
+                .technologies(challenge.getTechnologies() != null ? challenge.getTechnologies() : Set.of())
+                .criteresIA(challenge.getCriteresIA() != null ? challenge.getCriteresIA() : Set.of())
                 .points(challenge.getPoints())
                 .isPremium(challenge.getIsPremium())
                 .createdAt(challenge.getCreatedAt())
@@ -111,10 +111,23 @@ public class ChallengeService {
     }
 
     private String generateSlug(String title) {
-        return title.toLowerCase()
+        if (title == null || title.isBlank()) {
+            return "untitled-" + System.currentTimeMillis();
+        }
+
+        String slug = title.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .replaceAll("\\s+", "-")
                 .replaceAll("-+", "-")
                 .trim();
+
+        // remove leading/trailing hyphens
+        slug = slug.replaceAll("(^-+|-+$)", "");
+
+        if (slug.isEmpty()) {
+            return "untitled-" + System.currentTimeMillis();
+        }
+
+        return slug;
     }
 }

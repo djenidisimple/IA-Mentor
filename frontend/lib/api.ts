@@ -6,10 +6,49 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public data?: unknown
+    public data?: unknown,
+    public redirectUrl?: string // ⭐ Nouveau: pour capturer les redirections
   ) {
     super(message)
     this.name = 'ApiError'
+  }
+}
+
+// ⭐ Extraction du token (fonction pure pour testabilité)
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null
+  
+  try {
+    const authStorage = localStorage.getItem('auth-storage')
+    if (!authStorage) return null
+    
+    const parsed = JSON.parse(authStorage)
+    return parsed.state?.token || null
+  } catch (e) {
+    console.error('[Auth] Failed to parse auth-storage', e)
+    return null
+  }
+}
+
+// ⭐ Service d'authentification (à importer dans les composants)
+export const AuthService = {
+  logout: (redirectPath: string = '/login') => {
+    if (typeof window === 'undefined') return
+    
+    localStorage.removeItem('auth-storage')
+    localStorage.removeItem('user') // Si vous stockez d'autres données
+    
+    // Dispatch d'un événement personnalisé pour que les stores Zustand puissent réagir
+    window.dispatchEvent(new CustomEvent('auth:logout'))
+    
+    // Navigation programmatique (sera gérée par le composant)
+    window.location.href = redirectPath
+  },
+  
+  getToken: getAuthToken,
+  
+  isAuthenticated: (): boolean => {
+    return !!getAuthToken()
   }
 }
 
@@ -17,22 +56,8 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Normaliser l'endpoint
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  
-  // Récupérer le token depuis le store Zustand (auth-storage)
-  let token: string | null = null
-  if (typeof window !== 'undefined') {
-    const authStorage = localStorage.getItem('auth-storage')
-    if (authStorage) {
-      try {
-        const parsed = JSON.parse(authStorage)
-        token = parsed.state?.token || null
-      } catch (e) {
-        console.error('Failed to parse auth-storage', e)
-      }
-    }
-  }
+  const token = getAuthToken()
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -41,22 +66,46 @@ export async function apiFetch<T>(
   }
 
   try {
+    // ⭐ CRITICAL : Empêche le navigateur de suivre automatiquement les redirections
     const response = await fetch(`${API_URL}${normalizedEndpoint}`, {
       ...options,
       headers,
-      // Ajouter credentials si nécessaire pour les cookies
       credentials: 'include',
+      redirect: 'manual', // 🔥 CECI RÉSOUT LA BOUCLE INFINIE
     })
 
-    // Vérifier le content-type
-    const contentType = response.headers.get('content-type')
-    
-    // Si la réponse est vide
+    // ⭐ Gestion explicite des redirections (3xx)
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('Location')
+      
+      // Si le backend redirige vers /login, on déconnecte proprement
+      if (location?.includes('/login')) {
+        AuthService.logout()
+        throw new ApiError(
+          'Session expired - Redirecting to login',
+          response.status,
+          null,
+          location
+        )
+      }
+      
+      // Pour les autres redirections (ex: /api/v2/...), on pourrait les suivre manuellement
+      // Mais ici, on considère ça comme une erreur
+      throw new ApiError(
+        `Unexpected redirect to: ${location}`,
+        response.status,
+        null,
+        location || undefined
+      )
+    }
+
+    // 204 No Content
     if (response.status === 204) {
       return {} as T
     }
 
-    // Parser la réponse JSON
+    const contentType = response.headers.get('content-type')
+    
     let jsonResponse: ApiResponse<T>
     if (contentType?.includes('application/json')) {
       jsonResponse = await response.json()
@@ -65,12 +114,25 @@ export async function apiFetch<T>(
       throw new ApiError(`Invalid content type: ${contentType}`, response.status, text)
     }
 
-    // Gérer les erreurs HTTP
+    // Gestion des erreurs HTTP 4xx/5xx
     if (!response.ok) {
-      if (response.status === 401 && typeof window !== 'undefined') {
-        // Token expiré ou invalide, déconnexion forcée
-        localStorage.removeItem('auth-storage')
-        window.location.href = '/login?error=Session_Expired'
+      // 401 Unauthorized → Déconnexion forcée
+      if (response.status === 401) {
+        AuthService.logout()
+        throw new ApiError(
+          jsonResponse.message || 'Unauthorized - Please login again',
+          response.status,
+          jsonResponse
+        )
+      }
+      
+      // 403 Forbidden → Ne pas déconnecter, juste notifier
+      if (response.status === 403) {
+        throw new ApiError(
+          jsonResponse.message || 'Access forbidden',
+          response.status,
+          jsonResponse
+        )
       }
       
       throw new ApiError(
@@ -80,25 +142,22 @@ export async function apiFetch<T>(
       )
     }
 
-    // Vérifier la structure de la réponse
+    // Validation de la structure
     if (!jsonResponse || typeof jsonResponse !== 'object') {
       throw new ApiError('Invalid response structure', response.status)
     }
 
-    // Retourner les données
     return jsonResponse.data
   } catch (error) {
-    // Gérer les erreurs réseau
+    // Erreur réseau (CORS, serveur down, etc.)
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new ApiError('Network error: Unable to connect to server')
     }
     
-    // Relancer l'erreur si c'est déjà une ApiError
     if (error instanceof ApiError) {
       throw error
     }
     
-    // Erreur inconnue
     throw new ApiError(error instanceof Error ? error.message : 'Unknown error')
   }
 }

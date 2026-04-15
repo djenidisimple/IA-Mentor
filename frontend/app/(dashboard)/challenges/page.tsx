@@ -9,6 +9,7 @@ import ChallengeStyles from "@/components/challenges/ChallengeStyles";
 import ChallengeListHeader from "@/components/challenges/ChallengeListHeader";
 import ChallengeFilters from "@/components/challenges/ChallengeFilters";
 import ChallengeCard from "@/components/challenges/ChallengeCard";
+import LoadingScreen from "@/components/ui/LoadingScreen";
 
 export default function ChallengesPage(): React.ReactElement {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -59,6 +60,10 @@ export default function ChallengesPage(): React.ReactElement {
     hard: challenges.filter(c => c.level === 'HARD' || c.level === 'AVANCE').length,
     totalXP: filteredChallenges.reduce((acc, c) => acc + c.points, 0),
   };
+
+  if (loading) {
+    return <LoadingScreen/>
+  }
 
   return (
     <div className="min-h-screen bg-[#FBFBF9] font-['Space_Grotesk'] relative">

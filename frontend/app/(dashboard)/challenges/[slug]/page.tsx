@@ -14,7 +14,9 @@ interface ChallengePageProps {
 export default async function ChallengePage({ params }: ChallengePageProps): Promise<React.ReactElement> {
   const { slug } = await params;
   
-  const challenge: Challenge | null = await challengesApi.getBySlug(slug).catch((): null => null);
+  const challenge: Challenge | null = await challengesApi.getBySlug(slug).catch((e) => {
+    return null;
+  });
 
   if (!challenge) {
     return (
