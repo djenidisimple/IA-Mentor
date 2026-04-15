@@ -90,7 +90,12 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
             )}
 
             {currentStep === 3 && (
-              <ChallengeAIFeedback />
+              <ChallengeAIFeedback  
+                challengeId={challenge.id}
+                submissionId={1}
+                challengeTitle={challenge.title}
+                challengeContext={challenge.description}
+              />
             )}
 
             {currentStep === 4 && (
