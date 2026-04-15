@@ -80,10 +80,22 @@ public class CategoryService {
     }
 
     private String generateSlug(String name) {
-        return name.toLowerCase()
+        if (name == null || name.isBlank()) {
+            return "untitled-" + System.currentTimeMillis();
+        }
+
+        String slug = name.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .replaceAll("\\s+", "-")
                 .replaceAll("-+", "-")
                 .trim();
+
+        slug = slug.replaceAll("(^-+|-+$)", "");
+
+        if (slug.isEmpty()) {
+            return "untitled-" + System.currentTimeMillis();
+        }
+
+        return slug;
     }
 }

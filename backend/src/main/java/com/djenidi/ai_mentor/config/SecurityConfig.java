@@ -19,12 +19,18 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
@@ -35,39 +41,48 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
-    
-    // AJOUTE CES DEUX DÉPENDANCES
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    
+    @Value("${application.security.jwt.secret-key}")
+    private String secretKey;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Routes publiques
                 .requestMatchers("/api/auth/**", "/login/**", "/oauth2/**").permitAll()
                 .requestMatchers("/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers("/api/challenges", "/api/challenges/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                // Routes protégées
+                .requestMatchers("/api/submissions/**").authenticated()
                 .anyRequest().authenticated()
             )
-            // ⭐ AJOUTE LA CONFIG OAUTH2 ICI
+            // 🔥 CONFIGURATION RESOURCE SERVER (JWT) - CECI MANQUAIT !
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                )
+            )
+            // Configuration OAuth2 Login (pour Google/GitHub)
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
                 .successHandler(oAuth2SuccessHandler)
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
                     if (request.getRequestURI().startsWith("/api/")) {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setContentType("application/json");
-                        response.getWriter().write("{\"success\":false,\"message\":\"Session expirée ou invalide\"}");
+                        response.getWriter().write("{\"success\":false,\"message\":\"Authentification requise\"}");
                     } else {
                         response.sendRedirect("/login");
                     }
@@ -75,6 +90,26 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    // 🔥 CONVERTISSEUR JWT → AUTHORITIES (CECI MANQUAIT !)
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthorityPrefix("");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("authorities"); // ← Cherche "authorities" dans le JWT
+        
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtConverter;
+    }
+
+    // 🔥 DECODER JWT (CECI MANQUAIT !)
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(secretKey);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "HmacSHA256");
+        return NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
     }
 
     @Bean
