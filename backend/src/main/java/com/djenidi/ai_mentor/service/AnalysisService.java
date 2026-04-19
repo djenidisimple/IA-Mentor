@@ -5,6 +5,7 @@ import com.djenidi.ai_mentor.dto.response.RepositoryContentResponse;
 import com.djenidi.ai_mentor.entity.Analysis;
 import com.djenidi.ai_mentor.entity.AnalysisStatus;
 import com.djenidi.ai_mentor.entity.Submission;
+import com.djenidi.ai_mentor.entity.SubmissionStatus;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
 import com.djenidi.ai_mentor.repository.AnalysisRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
@@ -90,11 +91,29 @@ public class AnalysisService {
 
             analysisRepository.save(analysis);
 
+            // ✅ SYNCHRONISER AVEC SUBMISSION: Mettre à jour aiFeedback et score
+            Submission submission = analysis.getSubmission();
+            submission.setAiFeedback(aiResult.summary() + "\n\n" + aiResult.detailedFeedback());
+            submission.setScore(aiResult.score());
+            submission.setStatus(SubmissionStatus.REVIEWED);
+            submission.setReviewedAt(LocalDateTime.now());
+            submissionRepository.save(submission);
+
+            log.info("✅ Analysis completed and synced for submission {}: score={}", submission.getId(), aiResult.score());
+
         } catch (Exception e) {
             log.error("Analysis failed for submission {}", analysis.getSubmission().getId(), e);
             analysis.setStatus(AnalysisStatus.FAILED);
             analysis.setErrorMessage(e.getMessage());
             analysisRepository.save(analysis);
+            
+            // ✅ METTRE À JOUR SUBMISSION EN CAS D'ERREUR
+            Submission submission = analysis.getSubmission();
+            submission.setAiFeedback("Erreur lors de l'analyse: " + e.getMessage());
+            submission.setStatus(SubmissionStatus.REVIEWED);
+            submission.setReviewedAt(LocalDateTime.now());
+            submission.setScore(0);
+            submissionRepository.save(submission);
         }
     }
 

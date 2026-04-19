@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/authStore'
 import { 
-  User, 
+  User as UserIcon, 
   Mail, 
   Crown, 
   ShieldCheck, 
@@ -83,7 +83,7 @@ export default function ProfilePage() {
             <div className="flex-1">
               <div className="inline-flex items-center gap-2 mb-3">
                 <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border border-blue-100 flex items-center gap-1.5">
-                  <User className="w-3 h-3" />
+                  <UserIcon className="w-3 h-3" />
                   {user.role}
                 </span>
                 {user.isPremium && (

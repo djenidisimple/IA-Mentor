@@ -8,17 +8,17 @@ import { submissionsApi } from "@/lib/submissions";
 interface ExistingSubmission {
   id: number;
   challengeId: number;
-  githubUrl: string;
+  githubUrl?: string;
   status: string;
-  submittedAt: string;
+  submittedAt?: string;
 }
 
 interface SubmissionResponse {
   id: number;
   challengeId: number;
-  githubUrl: string;
+  githubUrl?: string;
   status: string;
-  submittedAt: string;
+  submittedAt?: string;
   startedAt: string;
 }
 
@@ -63,7 +63,13 @@ const validateGithubUrl = (url: string): { isValid: boolean; error: string } => 
   return { isValid: true, error: "" };
 };
 
-export default function ChallengeSubmissionForm({ challengeId }: { challengeId: number }) {
+export default function ChallengeSubmissionForm({ 
+  challengeId,
+  onSubmissionCreated
+}: { 
+  challengeId: number;
+  onSubmissionCreated?: (submissionId: number) => void; // ✅ CALLBACK
+}) {
   const [status, setStatus] = useState<"loading" | "idle" | "submitting" | "success" | "already-submitted">("loading");
   const [githubUrl, setGithubUrl] = useState<string>("");
   const [comment, setComment] = useState<string>("");
@@ -81,10 +87,12 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
           (s) => s.challengeId === challengeId && s.githubUrl
         );
 
-        if (submission) {
+        if (submission && submission.githubUrl) {
           setExistingSubmission(submission);
           setStatus("already-submitted");
           setGithubUrl(submission.githubUrl);
+          // ✅ CALL CALLBACK FOR EXISTING SUBMISSION
+          onSubmissionCreated?.(submission.id);
         } else {
           setStatus("idle");
         }
@@ -95,7 +103,7 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
     };
 
     checkExistingSubmission();
-  }, [challengeId]);
+  }, [challengeId, onSubmissionCreated]);
 
   // Validation en temps réel
   const handleUrlChange = (value: string): void => {
@@ -136,8 +144,10 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
     try {
       const response = await submissionsApi.submit(challengeId, githubUrl.trim());
 
-      if (response && response.data) {
-        setExistingSubmission(response.data);
+      if (response) {
+        setExistingSubmission(response);
+        // ✅ CALL CALLBACK WITH SUBMISSION ID
+        onSubmissionCreated?.(response.id);
       }
 
       setStatus("success");
@@ -222,11 +232,14 @@ export default function ChallengeSubmissionForm({ challengeId }: { challengeId: 
                 <div>
                   <p className="text-[10px] font-mono text-gray-500 uppercase">Soumis le</p>
                   <p className="text-xs font-mono text-gray-700 mt-1">
-                    {new Date(existingSubmission.submittedAt).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {existingSubmission.submittedAt 
+                      ? new Date(existingSubmission.submittedAt).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "Non disponible"
+                    }
                   </p>
                 </div>
               </div>

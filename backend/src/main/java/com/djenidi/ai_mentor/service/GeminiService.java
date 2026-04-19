@@ -39,14 +39,34 @@ public class GeminiService implements AIService {
     @Override
     public AIAnalysisResult analyzeRepository(RepositoryContentResponse repository, String challengeContext) {
         try {
+            log.info("🔍 Starting Gemini analysis for repository: {}/{}", repository.getOwner(), repository.getRepo());
+            
+            if (repository.getFiles() == null || repository.getFiles().isEmpty()) {
+                log.warn("⚠️ No files found in repository!");
+                return getFallbackAnalysis();
+            }
+            
+            log.info("📁 Found {} files in repository", repository.getFiles().size());
+            
             String codeContent = extractCodeContent(repository);
+            log.debug("📄 Code content length: {} characters", codeContent.length());
+            
             String prompt = promptTemplates.buildAnalysisPrompt(codeContent, challengeContext, repository);
+            log.debug("📝 Prompt length: {} characters", prompt.length());
+            
+            if (geminiApiKey == null || geminiApiKey.isEmpty()) {
+                log.error("❌ GEMINI_API_KEY not configured!");
+                return getFallbackAnalysis();
+            }
             
             String response = callGeminiWithRetry(prompt);
+            log.info("✅ Received response from Gemini API");
+            
             return parseResponse(response);
             
         } catch (Exception e) {
-            log.error("Gemini analysis failed", e);
+            log.error("❌ Gemini analysis failed: {}", e.getMessage(), e);
+            e.printStackTrace();
             return getFallbackAnalysis();
         }
     }
@@ -83,22 +103,29 @@ public class GeminiService implements AIService {
         
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
+                log.info("🔄 Gemini API call attempt {}/{}", i + 1, MAX_RETRIES);
                 return callGemini(prompt);
             } catch (Exception e) {
                 lastException = e;
-                log.warn("Gemini API call failed (attempt {} of {}): {}", i + 1, MAX_RETRIES, e.getMessage());
+                log.warn("⚠️ Gemini API call failed (attempt {} of {}): {}", i + 1, MAX_RETRIES, e.getMessage());
                 
                 if (i < MAX_RETRIES - 1) {
-                    Thread.sleep(RETRY_DELAY_MS * (i + 1));
+                    long sleepTime = RETRY_DELAY_MS * (i + 1);
+                    log.info("⏳ Retrying in {} ms...", sleepTime);
+                    Thread.sleep(sleepTime);
                 }
             }
         }
         
+        log.error("❌ All {} retry attempts failed!", MAX_RETRIES);
         throw lastException;
     }
 
     private String callGemini(String prompt) throws Exception {
-        String fullUrl = geminiApiUrl + "?key=" + geminiApiKey;
+        String fullUrl = geminiApiUrl + "?key=" + (geminiApiKey == null || geminiApiKey.isEmpty() ? "MISSING" : geminiApiKey.substring(0, Math.min(10, geminiApiKey.length())) + "...");
+        
+        log.info("🌐 Calling Gemini API at: {}", geminiApiUrl.substring(0, 100) + "...");
+        log.debug("🔑 API Key configured: {}", geminiApiKey != null && !geminiApiKey.isEmpty());
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -126,30 +153,49 @@ public class GeminiService implements AIService {
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);
         
-        log.debug("Calling Gemini API with prompt length: {}", prompt.length());
+        log.info("📤 Sending request to Gemini (prompt length: {}, config: JSON output)", prompt.length());
         
-        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
-        ResponseEntity<String> response = restTemplate.exchange(
-                fullUrl, HttpMethod.POST, entity, String.class);
+        try {
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    geminiApiUrl + "?key=" + geminiApiKey, HttpMethod.POST, entity, String.class);
 
-        if (response.getBody() == null) {
-            throw new RuntimeException("Gemini API returned empty response");
+            if (response.getBody() == null || response.getBody().isEmpty()) {
+                log.error("❌ Gemini API returned empty response");
+                throw new RuntimeException("Gemini API returned empty response");
+            }
+
+            log.info("📥 Received response from Gemini (status: {})", response.getStatusCode());
+            log.debug("Response body length: {} characters", response.getBody().length());
+
+            JsonNode json = objectMapper.readTree(response.getBody());
+            
+            if (json.has("error")) {
+                String errorMessage = json.path("error").path("message").asText("Unknown error");
+                log.error("❌ Gemini API error: {}", errorMessage);
+                throw new RuntimeException("Gemini API error: " + errorMessage);
+            }
+
+            String result = json.path("candidates")
+                    .path(0)
+                    .path("content")
+                    .path("parts")
+                    .path(0)
+                    .path("text")
+                    .asText();
+            
+            if (result == null || result.isEmpty()) {
+                log.error("❌ Gemini returned empty text content");
+                throw new RuntimeException("Gemini returned empty text content");
+            }
+            
+            log.info("✅ Successfully extracted text from Gemini response (length: {})", result.length());
+            return result;
+            
+        } catch (Exception e) {
+            log.error("❌ Exception during Gemini API call: {}", e.getClass().getName() + ": " + e.getMessage());
+            throw e;
         }
-
-        JsonNode json = objectMapper.readTree(response.getBody());
-        
-        if (json.has("error")) {
-            String errorMessage = json.path("error").path("message").asText("Unknown error");
-            throw new RuntimeException("Gemini API error: " + errorMessage);
-        }
-
-        return json.path("candidates")
-                .path(0)
-                .path("content")
-                .path("parts")
-                .path(0)
-                .path("text")
-                .asText();
     }
 
     private AIAnalysisResult parseResponse(String jsonResponse) {

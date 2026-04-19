@@ -22,6 +22,7 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
+    private final AnalysisService analysisService;
 
     /**
      * Démarrer un challenge → crée une Submission avec status IN_PROGRESS
@@ -53,6 +54,7 @@ public class SubmissionService {
 
     /**
      * Soumettre un challenge → met à jour avec l'URL GitHub + status SUBMITTED
+     * ✅ DÉCLENCHE AUTOMATIQUEMENT L'ANALYSE GEMINI EN ASYNC
      */
     @Transactional
     public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl) {
@@ -68,7 +70,18 @@ public class SubmissionService {
         submission.setStatus(SubmissionStatus.SUBMITTED);
         submission.setSubmittedAt(LocalDateTime.now());
 
-        return toResponse(submissionRepository.save(submission));
+        Submission saved = submissionRepository.save(submission);
+        
+        // ✅ DÉCLENCHER AUTOMATIQUEMENT L'ANALYSE GEMINI
+        try {
+            analysisService.analyzeSubmission(saved.getId());
+        } catch (Exception e) {
+            // L'analyse est async, on log mais on retourne la soumission quand même
+            org.slf4j.LoggerFactory.getLogger(SubmissionService.class)
+                    .warn("Impossible de déclencher l'analyse pour la soumission {}: {}", saved.getId(), e.getMessage());
+        }
+
+        return toResponse(saved);
     }
 
     /**
@@ -108,30 +121,6 @@ public class SubmissionService {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
         return toResponse(submission);
-    }
-
-    /**
-     * Mock review performed by the AI: sets aiFeedback, score and marks submission REVIEWED
-     */
-    @Transactional
-    public SubmissionResponse reviewSubmission(Long submissionId) {
-        Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
-
-        if (submission.getStatus() != SubmissionStatus.SUBMITTED) {
-            throw new IllegalStateException("Only submitted challenges can be reviewed");
-        }
-
-        // Mock AI analysis — simple deterministic feedback and score
-        String feedback = "Review résumé: Le code respecte les consignes. Suggestions: optimiser les fonctions critiques et ajouter des tests unitaires.";
-        int score = Math.max(0, Math.min(100, 70 + (submission.getChallenge() != null && submission.getChallenge().getPoints() != null ? submission.getChallenge().getPoints() / 2 : 0)));
-
-        submission.setAiFeedback(feedback);
-        submission.setScore(score);
-        submission.setStatus(SubmissionStatus.REVIEWED);
-        submission.setReviewedAt(LocalDateTime.now());
-
-        return toResponse(submissionRepository.save(submission));
     }
 
     /**
