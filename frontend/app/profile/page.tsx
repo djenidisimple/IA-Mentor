@@ -179,7 +179,7 @@ export default function ProfilePage() {
                   
                   {/* Badge Premium */}
                   {user.isPremium && (
-                    <div className="absolute -bottom-2 -right-2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 p-1.5 shadow-lg">
+                    <div className="absolute -bottom-2 -right-2 rounded-md bg-gradient-to-r from-amber-400 to-yellow-500 p-1.5 shadow-lg">
                       <Crown className="h-5 w-5 text-white" />
                     </div>
                   )}
@@ -188,17 +188,17 @@ export default function ProfilePage() {
                 {/* Info utilisateur */}
                 <div className="flex-1 text-white">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/30">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/30">
                       <UserIcon className="h-3 w-3" />
                       {user.role}
                     </span>
                     {user.isPremium && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/30 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-amber-300/50">
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-400/30 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-amber-300/50">
                         <Crown className="h-3 w-3" />
                         Premium
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/30 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-emerald-300/50">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-400/30 backdrop-blur-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white border border-emerald-300/50">
                       <ShieldCheck className="h-3 w-3" />
                       Vérifié
                     </span>
@@ -213,7 +213,7 @@ export default function ProfilePage() {
                       <Mail className="h-4 w-4 shrink-0" />
                       <span className="break-all">{user.email}</span>
                     </div>
-                    <div className="hidden md:block h-1 w-1 rounded-full bg-white/40" />
+                    <div className="hidden md:block h-1 w-1 rounded-md bg-white/40" />
                     <div className="flex items-center gap-2">
                       <CalendarDays className="h-4 w-4 shrink-0" />
                       <span>Inscrit le {joinDate}</span>
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 md:px-2.5 md:py-1 font-mono text-[8px] md:text-[9px] font-medium text-slate-600">
+                  <span className="rounded-md bg-slate-100 px-2 py-0.5 md:px-2.5 md:py-1 font-mono text-[8px] md:text-[9px] font-medium text-slate-600">
                     {stat.trend}
                   </span>
                 </div>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
                     </span>
                   </div>
                   
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-2 w-full overflow-hidden rounded-md bg-slate-100">
                     <div 
                       className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000"
                       style={{ width: `${progressToNextLevel}%` }}

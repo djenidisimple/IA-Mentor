@@ -134,9 +134,9 @@ export default function LandingPage(): React.ReactElement {
                 {/* Window Header */}
                 <div className="bg-gray-50/50 px-6 py-5 flex items-center justify-between border-b border-gray-100">
                   <div className="flex gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
+                    <div className="w-2.5 h-2.5 rounded-md bg-gray-200" />
+                    <div className="w-2.5 h-2.5 rounded-md bg-gray-200" />
+                    <div className="w-2.5 h-2.5 rounded-md bg-gray-200" />
                   </div>
                   <div className="font-mono text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] bg-white px-4 py-2 rounded-lg border border-gray-100">
                     ANALYSE_MODULE_PROMPT.TSX — SPEC_TYPE_V1
@@ -155,7 +155,7 @@ export default function LandingPage(): React.ReactElement {
                     </div>
                     <div className="space-y-4 font-mono text-[10px] text-gray-400">
                       <div className="flex items-center gap-2 text-gray-900 font-bold">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-md" />
                         Component
                       </div>
                       <div className="ml-4 pl-4 border-l border-gray-200 space-y-3">
@@ -391,7 +391,7 @@ export default function LandingPage(): React.ReactElement {
               </div>
 
               <div className="relative">
-                <div className="absolute -inset-10 bg-blue-500/5 blur-3xl rounded-full" />
+                <div className="absolute -inset-10 bg-blue-500/5 blur-3xl rounded-md" />
                 <div className="relative p-1.5 bg-gray-100 rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
                    <div className="bg-white rounded-2xl p-10 space-y-8 relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-8 diagonal-pattern text-gray-900 opacity-[0.02] w-32 h-32" />
@@ -409,7 +409,7 @@ export default function LandingPage(): React.ReactElement {
                          <div className="font-mono text-2xl font-black text-emerald-500 tabular-nums tracking-tighter">98/100</div>
                       </div>
 
-                      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-gray-100 rounded-md overflow-hidden">
                          <div className="h-full w-[98%] bg-emerald-500 transition-all duration-1000" />
                       </div>
 

@@ -14,7 +14,8 @@ export interface Challenge {
   criteresIA: string[]
   points: number
   isPremium: boolean
-  createdAt: string
+  createdAt: string,
+  comments?: Comment[]
 }
 
 export interface Category {

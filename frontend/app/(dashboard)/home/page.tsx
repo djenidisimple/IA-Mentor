@@ -1,410 +1,320 @@
-"use client"
+'use client'
 
-import { submissionsApi } from "@/lib/submissions"
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 import { 
-  Trophy, 
-  CheckCircle2, 
-  XCircle, 
-  GitBranch, 
-  ExternalLink,
-  Brain,
-  Code2,
-  Clock,
-  AlertCircle,
-  Heart,
-  MessageCircle,
-  Bookmark,
-  MoreHorizontal,
-  Send
-} from "lucide-react"
-import Link from "next/link"
-
-interface Submission {
-  id: number
-  challengeId: number
-  challengeTitle: string
-  challengeSlug: string
-  githubUrl: string
-  score: number
-  status: string
-  aiFeedback: string
-  submittedAt: string
-  reviewedAt: string
-  startedAt: string
-  userId: number
-  username: string
-}
+  Brain, AlertCircle, Plus, Zap, 
+  Terminal, BarChart3, ArrowUpRight, 
+  Activity, ShieldCheck, Code2, Sparkles,
+  TrendingUp, Users, Target, Crown,
+  MessageCircle, Heart, Bookmark, Send,
+  Coffee, Rocket, Flame,
+  Trophy
+} from 'lucide-react'
+import { useSubmissions } from '@/hooks/useSubmissions'
+import { usePostInteractions } from '@/hooks/usePostInteractions'
+import SubmissionsList from '@/components/submissions/SubmissionsList'
+import Link from 'next/link'
 
 export default function Home() {
-  const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isVisible, setIsVisible] = useState(false)
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set())
-  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set())
-  const [commentingOn, setCommentingOn] = useState<number | null>(null)
-  const [comments, setComments] = useState<Record<number, string>>({})
-  const [expandedFeedback, setExpandedFeedback] = useState<Set<number>>(new Set())
+  const { submissions, loading } = useSubmissions()
+  const {
+    likedPosts,
+    savedPosts,
+    commentingOn,
+    comments,
+    expandedFeedback,
+    handleLike,
+    handleSave,
+    handleComment,
+    toggleFeedback,
+    setComments,
+    setCommentingOn,
+  } = usePostInteractions()
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await submissionsApi.getAllCompleted()
-        setSubmissions(response as Submission[])
-      } catch (error) {
-        console.error("Erreur lors du chargement:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
+  const [isVisible, setIsVisible] = useState(false)
+  const [activeTab, setActiveTab] = useState('feed')
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const minutes = Math.floor(diff / (1000 * 60))
-
-    if (days > 7) {
-      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-    } else if (days > 0) {
-      return `il y a ${days} j`
-    } else if (hours > 0) {
-      return `il y a ${hours} h`
-    } else if (minutes > 0) {
-      return `il y a ${minutes} min`
-    } else {
-      return "à l'instant"
-    }
-  }
-
-  const handleLike = (id: number) => {
-    setLikedPosts(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
-  const handleSave = (id: number) => {
-    setSavedPosts(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
-  const handleComment = (id: number) => {
-    if (comments[id]?.trim()) {
-      console.log('Commentaire:', comments[id])
-      setComments(prev => ({ ...prev, [id]: '' }))
-      setCommentingOn(null)
-    }
-  }
-
-  const toggleFeedback = (id: number) => {
-    setExpandedFeedback(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
-  const getRandomLikes = (id: number) => {
-    const hash = id * 7
-    return Math.floor((hash % 50) + 15)
-  }
-
-  const getRandomComments = (id: number) => {
-    const hash = id * 13
-    return Math.floor((hash % 20) + 3)
-  }
-
-  const customStyles = `
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes likeAnimation {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-      100% { transform: scale(1); }
-    }
-    .animate-slide-in {
-      animation: slideIn 0.5s ease-out forwards;
-    }
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-out forwards;
-    }
-    .like-animation {
-      animation: likeAnimation 0.3s ease-out;
-    }
-  `
-
   if (loading) {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-          <div className="max-w-[600px] mx-auto px-4 py-8">
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center">
-                <div className="relative mb-6 flex h-20 w-20 mx-auto items-center justify-center">
-                  <div className="absolute inset-0 animate-ping rounded-full bg-blue-400/20"></div>
-                  <div className="absolute inset-2 animate-pulse rounded-full bg-blue-500/30"></div>
-                  <Brain className="h-10 w-10 text-blue-500 relative z-10" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex flex-col items-center justify-center">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center animate-pulse">
+            <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce" />
+        </div>
+        <p className="mt-8 text-white font-bold text-lg animate-pulse">
+          Loading amazing stuff...
+        </p>
+      </div>
+    )
+  }
+
+  if (!isVisible) return null
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      {/* Navigation Flottante */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-lg font-semibold text-slate-700">Chargement du feed...</h2>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+              </div>
+              <div>
+                <h2 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  DevReview
+                </h2>
+                <p className="text-xs text-gray-500">AI Powered Reviews</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link 
+                href="/submit"
+                className="group relative px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  New Submission
+                  <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+        
+        {/* Hero Section */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 rounded-3xl p-8 md:p-12 text-white shadow-2xl">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Crown className="w-6 h-6 text-yellow-300" />
+                  <span className="text-sm font-semibold uppercase tracking-wider bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                    Welcome Back
+                  </span>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                  Your Code Review
+                  <br />
+                  <span className="text-yellow-300">Control Center</span>
+                </h1>
+                <p className="text-white/90 text-lg max-w-2xl">
+                  Get AI-powered insights, track your progress, and collaborate with developers worldwide.
+                </p>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="flex gap-4">
+                <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center">
+                  <Users className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-3xl font-bold">1.2k</p>
+                  <p className="text-sm opacity-90">Developers</p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 text-center">
+                  <Target className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-3xl font-bold">{submissions.length}</p>
+                  <p className="text-sm opacity-90">Reviews</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </>
-    )
-  }
 
-  return (
-    <>
-      <style>{customStyles}</style>
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        <div className="max-w-[600px] mx-auto px-4 py-6">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          {[
+            { icon: TrendingUp, label: 'Trending', color: 'from-blue-500 to-cyan-500' },
+            { icon: Flame, label: 'Popular', color: 'from-orange-500 to-red-500' },
+            { icon: Rocket, label: 'Latest', color: 'from-green-500 to-emerald-500' },
+            { icon: Coffee, label: 'For You', color: 'from-purple-500 to-pink-500' },
+          ].map((item, index) => (
+            <button
+              key={index}
+              className={`group relative p-6 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden`}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+              <item.icon className={`w-8 h-8 mb-3 bg-gradient-to-r ${item.color} bg-clip-text text-transparent`} />
+              <p className="font-semibold text-gray-800">{item.label}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Feed Principal */}
-          <div className="space-y-4">
+          {/* Left Column - Feed (2 columns) */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Activity className="w-6 h-6 text-purple-600" />
+                Recent Activity
+              </h2>
+              <div className="flex gap-2">
+                {['Feed', 'Following', 'Trending'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab.toLowerCase())}
+                    className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                      activeTab === tab.toLowerCase()
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {submissions.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
-                <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500">Aucune soumission pour le moment</p>
+              <div className="bg-white rounded-3xl p-12 text-center shadow-sm border-2 border-dashed border-gray-200">
+                <AlertCircle className="w-16 h-16 mx-auto mb-4 text-purple-400" />
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No submissions yet</h3>
+                <p className="text-gray-500 mb-6">Be the first to share your code for review!</p>
+                <Link
+                  href="/submit"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create First Submission
+                </Link>
               </div>
             ) : (
-              submissions.map((submission, idx) => {
-                const likeCount = getRandomLikes(submission.id)
-                const commentCount = getRandomComments(submission.id)
-                const isLiked = likedPosts.has(submission.id)
-                const isSaved = savedPosts.has(submission.id)
-                const isCommenting = commentingOn === submission.id
-                const isExpanded = expandedFeedback.has(submission.id)
-
-                return (
-                  <div
-                    key={submission.id}
-                    className={`rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all ${
-                      isVisible ? 'animate-slide-in' : 'opacity-0'
-                    }`}
-                    style={{ animationDelay: `${idx * 50}ms` }}
-                  >
-                    {/* Post Header */}
-                    <div className="p-4 pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                            {submission.username[0].toUpperCase()}
-                          </div>
-                          
-                          {/* User Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-slate-900 hover:underline cursor-pointer">
-                                {submission.username}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                @{submission.username.toLowerCase()}
-                              </span>
-                              <span className="text-xs text-slate-400">·</span>
-                              <span className="text-xs text-slate-500 flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {formatDate(submission.submittedAt)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-slate-600 mt-0.5">
-                              a complété un défi
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <button className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                          <MoreHorizontal className="h-4 w-4 text-slate-500" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Post Content - Challenge Card */}
-                    <div className="px-4 pb-3">
-                      <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="rounded-lg bg-blue-50 p-2">
-                            <Trophy className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-slate-800 mb-1">
-                              {submission.challengeTitle}
-                            </h3>
-                            <div className="flex items-center gap-3">
-                              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                                submission.score >= 80 ? 'bg-emerald-50 text-emerald-700' :
-                                submission.score >= 60 ? 'bg-amber-50 text-amber-700' :
-                                'bg-rose-50 text-rose-700'
-                              }`}>
-                                {submission.score >= 80 ? <CheckCircle2 className="h-3 w-3" /> :
-                                 submission.score >= 60 ? <CheckCircle2 className="h-3 w-3" /> :
-                                 <XCircle className="h-3 w-3" />}
-                                Score: {submission.score}/100
-                              </div>
-                              <Link
-                                href={submission.githubUrl}
-                                target="_blank"
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-                              >
-                                <GitBranch className="h-3 w-3" />
-                                Voir le code
-                                <ExternalLink className="h-3 w-3" />
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* AI Feedback */}
-                        <div className="bg-white rounded-lg p-3 border border-slate-100">
-                          <div className="flex items-start gap-2">
-                            <div className="rounded-full bg-gradient-to-br from-purple-400 to-pink-500 p-1.5 flex-shrink-0">
-                              <Brain className="h-3 w-3 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <p className={`text-xs text-slate-600 ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                                {submission.aiFeedback}
-                              </p>
-                              {submission.aiFeedback.length > 150 && (
-                                <button
-                                  onClick={() => toggleFeedback(submission.id)}
-                                  className="text-xs text-blue-600 hover:text-blue-700 mt-1 font-medium"
-                                >
-                                  {isExpanded ? 'Voir moins' : 'Voir plus'}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Post Actions */}
-                    <div className="px-4 pb-2">
-                      <div className="flex items-center gap-6 py-2 border-t border-slate-100">
-                        {/* Like Button */}
-                        <button
-                          onClick={() => handleLike(submission.id)}
-                          className={`flex items-center gap-2 transition-all ${
-                            isLiked 
-                              ? 'text-rose-500 hover:text-rose-600' 
-                              : 'text-slate-500 hover:text-slate-700'
-                          }`}
-                        >
-                          <Heart 
-                            className={`h-5 w-5 transition-transform ${isLiked ? 'fill-current like-animation' : ''}`} 
-                          />
-                          <span className="text-sm font-medium">
-                            {likeCount + (isLiked ? 1 : 0)}
-                          </span>
-                        </button>
-
-                        {/* Comment Button */}
-                        <button
-                          onClick={() => setCommentingOn(isCommenting ? null : submission.id)}
-                          className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-all"
-                        >
-                          <MessageCircle className="h-5 w-5" />
-                          <span className="text-sm font-medium">{commentCount}</span>
-                        </button>
-
-                        {/* Save Button */}
-                        <button
-                          onClick={() => handleSave(submission.id)}
-                          className={`transition-all ${
-                            isSaved 
-                              ? 'text-blue-500 hover:text-blue-600' 
-                              : 'text-slate-500 hover:text-slate-700'
-                          }`}
-                        >
-                          <Bookmark className={`h-5 w-5 ${isSaved ? 'fill-current' : ''}`} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Comment Input */}
-                    {isCommenting && (
-                      <div className="px-4 pb-4 animate-fade-in">
-                        <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                            M
-                          </div>
-                          <div className="flex-1 flex items-center gap-2">
-                            <input
-                              type="text"
-                              placeholder="Ajouter un commentaire..."
-                              value={comments[submission.id] || ''}
-                              onChange={(e) => setComments(prev => ({ ...prev, [submission.id]: e.target.value }))}
-                              onKeyPress={(e) => e.key === 'Enter' && handleComment(submission.id)}
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleComment(submission.id)}
-                              disabled={!comments[submission.id]?.trim()}
-                              className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              <Send className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Comments Preview */}
-                    {commentCount > 0 && !isCommenting && (
-                      <div className="px-4 pb-3">
-                        <button 
-                          onClick={() => setCommentingOn(submission.id)}
-                          className="text-xs text-slate-500 hover:text-slate-700"
-                        >
-                          Voir les {commentCount} commentaires
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              </div>
             )}
           </div>
 
-          {/* Bottom Spacer */}
-          <div className="h-8" />
+          {/* Right Column - Sidebar (1 column) */}
+          <div className="space-y-6">
+            
+            {/* Profile Card */}
+            <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl p-6 text-white shadow-xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Users className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl">Alex Developer</h3>
+                  <p className="text-white/80">Senior Developer</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{submissions.length}</p>
+                  <p className="text-xs text-white/70">Posts</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">284</p>
+                  <p className="text-xs text-white/70">Reviews</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">1.2k</p>
+                  <p className="text-xs text-white/70">Points</p>
+                </div>
+              </div>
+              <button className="w-full py-3 bg-white/20 backdrop-blur-sm rounded-xl font-semibold hover:bg-white/30 transition-all">
+                View Profile
+              </button>
+            </div>
+
+            {/* Skill Matrix */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-600" />
+                Skill Matrix
+              </h3>
+              <div className="space-y-4">
+                {[
+                  { label: 'Frontend', value: 92, color: 'from-purple-500 to-pink-500' },
+                  { label: 'Backend', value: 78, color: 'from-blue-500 to-cyan-500' },
+                  { label: 'DevOps', value: 65, color: 'from-green-500 to-emerald-500' },
+                  { label: 'Security', value: 45, color: 'from-orange-500 to-red-500' },
+                ].map((skill) => (
+                  <div key={skill.label}>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="font-medium text-gray-700">{skill.label}</span>
+                      <span className="font-bold text-gray-900">{skill.value}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${skill.color} rounded-full transition-all duration-1000`}
+                        style={{ width: `${isVisible ? skill.value : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Activity */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-yellow-500" />
+                Live Activity
+              </h3>
+              <div className="space-y-4">
+                {[
+                  { user: 'Sarah Chen', action: 'reviewed', project: 'React Dashboard', time: '2m ago', color: 'bg-green-500' },
+                  { user: 'Mike Ross', action: 'commented on', project: 'API Design', time: '5m ago', color: 'bg-blue-500' },
+                  { user: 'Emma Watson', action: 'starred', project: 'UI Components', time: '12m ago', color: 'bg-yellow-500' },
+                ].map((activity, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className={`w-2 h-2 ${activity.color} rounded-full animate-pulse`} />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold">{activity.user}</span>
+                        {' '}{activity.action}{' '}
+                        <span className="font-medium">{activity.project}</span>
+                      </p>
+                      <p className="text-xs text-gray-400">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Achievement Card */}
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-6 text-white shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Trophy className="w-8 h-8" />
+                <div>
+                  <h4 className="font-bold text-lg">Achievement Unlocked!</h4>
+                  <p className="text-sm opacity-90">Code Master Level 5</p>
+                </div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                <p className="text-sm mb-2">Next Achievement</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-white/30 rounded-full">
+                    <div className="w-3/4 h-full bg-white rounded-full" />
+                  </div>
+                  <span className="text-sm font-semibold">75%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Floating Action Button */}
+      <button className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform">
+        <MessageCircle className="w-6 h-6" />
+      </button>
+    </main>
   )
 }

@@ -197,7 +197,7 @@ export default function ChallengeSubmissionForm({
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 animate-in fade-in zoom-in duration-300">
         <div className="flex items-start gap-4">
-          <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full flex-shrink-0">
+          <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-md flex-shrink-0">
             <CheckCircle2 className="text-blue-600" size={20} />
           </div>
           <div className="flex-1">
@@ -225,7 +225,7 @@ export default function ChallengeSubmissionForm({
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
                 <div>
                   <p className="text-[10px] font-mono text-gray-500 uppercase">Statut</p>
-                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] font-mono rounded-full mt-1">
+                  <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] font-mono rounded-md mt-1">
                     {existingSubmission.status === "SUBMITTED" ? "En cours d'analyse" : existingSubmission.status}
                   </span>
                 </div>
@@ -258,7 +258,7 @@ export default function ChallengeSubmissionForm({
   if (status === "success") {
     return (
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center animate-in fade-in zoom-in duration-300">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3">
+        <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-md mb-3">
           <CheckCircle2 className="text-emerald-600" size={24} />
         </div>
         <h4 className="font-mono text-sm font-bold text-emerald-900">Soumission reussie !</h4>
@@ -288,7 +288,7 @@ export default function ChallengeSubmissionForm({
       </div>
 
       <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+        <div className="w-1.5 h-1.5 bg-blue-500 rounded-md animate-pulse" />
         Valider le challenge
       </h3>
 

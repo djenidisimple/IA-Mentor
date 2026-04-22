@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
 
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
@@ -25,4 +26,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findByChallengeId(Long challengeId);
 
     List<Submission> findByStatus(SubmissionStatus status);
+
+    @Query("SELECT s FROM Submission s JOIN FETCH s.user JOIN FETCH s.challenge ORDER BY s.submittedAt DESC")
+
+    List<Submission> findAllByOrderBySubmittedAtDesc();
 }

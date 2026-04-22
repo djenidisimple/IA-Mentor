@@ -140,7 +140,7 @@ export default function ChallengesPage(): React.ReactElement {
               <span>{filteredChallenges.length} challenges displayed</span>
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-md" />
                   Updated daily
                 </span>
                 <span className="text-gray-300">•</span>

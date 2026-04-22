@@ -8,10 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -37,7 +34,6 @@ public class User implements UserDetails {
     @Column(nullable = true)
     private String password;
 
-    // Pour l'auth GitHub OAuth2 (Phase 2)
     @Column(unique = true)
     private String githubId;
 
@@ -58,7 +54,30 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Boolean isPremium = false;
 
-    // === RELATIONS ===
+    // === RELATIONS SOCIALES ===
+
+    @ManyToMany
+    @Builder.Default // Indispensable pour Lombok Builder
+    @JoinTable(
+        name = "user_follows",
+        joinColumns = @JoinColumn(name = "follower_id"),
+        inverseJoinColumns = @JoinColumn(name = "following_id")
+    )
+    private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following")
+    @Builder.Default
+    private Set<User> followers = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SubmissionLike> likedSubmissions = new ArrayList<>();
+
+    // === RELATIONS MÉTIER ===
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -88,30 +107,11 @@ public class User implements UserDetails {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @Override public String getUsername() { return username; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 
     public static User fromGithubOAuth2(OAuth2User oAuth2User) {
         String githubId = oAuth2User.getAttribute("id").toString();
@@ -119,8 +119,6 @@ public class User implements UserDetails {
         String email = oAuth2User.getAttribute("email");
         String avatarUrl = oAuth2User.getAttribute("avatar_url");
 
-        // Si l'email n'est pas public sur GitHub, on en génère un fictif
-        // (GitHub fournit toujours un email via l'API si scope "user:email")
         if (email == null || email.isEmpty()) {
             email = login + "@github.user";
         }
@@ -130,7 +128,6 @@ public class User implements UserDetails {
                 .username(login)
                 .email(email)
                 .avatarUrl(avatarUrl)
-                .password(null)
                 .role(Role.USER)
                 .points(0)
                 .isPremium(false)

@@ -79,7 +79,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
             {/* Header */}
             <div className="text-center mb-10">
-               <div className="inline-flex font-mono text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+               <div className="inline-flex font-mono text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 bg-amber-50 px-3 py-1 rounded-md border border-amber-100">
                  Nouvelle Recrue
                </div>
                <h1 className="font-syne text-4xl md:text-5xl font-black tracking-tighter text-gray-900 uppercase mb-3">
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                         {[...Array(4)].map((_, i) => (
                           <div
                             key={i}
-                            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                            className={`h-1 flex-1 rounded-md transition-all duration-300 ${
                               form.password.length > i * 3
                                 ? form.password.length < 8
                                   ? 'bg-amber-500'

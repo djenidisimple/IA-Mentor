@@ -31,7 +31,7 @@ export default function LoadingScreen({ onComplete, minDuration = 1000 }: Loadin
       <div className="relative z-10 flex flex-col items-center animate-in fade-in duration-500">
         {/* Simple elegant loader */}
         <div className="relative mb-6">
-          <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full animate-pulse" />
+          <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-md animate-pulse" />
           <div className="w-16 h-16 bg-white border-1.5 border-gray-200 rounded-2xl flex items-center justify-center shadow-lg relative z-10">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
           </div>
