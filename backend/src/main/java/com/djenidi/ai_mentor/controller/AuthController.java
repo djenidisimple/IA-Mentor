@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,5 +33,26 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
         return ResponseEntity
                 .ok(authService.login(request));
+    }
+
+    /**
+     * 🔄 Renouvelle le token JWT pour un utilisateur authentifié
+     * Utilisé pour prolonger la session avant l'expiration
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+        
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        AuthResponse response = authService.refreshToken(userDetails.getUsername());
+        
+        return ResponseEntity
+                .ok(response);
     }
 }

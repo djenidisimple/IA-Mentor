@@ -7,6 +7,7 @@ import com.djenidi.ai_mentor.repository.ChallengeRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import com.djenidi.ai_mentor.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // ✅ FIX : ajout @Slf4j
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j // ✅ FIX : annotation Lombok, plus besoin de LoggerFactory manuel
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
@@ -24,10 +26,6 @@ public class SubmissionService {
     private final ChallengeRepository challengeRepository;
     private final AnalysisService analysisService;
 
-    /**
-     * Démarrer un challenge → crée une Submission avec status IN_PROGRESS
-     * C'est ici que l'activité de l'utilisateur commence !
-     */
     @Transactional
     public SubmissionResponse startChallenge(Long userId, Long challengeId) {
         User user = userRepository.findById(userId)
@@ -36,7 +34,6 @@ public class SubmissionService {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge", "id", challengeId));
 
-        // Vérifier si l'utilisateur a déjà commencé ce challenge
         Optional<Submission> existing = submissionRepository.findByUserIdAndChallengeId(userId, challengeId);
         if (existing.isPresent()) {
             throw new IllegalStateException("Vous avez déjà commencé ce challenge");
@@ -48,14 +45,9 @@ public class SubmissionService {
                 .status(SubmissionStatus.IN_PROGRESS)
                 .build();
 
-        Submission saved = submissionRepository.save(submission);
-        return toResponse(saved);
+        return toResponse(submissionRepository.save(submission));
     }
 
-    /**
-     * Soumettre un challenge → met à jour avec l'URL GitHub + status SUBMITTED
-     * ✅ DÉCLENCHE AUTOMATIQUEMENT L'ANALYSE GEMINI EN ASYNC
-     */
     @Transactional
     public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl) {
         Submission submission = submissionRepository.findByUserIdAndChallengeId(userId, challengeId)
@@ -71,22 +63,19 @@ public class SubmissionService {
         submission.setSubmittedAt(LocalDateTime.now());
 
         Submission saved = submissionRepository.save(submission);
-        
-        // ✅ DÉCLENCHER AUTOMATIQUEMENT L'ANALYSE GEMINI
+
+        // ✅ FIX : utilise log (Lombok) au lieu de LoggerFactory inline
+        // ✅ FIX : commentaire corrigé — c'est Groq, pas Gemini
         try {
             analysisService.analyzeSubmission(saved.getId());
         } catch (Exception e) {
-            // L'analyse est async, on log mais on retourne la soumission quand même
-            org.slf4j.LoggerFactory.getLogger(SubmissionService.class)
-                    .warn("Impossible de déclencher l'analyse pour la soumission {}: {}", saved.getId(), e.getMessage());
+            log.warn("Impossible de déclencher l'analyse Groq pour la soumission {}: {}",
+                    saved.getId(), e.getMessage());
         }
 
         return toResponse(saved);
     }
 
-    /**
-     * Récupérer toutes les activités d'un utilisateur (tous statuts)
-     */
     public List<SubmissionResponse> getUserActivity(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("Utilisateur", "id", userId);
@@ -96,43 +85,28 @@ public class SubmissionService {
                 .toList();
     }
 
-    /**
-     * Récupérer les challenges en cours d'un utilisateur
-     */
     public List<SubmissionResponse> getUserChallengesInProgress(Long userId) {
         return submissionRepository.findByUserIdAndStatus(userId, SubmissionStatus.IN_PROGRESS).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * Récupérer les challenges terminés (reviewés par l'IA)
-     */
     public List<SubmissionResponse> getUserChallengesCompleted(Long userId) {
         return submissionRepository.findByUserIdAndStatus(userId, SubmissionStatus.REVIEWED).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * Récupérer une soumission par son ID
-     */
     public SubmissionResponse getSubmissionById(Long submissionId) {
-        Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
-        return toResponse(submission);
+        return toResponse(submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId)));
     }
 
-    /**
-     * Récupérer toutes les soumissions (admin)
-     */
     public List<SubmissionResponse> getAllSubmissions() {
         return submissionRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
-
-    // === HELPER ===
 
     private SubmissionResponse toResponse(Submission submission) {
         return SubmissionResponse.builder()

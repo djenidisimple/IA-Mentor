@@ -2,6 +2,9 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "installConfig": {
+    "legacy-peer-deps": true
+  },
   "scripts": {
     "dev": "next dev",
     "test": "jest --passWithNoTests",
@@ -13,6 +16,7 @@
     "axios": "^1.15.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",
     "next": "^16.2.3",
     "postcss": "^8.5.8",

@@ -20,13 +20,13 @@ public class AdminSubmissionController {
     private final AnalysisService analysisService;
 
     /**
-     * ✅ DÉCLENCHER L'ANALYSE GEMINI POUR UNE SOUMISSION
+     * ✅ DÉCLENCHER L'ANALYSE OLLAMA (GEMMA2) POUR UNE SOUMISSION
      * (Normalement déclenchée automatiquement via POST /submissions/submit)
      */
     @PostMapping("/{id}/analyze")
     public ResponseEntity<ApiResponse<AnalysisResultResponse>> triggerAnalysis(@PathVariable Long id) {
         AnalysisResultResponse result = analysisService.analyzeSubmission(id);
-        return ResponseEntity.ok(ApiResponse.success("Analyse Gemini déclenchée (async)", result));
+        return ResponseEntity.ok(ApiResponse.success("Analyse Ollama (Gemma2) déclenchée (async)", result));
     }
 
     @GetMapping

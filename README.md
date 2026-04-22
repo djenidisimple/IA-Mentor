@@ -1,13 +1,13 @@
 # 🚀 IA Mentor - AI Powered Learning Platform
 
-**IA Mentor** est une plateforme d'apprentissage destinée aux développeurs souhaitant se perfectionner sur des projets **Fullstack** et **Backend**. Elle utilise l'**Intelligence Artificielle (Google Gemini 2.0 Flash)** pour valider automatiquement les soumissions des utilisateurs en analysant leur code source via GitHub.
+**IA Mentor** est une plateforme d'apprentissage destinée aux développeurs souhaitant se perfectionner sur des projets **Fullstack** et **Backend**. Elle utilise l'**Intelligence Artificielle (Ollama - Gemma2:2b)** pour valider automatiquement les soumissions des utilisateurs en analysant leur code source via GitHub.
 
 ## 📊 État du Projet (April 2026)
 
 ✅ **Production Ready** - Backend + Frontend compilés et testés
 - Backend: Java 21 + Spring Boot 3.4.1 ✓
 - Frontend: Next.js 14 + React 18 ✓
-- Gemini AI Integration: Opérationnel ✓
+- **Ollama (Gemma2:2b) AI Integration: Opérationnel ✓** (migré de Gemini)
 - Async Analysis Processing: Implémenté ✓
 - Database Sync: Actif ✓
 
@@ -33,7 +33,7 @@ Combler le fossé entre les tutoriels théoriques et la pratique réelle. IA Men
 * **Logique métier** : APIs RESTful, Architecture, Bonnes Pratiques
 * **Gestion des bases de données** : Modélisation, Optimisation
 * **Qualité du code** : Analyse sémantique, Recommandations personnalisées
-* **Feedback automatisé** : Génération de rapports via Gemini AI
+* **Feedback automatisé** : Génération de rapports via IA locale (Ollama)
 
 ---
 
@@ -49,11 +49,12 @@ Combler le fossé entre les tutoriels théoriques et la pratique réelle. IA Men
 - Clonage automatique du dépôt
 - Pas de fichiers à uploader
 
-### 3. 🤖 Analyse Intelligente (Google Gemini 2.0 Flash)
+### 3. 🤖 Analyse Intelligente (Ollama - Gemma2:2b-CPU)
 - **Async Processing** : Analyse en arrière-plan sans bloquer l'UI
 - **Code Analysis** : Analyse sémantique complète du code
 - **Real-time Polling** : Frontend met à jour le résultat toutes les 3 secondes
 - **Synchronized Storage** : Résultats sauvegardés en base de données
+- **Local Execution** : Pas de dépendance à une API cloud
 
 ### 4. 📊 Rapport Automatisé
 - **Score global** : Évaluation sur 100
@@ -74,7 +75,7 @@ Controller (REST API)
 Service Layer (Business Logic)
     ├─ SubmissionService (Gestion des soumissions)
     ├─ AnalysisService (Orchestration de l'analyse)
-    ├─ GeminiService (Appels API Gemini avec retry logic)
+    ├─ OllamaService (Appels API Ollama avec retry logic)
     └─ GitHubService (Clonage et lecture de dépôts)
     ↓
 Repository (JPA/Hibernate)
@@ -114,7 +115,7 @@ Tailwind CSS + Lucide Icons
    ↓
 5. GitHubService clones repository
    ↓
-6. GeminiService analyzes code (with retry logic: 3 attempts)
+6. OllamaService analyzes code (with retry logic: 3 attempts)
    ↓
 7. Results saved to Analysis + Submission entities (sync)
    ↓
@@ -135,7 +136,7 @@ Tailwind CSS + Lucide Icons
 - **Spring Security** - Authentication/Authorization
 - **JWT** - Token-based Auth
 - **PostgreSQL 18** - Base de données
-- **RestTemplate** - HTTP Client pour Gemini API
+- **RestTemplate** - HTTP Client pour Ollama API
 - **Lombok** - Réduction du boilerplate
 - **SLF4J + LogBack** - Logging
 
@@ -149,7 +150,7 @@ Tailwind CSS + Lucide Icons
 - **Axios** - HTTP Client (wrappé par apiFetch)
 
 ### AI/External Services
-- **Google Gemini 2.0 Flash API** - Code Analysis
+- **Ollama (Gemma2:2b-CPU)** - Code Analysis (Local)
 - **GitHub API** - Repository Access
 
 ### DevOps
@@ -166,7 +167,19 @@ Tailwind CSS + Lucide Icons
 - JDK 21+
 - Node.js 18+
 - PostgreSQL 15+
-- Google Gemini API Key (gratuit)
+- Ollama + Gemma2:2b (gratuit)
+
+### 0️⃣ Setup Ollama
+```bash
+# Installer Ollama depuis https://ollama.ai
+ollama serve
+
+# Dans un autre terminal, télécharger le modèle
+ollama pull gemma2:2b
+
+# Vérifier que le modèle est prêt
+curl http://localhost:11434/api/tags
+```
 
 ### 1️⃣ Setup Backend
 ```bash
@@ -176,7 +189,8 @@ cd backend
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_mentor_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=your_password
-GEMINI_API_KEY=your_gemini_api_key
+OLLAMA_API_URL=http://localhost:11434
+OLLAMA_MODEL=gemma2:2b
 
 # Build & Run
 mvn clean install
@@ -224,15 +238,21 @@ docker run --name postgres-ai-mentor \
 # CREATE DATABASE ai_mentor_db;
 ```
 
-### Étape 2 : Configuration Google Gemini API
+### Étape 2 : Configuration Ollama
 
-1. Allez sur https://makersuite.google.com/app/apikey
-2. Créez une nouvelle clé API
-3. Ajoutez la clé à votre `.env` backend
-
-```bash
-GEMINI_API_KEY=AIzaSy...your_key_here
-```
+1. Installez Ollama depuis https://ollama.ai
+2. Lancez le serveur:
+   ```bash
+   ollama serve
+   ```
+3. Téléchargez le modèle Gemma2:
+   ```bash
+   ollama pull gemma2:2b
+   ```
+4. Vérifiez que le serveur est en cours d'exécution:
+   ```bash
+   curl http://localhost:11434/api/tags
+   ```
 
 ### Étape 3 : Variables d'environnement
 
@@ -242,7 +262,8 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_mentor_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
-GEMINI_API_KEY=your_api_key_here
+OLLAMA_API_URL=http://localhost:11434
+OLLAMA_MODEL=gemma2:2b
 GITHUB_TOKEN=your_github_token_optional
 ```
 
@@ -254,24 +275,53 @@ NEXT_PUBLIC_APP_NAME=IA Mentor
 
 ### Étape 4 : Lancer l'Application
 
-**Terminal 1 - Backend**
+**Terminal 1 - Ollama**
+```bash
+ollama serve
+# Ollama listening on 127.0.0.1:11434
+```
+
+**Terminal 2 - Backend**
 ```bash
 cd backend
 mvn spring-boot:run
-# Logs avec emojis 🔍📁📝✅ pour tracking Gemini
+# Logs avec emojis 🔍📁📝✅ pour tracking Ollama
 ```
 
-**Terminal 2 - Frontend**
+**Terminal 3 - Frontend**
 ```bash
 cd frontend
 npm run dev
 # Hot reload activé
 ```
 
-**Terminal 3 - Optionnel (Database)**
+**Terminal 4 - Optionnel (Database)**
 ```bash
 docker exec -it postgres-ai-mentor psql -U postgres -d ai_mentor_db
 # Pour inspecter la base de données
+```
+
+---
+
+## 🧪 Tester la Configuration
+
+```bash
+# Test public (pas d'auth requise)
+curl http://localhost:8080/api/ollama/test
+
+# Test admin
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     http://localhost:8080/api/ollama/diagnose
+```
+
+**Réponse attendue:**
+```json
+{
+  "serviceAvailable": true,
+  "connectionSuccessful": true,
+  "modelAvailable": true,
+  "testMessage": "✅ Simple test successful - Ollama (Gemma2) is working | ✅ JSON parsing OK"
+}
 ```
 
 ---
@@ -289,14 +339,15 @@ Stop-Process -Id <PID> -Force
 server.port=8081
 ```
 
-### Erreur Gemini "Analysis failed"
-```
-Vérifiez les logs avec les emojis 🌐📤❌:
-- 🔍 Starting Gemini analysis
-- 🌐 Calling Gemini API
-- 📤 Sending request
-- ✅ Successfully (ou ❌ Failed)
-```
+### Erreur Ollama "Analysis failed"
+- Vérifiez que le serveur Ollama est lancé: `ollama serve`
+- Vérifiez que le modèle est téléchargé: `ollama pull gemma2:2b`
+- Vérifiez la connexion: `curl http://localhost:11434/api/tags`
+- Vérifiez les logs backend avec les emojis 🌐📤❌:
+  - 🔍 Démarrage analyse Ollama
+  - 🌐 Appel de l'API Ollama
+  - 📤 Envoi de la requête
+  - ✅ Réponse reçue (ou ❌ Erreur)
 
 ### Frontend ne se connecte pas au backend
 ```bash
@@ -327,7 +378,7 @@ docker start postgres-ai-mentor
 - [x] Frontend: Next.js + React + TypeScript
 - [x] Database: PostgreSQL avec JPA
 - [x] Authentication: JWT-based
-- [x] Gemini AI Integration
+- [x] Ollama (Gemma2:2b) AI Integration
 - [x] Async Analysis Processing
 - [x] Real-time Polling (Frontend)
 - [x] Submission + Analysis Sync
@@ -369,7 +420,7 @@ d:\IA-Mentor
 │   │       ├── service/              # Business Logic
 │   │       │   ├── SubmissionService
 │   │       │   ├── AnalysisService
-│   │       │   ├── GeminiService     # Gemini API
+│   │       │   ├── OllamaService     # Ollama (Gemma2) API
 │   │       │   └── GitHubService
 │   │       ├── repository/           # JPA Repositories
 │   │       ├── entity/               # Database Models
