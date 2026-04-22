@@ -36,7 +36,7 @@ export default function ChallengeTechnicalSpecs({ challenge }: { challenge: Chal
           <div className="space-y-3">
             {requirements.map((req, i) => (
               <div key={i} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-md bg-amber-400 mt-2 shrink-0" />
                 <span className="text-xs text-gray-600 font-mono leading-relaxed">{req}</span>
               </div>
             ))}
@@ -57,7 +57,7 @@ export default function ChallengeTechnicalSpecs({ challenge }: { challenge: Chal
                     <span className="text-[10px] font-black font-mono text-amber-800 uppercase">{c.label}</span>
                     <span className="text-[10px] font-mono text-amber-600">{c.weight}</span>
                   </div>
-                  <div className="h-1 bg-amber-100 rounded-full overflow-hidden">
+                  <div className="h-1 bg-amber-100 rounded-md overflow-hidden">
                     <div className="h-full bg-amber-400" style={{ width: c.weight }} />
                   </div>
                 </div>

@@ -18,7 +18,7 @@ export default function ChallengeBadge({ type, value, showIcon = true, className
 
     return (
       <div 
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] md:text-[9px] font-black tracking-wider uppercase border ${className}`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[8px] md:text-[9px] font-black tracking-wider uppercase border ${className}`}
         style={{ 
           backgroundColor: spec.bgColor, 
           color: spec.color,

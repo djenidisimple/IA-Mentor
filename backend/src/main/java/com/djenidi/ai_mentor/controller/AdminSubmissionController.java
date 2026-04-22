@@ -1,7 +1,9 @@
 package com.djenidi.ai_mentor.controller;
 
 import com.djenidi.ai_mentor.dto.response.ApiResponse;
+import com.djenidi.ai_mentor.dto.response.AnalysisResultResponse;
 import com.djenidi.ai_mentor.dto.response.SubmissionResponse;
+import com.djenidi.ai_mentor.service.AnalysisService;
 import com.djenidi.ai_mentor.service.SubmissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +17,16 @@ import org.springframework.web.bind.annotation.*;
 public class AdminSubmissionController {
 
     private final SubmissionService submissionService;
+    private final AnalysisService analysisService;
 
-    @PostMapping("/{id}/review")
-    public ResponseEntity<ApiResponse<SubmissionResponse>> reviewSubmission(@PathVariable Long id) {
-        SubmissionResponse response = submissionService.reviewSubmission(id);
-        return ResponseEntity.ok(ApiResponse.success("Submission reviewed", response));
+    /**
+     * ✅ DÉCLENCHER L'ANALYSE OLLAMA (GEMMA2) POUR UNE SOUMISSION
+     * (Normalement déclenchée automatiquement via POST /submissions/submit)
+     */
+    @PostMapping("/{id}/analyze")
+    public ResponseEntity<ApiResponse<AnalysisResultResponse>> triggerAnalysis(@PathVariable Long id) {
+        AnalysisResultResponse result = analysisService.analyzeSubmission(id);
+        return ResponseEntity.ok(ApiResponse.success("Analyse Ollama (Gemma2) déclenchée (async)", result));
     }
 
     @GetMapping

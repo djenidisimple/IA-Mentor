@@ -7,6 +7,11 @@ interface User {
   email: string;
   username: string;
   roles?: string[]; // 🔥 Ajouter les rôles
+  avatarUrl?: string;
+  points?: number;
+  isPremium?: boolean;
+  role?: string;
+  createdAt?: string;
 }
 
 interface AuthState {

@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
             {/* Header */}
             <div className="text-center mb-10">
-               <div className="inline-flex font-mono text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+               <div className="inline-flex font-mono text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
                  Identifiants Requis
                </div>
                <h1 className="font-syne text-4xl md:text-5xl font-black tracking-tighter text-gray-900 uppercase mb-3">

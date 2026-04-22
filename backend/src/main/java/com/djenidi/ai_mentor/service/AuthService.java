@@ -75,4 +75,21 @@ public class AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+
+    /**
+     * 🔄 Renouvelle le token JWT pour un utilisateur authentifié
+     */
+    public AuthResponse refreshToken(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé: " + username));
+
+        String newToken = jwtService.generateToken(user);
+
+        return AuthResponse.builder()
+                .token(newToken)
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .role(user.getRole().name())
+                .build();
+    }
 }

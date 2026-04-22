@@ -40,7 +40,7 @@ public class AdminSubmissionControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    public void reviewSubmission_marksReviewed() throws Exception {
+    public void triggerAnalysis_initiatesGeminiAnalysis() throws Exception {
         User user = User.builder()
                 .username("tester")
                 .email("tester@example.com")
@@ -74,10 +74,11 @@ public class AdminSubmissionControllerTest {
                 .build();
         sub = submissionRepository.save(sub);
 
-        mockMvc.perform(post("/api/admin/submissions/" + sub.getId() + "/review")
+        // ✅ TESTER LE NOUVEL ENDPOINT /analyze
+        // L'analyse est asynchrone (déclenchée en arrière-plan)
+        mockMvc.perform(post("/api/admin/submissions/" + sub.getId() + "/analyze")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("REVIEWED"))
-                .andExpect(jsonPath("$.data.aiFeedback").isNotEmpty());
+                .andExpect(jsonPath("$.data.status").value("PENDING")); // PENDING car async
     }
 }

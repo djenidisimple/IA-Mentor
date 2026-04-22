@@ -25,6 +25,9 @@ export const submissionsApi = {
   getMyCompleted: () =>
     apiFetch<SubmissionResponse[]>('/api/submissions/user/me/completed'),
 
+  getAllCompleted: () => 
+    apiFetch<SubmissionResponse[]>('/api/submissions/completed'),
+
   getSubmission: (id: number) =>
     apiFetch<SubmissionResponse>(`/api/submissions/${id}`),
 

@@ -27,6 +27,15 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     List<Challenge> findByCategorySlug(String categorySlug);
     
     boolean existsBySlug(String slug);
+
+    @Query("SELECT DISTINCT c FROM Challenge c " +
+       "LEFT JOIN FETCH c.technologies " +
+       "LEFT JOIN FETCH c.criteresIA " +
+       "LEFT JOIN FETCH c.category " +
+       "LEFT JOIN FETCH c.comments com " + // Charge les commentaires
+       "LEFT JOIN FETCH com.user " +        // Charge l'auteur du commentaire pour éviter le N+1
+       "WHERE c.slug = :slug")
+    Optional<Challenge> findBySlugWithComments(@Param("slug") String slug);
     
     // ========== MÉTHODES AVEC CHARGEMENT DES COLLECTIONS ==========
     

@@ -31,7 +31,9 @@ export default function DashboardLayout({
     return (
         <>
             <Navbar />
-            {children}
+            <div className='mt-12'>
+              {children}
+            </div>
         </>
     )
 }

@@ -7,26 +7,27 @@ import com.djenidi.ai_mentor.repository.ChallengeRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import com.djenidi.ai_mentor.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.djenidi.ai_mentor.entity.SubmissionStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ChallengeRepository challengeRepository;
+    private final AnalysisService analysisService;
 
-    /**
-     * Démarrer un challenge → crée une Submission avec status IN_PROGRESS
-     * C'est ici que l'activité de l'utilisateur commence !
-     */
     @Transactional
     public SubmissionResponse startChallenge(Long userId, Long challengeId) {
         User user = userRepository.findById(userId)
@@ -35,7 +36,6 @@ public class SubmissionService {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge", "id", challengeId));
 
-        // Vérifier si l'utilisateur a déjà commencé ce challenge
         Optional<Submission> existing = submissionRepository.findByUserIdAndChallengeId(userId, challengeId);
         if (existing.isPresent()) {
             throw new IllegalStateException("Vous avez déjà commencé ce challenge");
@@ -47,13 +47,9 @@ public class SubmissionService {
                 .status(SubmissionStatus.IN_PROGRESS)
                 .build();
 
-        Submission saved = submissionRepository.save(submission);
-        return toResponse(saved);
+        return toResponse(submissionRepository.save(submission));
     }
 
-    /**
-     * Soumettre un challenge → met à jour avec l'URL GitHub + status SUBMITTED
-     */
     @Transactional
     public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl) {
         Submission submission = submissionRepository.findByUserIdAndChallengeId(userId, challengeId)
@@ -68,12 +64,18 @@ public class SubmissionService {
         submission.setStatus(SubmissionStatus.SUBMITTED);
         submission.setSubmittedAt(LocalDateTime.now());
 
-        return toResponse(submissionRepository.save(submission));
+        Submission saved = submissionRepository.save(submission);
+
+        try {
+            analysisService.analyzeSubmission(saved.getId());
+        } catch (Exception e) {
+            log.warn("Impossible de déclencher l'analyse Groq pour la soumission {}: {}",
+                    saved.getId(), e.getMessage());
+        }
+
+        return toResponse(saved);
     }
 
-    /**
-     * Récupérer toutes les activités d'un utilisateur (tous statuts)
-     */
     public List<SubmissionResponse> getUserActivity(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("Utilisateur", "id", userId);
@@ -83,67 +85,38 @@ public class SubmissionService {
                 .toList();
     }
 
-    /**
-     * Récupérer les challenges en cours d'un utilisateur
-     */
     public List<SubmissionResponse> getUserChallengesInProgress(Long userId) {
         return submissionRepository.findByUserIdAndStatus(userId, SubmissionStatus.IN_PROGRESS).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * Récupérer les challenges terminés (reviewés par l'IA)
-     */
     public List<SubmissionResponse> getUserChallengesCompleted(Long userId) {
         return submissionRepository.findByUserIdAndStatus(userId, SubmissionStatus.REVIEWED).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * Récupérer une soumission par son ID
-     */
     public SubmissionResponse getSubmissionById(Long submissionId) {
-        Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
-        return toResponse(submission);
+        return toResponse(submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId)));
     }
 
-    /**
-     * Mock review performed by the AI: sets aiFeedback, score and marks submission REVIEWED
-     */
-    @Transactional
-    public SubmissionResponse reviewSubmission(Long submissionId) {
-        Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "id", submissionId));
-
-        if (submission.getStatus() != SubmissionStatus.SUBMITTED) {
-            throw new IllegalStateException("Only submitted challenges can be reviewed");
-        }
-
-        // Mock AI analysis — simple deterministic feedback and score
-        String feedback = "Review résumé: Le code respecte les consignes. Suggestions: optimiser les fonctions critiques et ajouter des tests unitaires.";
-        int score = Math.max(0, Math.min(100, 70 + (submission.getChallenge() != null && submission.getChallenge().getPoints() != null ? submission.getChallenge().getPoints() / 2 : 0)));
-
-        submission.setAiFeedback(feedback);
-        submission.setScore(score);
-        submission.setStatus(SubmissionStatus.REVIEWED);
-        submission.setReviewedAt(LocalDateTime.now());
-
-        return toResponse(submissionRepository.save(submission));
-    }
-
-    /**
-     * Récupérer toutes les soumissions (admin)
-     */
     public List<SubmissionResponse> getAllSubmissions() {
         return submissionRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    // === HELPER ===
+    /**
+     * Récupère toutes les soumissions complétées (REVIEWED) de tous les utilisateurs
+     */
+    public List<SubmissionResponse> getAllCompletedSubmissions() {
+        List<Submission> completedSubmissions = submissionRepository.findByStatus(SubmissionStatus.REVIEWED);
+        return completedSubmissions.stream()
+                .map(this::toResponse)  // ← CORRIGÉ : utilise toResponse qui existe déjà
+                .collect(Collectors.toList());
+    }
 
     private SubmissionResponse toResponse(Submission submission) {
         return SubmissionResponse.builder()

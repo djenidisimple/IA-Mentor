@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/login/**", "/oauth2/**").permitAll()
                 .requestMatchers("/api/categories", "/api/categories/**").permitAll()
                 .requestMatchers("/api/challenges", "/api/challenges/**").permitAll()
+                .requestMatchers("/api/grok/test").permitAll()  // 🔥 AJOUTER CETTE LIGNE
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 // Routes protégées
                 .requestMatchers("/api/submissions/**").authenticated()
@@ -107,7 +108,13 @@ public class SecurityConfig {
     // 🔥 DECODER JWT (CECI MANQUAIT !)
     @Bean
     public JwtDecoder jwtDecoder() {
-        byte[] keyBytes = java.util.Base64.getDecoder().decode(secretKey);
+        byte[] keyBytes;
+        try {
+            keyBytes = java.util.Base64.getDecoder().decode(secretKey);
+        } catch (IllegalArgumentException e) {
+            // fallback: treat secretKey as plain text
+            keyBytes = secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
         SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
     }

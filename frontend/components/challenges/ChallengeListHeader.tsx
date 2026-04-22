@@ -22,7 +22,7 @@ export default function ChallengeListHeader({
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-emerald-500 rounded-md animate-pulse" />
                 <span className="font-mono text-[9px] md:text-[10px] text-gray-500 tracking-wider">
                   {totalCount} CHALLENGES
                 </span>

@@ -15,4 +15,7 @@ export const challengesApi = {
 
   getAllCategories: () =>
     apiFetch<Category[]>('/api/categories'),
+
+  test: () =>
+    apiFetch<string>('/api/groq/test-analysis/1'),
 }

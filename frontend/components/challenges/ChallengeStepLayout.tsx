@@ -18,6 +18,7 @@ interface ChallengeStepLayoutProps {
 
 export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutProps) {
   const [currentStep, setCurrentStep] = useState<ChallengeStep>(1);
+  const [submissionId, setSubmissionId] = useState<number | null>(null); // ✅ AJOUTÉ
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,13 +87,16 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
           /* Autres étapes: Layout centré et large */
           <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             {currentStep === 2 && (
-              <ChallengeSubmissionForm challengeId={challenge.id} />
+              <ChallengeSubmissionForm 
+                challengeId={challenge.id}
+                onSubmissionCreated={(id) => setSubmissionId(id)} // ✅ Callback for submissionId
+              />
             )}
 
             {currentStep === 3 && (
               <ChallengeAIFeedback  
                 challengeId={challenge.id}
-                submissionId={1}
+                submissionId={submissionId} // ✅ USE REAL SUBMISSION ID
                 challengeTitle={challenge.title}
                 challengeContext={challenge.description}
               />

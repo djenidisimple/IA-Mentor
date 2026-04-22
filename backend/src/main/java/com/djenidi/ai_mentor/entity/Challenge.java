@@ -52,6 +52,8 @@ public class Challenge {
     private List<Submission> submissions = new ArrayList<>();
 
     // === DONNÉES ===
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @Builder.Default
     @ElementCollection

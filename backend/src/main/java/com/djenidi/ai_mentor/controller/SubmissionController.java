@@ -102,4 +102,10 @@ public class SubmissionController {
         SubmissionResponse submission = submissionService.getSubmissionById(id);
         return ResponseEntity.ok(ApiResponse.success(submission));
     }
+    @GetMapping("/completed")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getAllCompletedSubmissions() {
+        List<SubmissionResponse> completed = submissionService.getAllCompletedSubmissions();
+        return ResponseEntity.ok(ApiResponse.success(completed));
+    }
 }

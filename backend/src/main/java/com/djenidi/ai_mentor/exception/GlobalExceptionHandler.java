@@ -14,6 +14,15 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // ✅ FIX : GitHubApiException retournait un 500 via le catch-all
+    //    C'est une erreur liée à l'input utilisateur (URL GitHub invalide ou inaccessible)
+    @ExceptionHandler(GitHubApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGitHubApiException(GitHubApiException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity
