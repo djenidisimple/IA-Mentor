@@ -7,18 +7,20 @@ import com.djenidi.ai_mentor.repository.ChallengeRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import com.djenidi.ai_mentor.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j; // ✅ FIX : ajout @Slf4j
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.djenidi.ai_mentor.entity.SubmissionStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j // ✅ FIX : annotation Lombok, plus besoin de LoggerFactory manuel
+@Slf4j
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
@@ -64,8 +66,6 @@ public class SubmissionService {
 
         Submission saved = submissionRepository.save(submission);
 
-        // ✅ FIX : utilise log (Lombok) au lieu de LoggerFactory inline
-        // ✅ FIX : commentaire corrigé — c'est Groq, pas Gemini
         try {
             analysisService.analyzeSubmission(saved.getId());
         } catch (Exception e) {
@@ -106,6 +106,16 @@ public class SubmissionService {
         return submissionRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    /**
+     * Récupère toutes les soumissions complétées (REVIEWED) de tous les utilisateurs
+     */
+    public List<SubmissionResponse> getAllCompletedSubmissions() {
+        List<Submission> completedSubmissions = submissionRepository.findByStatus(SubmissionStatus.REVIEWED);
+        return completedSubmissions.stream()
+                .map(this::toResponse)  // ← CORRIGÉ : utilise toResponse qui existe déjà
+                .collect(Collectors.toList());
     }
 
     private SubmissionResponse toResponse(Submission submission) {

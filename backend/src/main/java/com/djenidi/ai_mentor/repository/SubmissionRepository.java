@@ -23,4 +23,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     // Toutes les soumissions pour un challenge donné
     List<Submission> findByChallengeId(Long challengeId);
+
+    List<Submission> findByStatus(SubmissionStatus status);
 }
