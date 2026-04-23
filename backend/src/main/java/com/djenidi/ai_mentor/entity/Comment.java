@@ -20,9 +20,15 @@ public class Comment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // Commentaire sur un challenge (global)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "challenge_id", nullable = false)
+    @JoinColumn(name = "challenge_id")
     private Challenge challenge;
+
+    // Commentaire sur une soumission (social)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_id")
+    private Submission submission;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.djenidi.ai_mentor.dto.CommentDTO;
 import com.djenidi.ai_mentor.dto.UserSummaryDTO;
 
@@ -22,48 +23,43 @@ public class SocialService {
     private final CommentRepository commentRepository;
     private final ChallengeRepository challengeRepository;
 
-    @Transactional(readOnly = true)
-    // public List<PostDTO> getCommunityFeed() {
-    //     return submissionRepository.findAllByOrderBySubmittedAtDesc().stream()
-    //         .map(sub -> new PostDTO(
-    //             sub.getId(),
-    //             convertToSummary(sub.getUser()),
-    //             "A terminé le challenge : " + sub.getChallenge().getTitle() + " avec un score de " + sub.getScore() + "/100",
-    //             // URL GitHub à la place
-    //             new CodeSnippetDTO("GitHub Link", sub.getGithubUrl() != null ? sub.getGithubUrl() : "No link provided"), 
-    //             new ArrayList<>(),
-    //             (long) sub.getLikeCount(),
-    //             0L,
-    //             0L, 
-    //             sub.getSubmittedAt() != null ? sub.getSubmittedAt() : sub.getStartedAt(),
-    //             checkIfUserLiked(sub.getId())
-    //         ))
-    //         .toList();
-    // }
+    // Récupère l'utilisateur connecté depuis SecurityContext
+    private User getCurrentUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        }
+        return null;
+    }
 
+    @Transactional(readOnly = true)
     public List<PostDTO> getCommunityFeed() {
         List<Submission> subs = submissionRepository.findAllByOrderBySubmittedAtDesc();
         if (subs.isEmpty()) return new ArrayList<>();
-        return subs.stream().map(this::mapToDTO).toList();
+        
+        User currentUser = getCurrentUser();
+        return subs.stream().map(sub -> mapToDTO(sub, currentUser)).toList();
     }
 
-    private PostDTO mapToDTO(Submission sub) {
+    private PostDTO mapToDTO(Submission sub, User currentUser) {
+        boolean isLiked = currentUser != null && 
+            likeRepository.findByUserAndSubmission(currentUser, sub).isPresent();
+        
         return new PostDTO(
             sub.getId(),
             convertToSummary(sub.getUser()),
             "A complété le challenge : " + sub.getChallenge().getTitle(),
             new CodeSnippetDTO("GitHub", sub.getGithubUrl()),
-            new ArrayList<>(), // Liste de tags vide pour l'instant
+            new ArrayList<>(),
             (long) sub.getLikeCount(),
-            0L, // Comments (à mapper plus tard)
-            0L, // Shares
+            (long) sub.getCommentCount(),
+            0L,
             sub.getSubmittedAt() != null ? sub.getSubmittedAt() : sub.getStartedAt(),
-            false // isLiked (valeur par défaut)
+            isLiked
         );
     }
 
     public List<TrendingTopicDTO> getTrendingTopics() {
-        // Logique pour compter les tags les plus utilisés
         return List.of(
             new TrendingTopicDTO(1L, "Spring", 125, "Framework"),
             new TrendingTopicDTO(2L, "React", 89, "Frontend")
@@ -71,7 +67,6 @@ public class SocialService {
     }
 
     public List<UserSummaryDTO> getUserSuggestions() {
-        // On remplace findTopSuggestions() par la méthode Spring Data
         return userRepository.findTop5ByOrderByUsernameAsc().stream()
             .map(this::convertToSummary)
             .toList();
@@ -87,11 +82,6 @@ public class SocialService {
             null                 
         );
     }
-    
-    private boolean checkIfUserLiked(Long postId) {
-        // Récupérer le user connecté via SecurityContextHolder et vérifier en DB
-        return false; 
-    }
 
     // --- LIKES ---
     @Transactional
@@ -101,7 +91,7 @@ public class SocialService {
 
         likeRepository.findByUserAndSubmission(user, submission)
             .ifPresentOrElse(
-                likeRepository::delete, // Si existe, on supprime (unlike)
+                likeRepository::delete,
                 () -> likeRepository.save(SubmissionLike.builder().user(user).submission(submission).build())
             );
     }
@@ -120,10 +110,29 @@ public class SocialService {
     }
 
     // --- COMMENTAIRES ---
-    // Dans SocialService.java
+    @Transactional
+    public CommentDTO addCommentToSubmission(User user, Long submissionId, String content) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new EntityNotFoundException("Soumission non trouvée"));
+        
+        Comment comment = Comment.builder()
+                .content(content)
+                .user(user)
+                .submission(submission)
+                .build();
+                
+        Comment saved = commentRepository.save(comment);
+
+        return new CommentDTO(
+            saved.getId(),
+            saved.getContent(),
+            new UserSummaryDTO(user.getId(), user.getUsername(), user.getAvatarUrl()),
+            saved.getCreatedAt()
+        );
+    }
 
     @Transactional
-    public CommentDTO addComment(User user, Long challengeId, String content) {
+    public CommentDTO addCommentToChallenge(User user, Long challengeId, String content) {
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new EntityNotFoundException("Challenge non trouvé"));
         
@@ -135,7 +144,6 @@ public class SocialService {
                 
         Comment saved = commentRepository.save(comment);
 
-        // Transformation manuelle de l'entité vers le DTO
         return new CommentDTO(
             saved.getId(),
             saved.getContent(),

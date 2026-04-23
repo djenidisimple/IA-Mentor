@@ -66,13 +66,15 @@ function handleErrorResponse<T>(
  * Client HTTP principal pour les appels API
  * @param endpoint Endpoint de l'API (ex: /api/users)
  * @param options Options de la requête fetch
+ * @param isRetry Indique si c'est un retry après refresh (pour éviter les boucles)
  * @returns Les données retournées par l'API
  */
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry: boolean = false
 ): Promise<T> {
-  const { getAuthHeaders } = require('./api-auth')
+  const { getAuthHeaders, AuthService, refreshToken } = require('./api-auth')
 
   const headers: HeadersInit = {
     ...getAuthHeaders(),
@@ -111,6 +113,29 @@ export async function apiFetch<T>(
 
     // Gestion des erreurs (4xx/5xx)
     if (!response.ok) {
+      // Cas spécial: 401 Unauthorized - Tenter un refresh si pas déjà retry
+      if (response.status === 401 && !isRetry && AuthService.isAuthenticated()) {
+        console.log('[API] Token expired - Attempting refresh...')
+        
+        try {
+          // Tenter de renouveler le token
+          await refreshToken()
+          console.log('[API] Token refreshed successfully - Retrying original request...')
+          
+          // Retry la requête originale avec le nouveau token
+          return apiFetch<T>(endpoint, options, true)
+        } catch (refreshError) {
+          console.error('[API] Token refresh failed - Logging out', refreshError)
+          // Si le refresh échoue, faire un logout
+          AuthService.logout()
+          throw new ApiError(
+            'Session expired and refresh failed - Please login again',
+            401,
+            jsonResponse
+          )
+        }
+      }
+      
       handleErrorResponse(response.status, jsonResponse)
     }
 

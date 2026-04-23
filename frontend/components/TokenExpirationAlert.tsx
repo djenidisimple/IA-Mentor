@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Clock, AlertCircle, X } from "lucide-react"
+import { Clock, AlertCircle, X, Loader2 } from "lucide-react"
 import { useTokenExpiration } from "@/hooks/useTokenExpiration"
+import { refreshToken } from "@/lib/api-auth"
 
 interface TokenExpirationAlertProps {
   /**
@@ -29,9 +30,11 @@ export default function TokenExpirationAlert({
   onRefresh,
   position = "top",
 }: TokenExpirationAlertProps) {
-  const { isExpiringSoon, minutesLeft } = useTokenExpiration(thresholdMinutes)
+  const { isExpiringSoon, minutesLeft, isRefreshing } = useTokenExpiration(thresholdMinutes)
   const [isVisible, setIsVisible] = useState(false)
   const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     if (isExpiringSoon && minutesLeft !== null && minutesLeft > 0) {
@@ -46,29 +49,27 @@ export default function TokenExpirationAlert({
   }
 
   const handleRefresh = async () => {
-    // Créer une requête simple au serveur pour obtenir un nouveau token
-    try {
-      const response = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+    setIsLoading(true)
+    setHasError(false)
 
-      if (response.ok) {
-        // Le nouveau token doit être stocké dans le localStorage par le serveur
-        // On ferme l'alerte
+    try {
+      const result = await refreshToken()
+      
+      if (result) {
+        console.log("[TokenExpiration] Token refreshed successfully")
         handleClose()
-        
-        // Dispatch un événement si nécessaire
         window.dispatchEvent(new CustomEvent("auth:token-refreshed"))
-        
-        // Appeler le callback
         onRefresh?.()
+      } else {
+        throw new Error("Refresh returned null")
       }
     } catch (err) {
-      console.error("[TokenExpiration] Refresh failed", err)
+      console.error("[TokenExpiration] Manual refresh failed:", err)
+      setHasError(true)
+      // L'erreur est gérée, mais afficher le message d'erreur
+      setTimeout(() => setHasError(false), 3000)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -86,43 +87,70 @@ export default function TokenExpirationAlert({
       aria-live="polite"
     >
       <div className="mx-auto max-w-2xl">
-        <div className="m-4 flex items-center gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-lg">
-          {/* Icône */}
-          <div className="flex-shrink-0">
-            <Clock className="h-5 w-5 text-amber-600 animate-pulse" />
-          </div>
-
-          {/* Contenu */}
-          <div className="flex-1">
-            <h3 className="font-semibold text-amber-900">
-              ⏰ Votre session expire bientôt
-            </h3>
-            <p className="mt-1 text-sm text-amber-800">
-              Votre session expire dans{" "}
-              <span className="font-bold text-amber-900">{minutesLeft} minute(s)</span>
-              . Cliquez sur "Renouveler" pour rester connecté.
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-shrink-0 gap-2">
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 active:bg-amber-800"
-              aria-label="Renouveler la session"
-            >
-              <Clock className="h-4 w-4" />
-              Renouveler
-            </button>
+        {hasError ? (
+          <div className="m-4 flex items-center gap-4 rounded-lg border border-red-200 bg-red-50 p-4 shadow-lg">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">Erreur de renouvellement</h3>
+              <p className="mt-1 text-sm text-red-800">
+                Impossible de renouveler votre session. Vous serez redirigé vers la connexion.
+              </p>
+            </div>
             <button
               onClick={handleClose}
-              className="inline-flex items-center justify-center rounded-md bg-amber-100 p-2 text-amber-600 transition-colors hover:bg-amber-200 active:bg-amber-300"
-              aria-label="Fermer l'alerte"
+              className="inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-600 transition-colors hover:bg-red-200"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="m-4 flex items-center gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-lg">
+            {/* Icône */}
+            <div className="flex-shrink-0">
+              <Clock className="h-5 w-5 text-amber-600 animate-pulse" />
+            </div>
+
+            {/* Contenu */}
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900">
+                ⏰ Votre session expire bientôt
+              </h3>
+              <p className="mt-1 text-sm text-amber-800">
+                Votre session expire dans{" "}
+                <span className="font-bold text-amber-900">{minutesLeft} minute(s)</span>
+                . Cliquez sur "Renouveler" pour rester connecté.
+                {isRefreshing && <span className="ml-2 text-amber-700">(Renouvellement automatique...)</span>}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-shrink-0 gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading || isRefreshing}
+                className="inline-flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Renouveler la session"
+              >
+                {isLoading || isRefreshing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Clock className="h-4 w-4" />
+                )}
+                {isLoading || isRefreshing ? "Renouvellement..." : "Renouveler"}
+              </button>
+              <button
+                onClick={handleClose}
+                disabled={isLoading}
+                className="inline-flex items-center justify-center rounded-md bg-amber-100 p-2 text-amber-600 transition-colors hover:bg-amber-200 active:bg-amber-300 disabled:opacity-50"
+                aria-label="Fermer l'alerte"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -149,11 +177,11 @@ export default function TokenExpirationAlert({
         }
 
         .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
+          animation: slide-in 0.3s ease-out forwards;
         }
 
         .animate-slide-out {
-          animation: slide-out 0.3s ease-in;
+          animation: slide-out 0.3s ease-in forwards;
         }
       `}</style>
     </div>
