@@ -68,17 +68,17 @@ export default function CommunityPage() {
     }
   }
 
-  const handleComment = async (postId: number) => {
+  const handleComment = async (submissionId: number) => {
     if (!newComment.trim()) return
     try {
-      await socialApi.addComment(postId, newComment)
+      await socialApi.addCommentToSubmission(submissionId, newComment)
       setPosts(prev => prev.map(post => 
-        post.id === postId ? { ...post, comments: post.comments + 1 } : post
+        post.id === submissionId ? { ...post, comments: post.comments + 1 } : post
       ))
       setNewComment("")
       setCommentingOn(null)
     } catch (error) {
-      console.error("Erreur commentaire")
+      console.error("Erreur commentaire:", error)
     }
   }
 

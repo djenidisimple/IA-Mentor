@@ -36,8 +36,15 @@ public class Submission {
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubmissionLike> likes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
     public int getLikeCount() {
         return likes != null ? likes.size() : 0;
+    }
+
+    public int getCommentCount() {
+        return comments != null ? comments.size() : 0;
     }
 
     // === DONNÉES ===

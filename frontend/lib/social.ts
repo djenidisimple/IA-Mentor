@@ -1,10 +1,9 @@
-import { apiFetch } from './api' // Importe ton client fetch personnalisé
+import { apiFetch } from './api'
 import { CommunityPost, SuggestedUser, TrendingTopic, Comment } from '@/types/social.types'
 
 export const socialApi = {
   /**
    * Récupère le flux d'actualité de la communauté
-   * (Soumissions récentes, partages, etc.)
    */
   getFeed: () => 
     apiFetch<CommunityPost[]>('/api/social/posts'),
@@ -17,26 +16,35 @@ export const socialApi = {
 
   /**
    * Récupère des suggestions d'utilisateurs à suivre
-   * basé sur les technologies ou les amis communs
    */
   getSuggestions: () => 
     apiFetch<SuggestedUser[]>('/api/social/suggestions'),
 
   /**
-   * Like ou Unlike une publication/soumission
+   * Like ou Unlike une soumission
    */
-  toggleLike: (postId: number) => 
-    apiFetch<void>(`/api/social/like/${postId}`, { 
+  toggleLike: (submissionId: number) => 
+    apiFetch<void>(`/api/social/like/${submissionId}`, { 
       method: 'POST' 
     }),
 
   /**
-   * Ajoute un commentaire à un post
+   * Ajoute un commentaire à une soumission
    */
-  addComment: (postId: number, content: string) => 
-    apiFetch<Comment>(`/api/social/comment/${postId}`, {
+  addCommentToSubmission: (submissionId: number, content: string) => 
+    apiFetch<Comment>(`/api/social/comment/submission/${submissionId}`, {
       method: 'POST',
-      body: JSON.stringify({ content }), // On envoie un objet JSON
+      body: JSON.stringify({ content }),
+      headers: { 'Content-Type': 'application/json' }
+    }),
+
+  /**
+   * Ajoute un commentaire à un challenge (endpoint existant)
+   */
+  addCommentToChallenge: (challengeId: number, content: string) => 
+    apiFetch<Comment>(`/api/social/comment/challenge/${challengeId}`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
       headers: { 'Content-Type': 'application/json' }
     }),
 

@@ -1,4 +1,5 @@
 import { ApiError } from './api-errors'
+import { AuthResponse } from '@/types/auth.types'
 
 /**
  * Récupère le token d'authentification depuis le localStorage
@@ -16,6 +17,96 @@ function getAuthToken(): string | null {
     console.error('[Auth] Failed to parse auth-storage', e)
     return null
   }
+}
+
+/**
+ * Sauvegarde les données d'authentification dans le localStorage
+ */
+function saveAuthData(authResponse: AuthResponse): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    const authStorage = localStorage.getItem('auth-storage')
+    if (!authStorage) return
+
+    const parsed = JSON.parse(authStorage)
+    parsed.state = {
+      ...parsed.state,
+      token: authResponse.token,
+      email: authResponse.email,
+      username: authResponse.username,
+      role: authResponse.role,
+    }
+
+    localStorage.setItem('auth-storage', JSON.stringify(parsed))
+    localStorage.setItem('user', JSON.stringify({
+      email: authResponse.email,
+      username: authResponse.username,
+      role: authResponse.role,
+    }))
+  } catch (e) {
+    console.error('[Auth] Failed to save auth data', e)
+  }
+}
+
+// Suivi des refresh en cours pour éviter les appels concurrents
+let refreshTokenPromise: Promise<AuthResponse> | null = null
+
+/**
+ * Renouvelle le token JWT
+ * Retourne la nouvelle AuthResponse ou null si le refresh échoue
+ */
+export async function refreshToken(): Promise<AuthResponse | null> {
+  if (typeof window === 'undefined') return null
+
+  // Si un refresh est déjà en cours, attendre le résultat
+  if (refreshTokenPromise) {
+    try {
+      return await refreshTokenPromise
+    } catch (e) {
+      return null
+    }
+  }
+
+  // Créer une nouvelle promesse de refresh
+  refreshTokenPromise = new Promise(async (resolve, reject) => {
+    try {
+      const token = getAuthToken()
+      if (!token) {
+        reject(new Error('No token available'))
+        return
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/refresh`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          credentials: 'include',
+        }
+      )
+
+      if (!response.ok) {
+        reject(new Error(`Refresh failed with status ${response.status}`))
+        return
+      }
+
+      const authResponse: AuthResponse = await response.json()
+      saveAuthData(authResponse)
+      resolve(authResponse)
+    } catch (error) {
+      console.error('[Auth] Token refresh failed:', error)
+      reject(error)
+    } finally {
+      // Réinitialiser après le refresh
+      refreshTokenPromise = null
+    }
+  })
+
+  return refreshTokenPromise
 }
 
 /**

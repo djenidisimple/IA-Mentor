@@ -33,26 +33,33 @@ public class SocialController {
         return ResponseEntity.ok(socialService.getUserSuggestions());
     }
 
-    // Liker une soumission : POST /api/social/like/5
     @PostMapping("/like/{submissionId}")
     public ResponseEntity<Void> toggleLike(@AuthenticationPrincipal User user, @PathVariable Long submissionId) {
         socialService.toggleLike(user, submissionId);
         return ResponseEntity.ok().build();
     }
 
-    // Suivre un utilisateur : POST /api/social/follow/10
     @PostMapping("/follow/{userId}")
     public ResponseEntity<Void> follow(@AuthenticationPrincipal User user, @PathVariable Long userId) {
         socialService.followUser(user, userId);
         return ResponseEntity.ok().build();
     }
 
-    // Commenter un challenge : POST /api/social/comment/3
-    @PostMapping("/comment/{challengeId}")
-    public ResponseEntity<CommentDTO> addComment(
+    // Commenter une soumission (pour le système social)
+    @PostMapping("/comment/submission/{submissionId}")
+    public ResponseEntity<CommentDTO> addCommentToSubmission(
+            @AuthenticationPrincipal User user, 
+            @PathVariable Long submissionId, 
+            @RequestBody CommentRequest request) {
+        return ResponseEntity.ok(socialService.addCommentToSubmission(user, submissionId, request.content()));
+    }
+
+    // Commenter un challenge (existant)
+    @PostMapping("/comment/challenge/{challengeId}")
+    public ResponseEntity<CommentDTO> addCommentToChallenge(
             @AuthenticationPrincipal User user, 
             @PathVariable Long challengeId, 
             @RequestBody CommentRequest request) {
-        return ResponseEntity.ok(socialService.addComment(user, challengeId, request.content()));
+        return ResponseEntity.ok(socialService.addCommentToChallenge(user, challengeId, request.content()));
     }
 }
