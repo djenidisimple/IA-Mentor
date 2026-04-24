@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import api from '@/lib/axiosInstance'
 
 interface User {
@@ -15,7 +15,7 @@ interface User {
 }
 
 interface AuthState {
-  // ✅ Le token vit UNIQUEMENT en mémoire Zustand — jamais dans localStorage
+  // Le token vit UNIQUEMENT en mémoire (Zustand State)
   token: string | null
   user: User | null
   isAuthenticated: boolean
@@ -33,83 +33,98 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
 
-      // Appelé après login/register — le refresh token est déjà dans le cookie
-      // posé par le serveur, on ne le touche pas ici.
+      // 1. Connexion initiale (Login/Register)
       setAuth: (token, user) => {
         set({ token, user, isAuthenticated: true })
       },
 
-      // Logout propre : révoque le refresh token en DB + supprime le cookie
+      // 2. Déconnexion complète
       logout: async () => {
         try {
+          // Appelle le backend pour révoquer le Refresh Token en DB et supprimer le cookie
           await api.post('/api/auth/logout')
-        } catch {
-          // On continue le logout local même si le serveur est injoignable
+        } catch (error) {
+          console.error('[AuthStore] Logout server-side failed', error)
         } finally {
+          // Nettoyage local quoi qu'il arrive
           set({ token: null, user: null, isAuthenticated: false })
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-storage')
+          }
         }
       },
 
-      // Appelé silencieusement par l'intercepteur Axios quand le JWT expire
+      // 3. Rafraîchissement silencieux (appelé par l'intercepteur ou au reload)
       refreshAccessToken: async () => {
         try {
           const res = await api.post(
             '/api/auth/refresh',
             {},
             {
-              // ✅ Envoie le cookie HttpOnly automatiquement, même cross-origin
-              withCredentials: true,
-              // Flag pour ne pas re-intercepter cette requête (évite la boucle infinie)
-              _isRefreshCall: true,
-              // On s'assure de NE PAS envoyer l'ancien token expiré
-              headers: { Authorization: '' }
+              // Flags personnalisés pour l'intercepteur axiosInstance
+              _isRefreshCall: true, 
+              withCredentials: true, // Crucial pour envoyer le cookie httpOnly
+              headers: { 
+                // On s'assure de ne pas envoyer un ancien Bearer token expiré
+                'Authorization': '' 
+              }
             } as any
           )
 
-          // Le backend renvoie { token, email, username, role }
-          const { token, email, username, role } = res.data as any
-          
-          const updatedUser = get().user ? {
-            ...get().user!,
-            email,
-            username,
-            role
-          } : { email, username, role } as User
+          // Le backend doit renvoyer { token, email, username, role, ... }
+          // On déstructure les données pour reconstruire l'objet user
+          const { token, ...userData } = res.data
 
-          set({ token, user: updatedUser, isAuthenticated: true })
+          // Si on a déjà un user partiel en cache, on merge les données
+          const currentUser = get().user
+          const updatedUser = {
+            ...(currentUser || {}),
+            ...userData
+          } as User
+
+          set({ 
+            token: token, 
+            user: updatedUser, 
+            isAuthenticated: true 
+          })
+
+          console.log('[AuthStore] Refresh success')
           return token
 
         } catch (error) {
-          console.error('[AuthStore] Refresh failed', error)
-          // Refresh token expiré ou révoqué → vrai logout
+          console.error('[AuthStore] Refresh failed - Session expired', error)
+          // Si le refresh échoue, on considère la session comme morte
           set({ token: null, user: null, isAuthenticated: false })
           return null
         }
       },
 
+      // 4. Vérification des rôles
       hasRole: (role: string) => {
-        const { user } = get()
+        const user = get().user
+        // Supporte à la fois user.role (string) et user.roles (array)
+        if (user?.role === role) return true
         return user?.roles?.includes(role) ?? false
       },
     }),
-
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
 
-      // ✅ CRITIQUE : on ne persiste QUE user — jamais le token.
-      // Le token est en mémoire pure (perdu au refresh de page → géré par /refresh).
-      // user est persisté pour afficher le nom/avatar immédiatement au reload.
+      // ✅ STRATÉGIE DE SÉCURITÉ :
+      // On persiste le user et le flag isAuthenticated pour l'UI immédiate au refresh,
+      // mais on ne persiste JAMAIS le token JWT (sécurité XSS).
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
 
-      // Au reload de page, isAuthenticated peut être true mais token = null.
-      // L'intercepteur Axios va automatiquement appeler /refresh au premier appel API.
+      // Au moment de la réhydratation (quand la page charge)
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Token toujours null au reload — c'est voulu
+          // Le token est forcément null au refresh car non persisté
           state.token = null
+          console.log('[AuthStore] Rehydrated: session pending refresh')
         }
       },
     }

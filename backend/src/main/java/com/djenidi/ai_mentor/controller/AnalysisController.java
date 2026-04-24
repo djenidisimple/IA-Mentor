@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/analysis")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('USER')")
+@PreAuthorize("hasAuthority('ROLE_USER')")
 public class AnalysisController {
 
     private final AnalysisService analysisService;
