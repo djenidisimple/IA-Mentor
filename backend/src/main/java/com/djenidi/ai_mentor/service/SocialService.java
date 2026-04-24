@@ -148,6 +148,7 @@ public class SocialService {
                 .content(content)
                 .user(user)
                 .submission(submission)
+                .challenge(submission.getChallenge())
                 .build();
                 
         Comment saved = commentRepository.save(comment);
