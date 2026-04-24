@@ -37,7 +37,7 @@ public class AnalysisService {
     private final ObjectMapper objectMapper;
     private final ChallengeRepository challengeRepository; 
 
-    // ✅ FIX 1 : constructeur manuel pour que @Qualifier soit respecté
+    //  FIX 1 : constructeur manuel pour que @Qualifier soit respecté
     public AnalysisService(
             AnalysisRepository analysisRepository,
             SubmissionRepository submissionRepository,
@@ -76,7 +76,7 @@ public class AnalysisService {
         Long analysisId = analysis.getId();
         String githubUrl = submission.getGithubUrl();
 
-        // ✅ FIX 2 : extrait l'ID du challenge pendant la transaction
+        //  FIX 2 : extrait l'ID du challenge pendant la transaction
         // pour recharger l'entité proprement dans le thread async
         Long challengeId = submission.getChallenge() != null
                 ? submission.getChallenge().getId()
@@ -99,7 +99,7 @@ public class AnalysisService {
         return mapToResponse(analysis);
     }
 
-    // ✅ Nouvelle méthode : logique déplacée depuis le controller
+    //  Nouvelle méthode : logique déplacée depuis le controller
     public RepositoryContentResponse getRepositoryContent(Long submissionId) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", submissionId));
@@ -137,13 +137,13 @@ public class AnalysisService {
             managed.setStatus(AnalysisStatus.ANALYZING);
             analysisRepository.save(managed);
 
-            // ✅ FIX 2 : recharge le Challenge dans cette transaction
+            //  FIX 2 : recharge le Challenge dans cette transaction
             Challenge challenge = challengeId != null
                     ? challengeRepository.findById(challengeId).orElse(null)
                     : null;
 
             AIService.AIAnalysisResult aiResult = aiService.analyzeRepository(repoContent, challenge);
-            log.info("✅ Groq a répondu — score={}", aiResult.score());
+            log.info(" Groq a répondu — score={}", aiResult.score());
 
             managed.setSummary(aiResult.summary());
             managed.setDetailedFeedback(aiResult.detailedFeedback());
@@ -163,7 +163,7 @@ public class AnalysisService {
             submission.setReviewedAt(LocalDateTime.now());
             submissionRepository.save(submission);
 
-            log.info("✅ Analysis completed for submission {}: score={}", submission.getId(), aiResult.score());
+            log.info(" Analysis completed for submission {}: score={}", submission.getId(), aiResult.score());
 
         } catch (Exception e) {
             log.error("❌ Analysis failed for analysisId={}", analysisId, e);
@@ -220,7 +220,7 @@ public class AnalysisService {
         }
     }
 
-    // ✅ FIX 2 : parsing JSON robuste avec Jackson
+    //  FIX 2 : parsing JSON robuste avec Jackson
     private List<String> parseJsonArray(String json) {
         if (json == null || json.isBlank()) return List.of();
         try {

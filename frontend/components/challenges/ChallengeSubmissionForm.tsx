@@ -68,7 +68,7 @@ export default function ChallengeSubmissionForm({
   onSubmissionCreated
 }: { 
   challengeId: number;
-  onSubmissionCreated?: (submissionId: number) => void; // ✅ CALLBACK
+  onSubmissionCreated?: (submissionId: number) => void; //  CALLBACK
 }) {
   const [status, setStatus] = useState<"loading" | "idle" | "submitting" | "success" | "already-submitted">("loading");
   const [githubUrl, setGithubUrl] = useState<string>("");
@@ -91,7 +91,7 @@ export default function ChallengeSubmissionForm({
           setExistingSubmission(submission);
           setStatus("already-submitted");
           setGithubUrl(submission.githubUrl);
-          // ✅ CALL CALLBACK FOR EXISTING SUBMISSION
+          //  CALL CALLBACK FOR EXISTING SUBMISSION
           onSubmissionCreated?.(submission.id);
         } else {
           setStatus("idle");
@@ -146,7 +146,7 @@ export default function ChallengeSubmissionForm({
 
       if (response) {
         setExistingSubmission(response);
-        // ✅ CALL CALLBACK WITH SUBMISSION ID
+        //  CALL CALLBACK WITH SUBMISSION ID
         onSubmissionCreated?.(response.id);
       }
 

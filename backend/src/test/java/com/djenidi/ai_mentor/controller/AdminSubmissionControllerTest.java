@@ -74,7 +74,7 @@ public class AdminSubmissionControllerTest {
                 .build();
         sub = submissionRepository.save(sub);
 
-        // ✅ TESTER LE NOUVEL ENDPOINT /analyze
+        //  TESTER LE NOUVEL ENDPOINT /analyze
         // L'analyse est asynchrone (déclenchée en arrière-plan)
         mockMvc.perform(post("/api/admin/submissions/" + sub.getId() + "/analyze")
                         .contentType(MediaType.APPLICATION_JSON))

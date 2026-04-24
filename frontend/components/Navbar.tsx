@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
-import { X, LogOut, User, ArrowUpRight } from 'lucide-react'
+import { X, LogOut, User, Menu } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -18,7 +18,6 @@ export default function Navbar() {
     setHydrated(true)
   }, [])
 
-  // Fermer le menu utilisateur en cliquant dehors
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -46,7 +45,7 @@ export default function Navbar() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
 
         :root {
           --accent: #0052FF;
@@ -97,32 +96,19 @@ export default function Navbar() {
           color: var(--ink);
           background: transparent;
           transition: background 0.2s ease, color 0.2s ease;
+          text-align: center;
         }
         .nav-cta:hover {
           background: var(--ink);
           color: white;
         }
 
-        /* Checkerboard accent strip (inspired by reference) */
-        .checker-strip {
-          height: 6px;
-          background-image: repeating-linear-gradient(
-            90deg,
-            var(--ink) 0px,
-            var(--ink) 10px,
-            transparent 10px,
-            transparent 20px
-          );
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
+        .mobile-fade-in { animation: fadeIn 0.2s ease forwards; }
 
-        /* Mobile menu */
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .mobile-menu-enter { animation: slideDown 0.35s ease forwards; }
-
-        /* User dropdown */
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -130,27 +116,19 @@ export default function Navbar() {
         .dropdown-enter { animation: fadeUp 0.2s ease forwards; }
       `}</style>
 
-      {/* Checkerboard top strip */}
-      <div className="fixed top-0 w-full z-[101] checker-strip" />
-
-      <nav className="fixed top-[6px] w-full z-[100] bg-white font-['Outfit']">
-
-        {/* Main bar */}
-        <div className="max-w-[1400px] mx-auto px-8 lg:px-12 h-16 flex items-center justify-between">
-
+      <nav className="fixed top-0 w-full z-[100] bg-white font-['Outfit'] border-b border-[var(--border)]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
+          
           {/* ── Logo ── */}
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-            {/* Geometric mark */}
             <div
-              className="w-8 h-8 flex-shrink-0 transition-transform duration-300 group-hover:rotate-45"
+              className="w-7 h-7 flex-shrink-0 transition-transform duration-300 group-hover:rotate-45"
               style={{
                 background: 'var(--accent)',
                 clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
               }}
             />
-            <div className="flex flex-col leading-none">
-              Logo
-            </div>
+            <span className="font-bold text-lg tracking-tight">Logo</span>
           </Link>
 
           {/* ── Desktop Nav ── */}
@@ -167,23 +145,16 @@ export default function Navbar() {
           </div>
 
           {/* ── Right actions ── */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
-                {/* Avatar button */}
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-3 group"
                 >
                   <div className="hidden sm:block text-right leading-none">
-                    <p
-                      className="text-[12px] font-semibold uppercase tracking-wide"
-                      style={{ color: 'var(--ink)' }}
-                    >
+                    <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--ink)]">
                       {user?.username}
-                    </p>
-                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>
-                      Member
                     </p>
                   </div>
                   <div
@@ -197,146 +168,89 @@ export default function Navbar() {
                   </div>
                 </button>
 
-                {/* Dropdown */}
                 {userMenuOpen && (
-                  <div
-                    className="dropdown-enter absolute right-0 top-12 w-52 bg-white border shadow-md z-50"
-                    style={{ borderColor: 'var(--border)' }}
-                  >
-                    <div
-                      className="px-4 py-3 border-b"
-                      style={{ borderColor: 'var(--border)' }}
-                    >
-                      <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--ink)' }}>
-                        {user?.username}
-                      </p>
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--muted)' }}>
-                        {user?.email ?? 'Membre actif'}
-                      </p>
+                  <div className="dropdown-enter absolute right-0 top-12 w-52 bg-white border border-[var(--border)] shadow-xl z-50">
+                    <div className="px-4 py-3 border-b border-[var(--border)]">
+                      <p className="text-[12px] font-bold uppercase text-[var(--ink)]">{user?.username}</p>
+                      <p className="text-[11px] text-[var(--muted)] truncate">{user?.email}</p>
                     </div>
                     <Link
                       href="/profile"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-[13px] font-medium text-[var(--ink)]"
                     >
-                      <User className="w-4 h-4" style={{ color: 'var(--muted)' }} />
-                      <span className="text-[13px] font-medium" style={{ color: 'var(--ink)' }}>
-                        Mon profil
-                      </span>
+                      <User className="w-4 h-4 text-[var(--muted)]" />
+                      Mon profil
                     </Link>
                     <button
                       onClick={() => { logout(); setUserMenuOpen(false) }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors border-t"
-                      style={{ borderColor: 'var(--border)' }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-[13px] font-medium text-red-500 border-t border-[var(--border)]"
                     >
-                      <LogOut className="w-4 h-4 text-red-500" />
-                      <span className="text-[13px] font-medium text-red-500">Déconnexion</span>
+                      <LogOut className="w-4 h-4" />
+                      Déconnexion
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-5">
-                <Link
-                  href="/login"
-                  className="nav-link hidden sm:block"
-                >
-                  Login
-                </Link>
-                <Link href="/register" className="nav-cta">
-                  Join Free
-                </Link>
+              <div className="hidden sm:flex items-center gap-6">
+                <Link href="/login" className="nav-link">Login</Link>
+                <Link href="/register" className="nav-cta">Join Free</Link>
               </div>
             )}
 
-            {/* Mobile burger */}
+            {/* Mobile Burger Toggle */}
             <button
-              onClick={() => setMobileOpen(true)}
-              className="lg:hidden flex flex-col gap-[5px] p-1"
-              aria-label="Open menu"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 text-[var(--ink)]"
+              aria-label="Toggle menu"
             >
-              <span className="block w-6 h-[2px]" style={{ background: 'var(--ink)' }} />
-              <span className="block w-4 h-[2px]" style={{ background: 'var(--ink)' }} />
-              <span className="block w-6 h-[2px]" style={{ background: 'var(--ink)' }} />
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Bottom border */}
-        <div className="h-px" style={{ background: 'var(--border)' }} />
-      </nav>
-
-      {/* ── Fullscreen Mobile Menu ── */}
-      {mobileOpen && (
-        <div className="mobile-menu-enter fixed inset-0 z-[200] bg-white flex flex-col p-8">
-
-          {/* Header */}
-          <div className="flex justify-between items-center mb-16">
-            <span
-              className="text-[11px] font-bold uppercase tracking-[0.25em]"
-              style={{ color: 'var(--muted)' }}
-            >
-              Navigation
-            </span>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 group"
-            >
-              <span
-                className="text-[11px] font-bold uppercase tracking-widest transition-colors"
-                style={{ color: 'var(--muted)' }}
-              >
-                Fermer
-              </span>
-              <X className="w-5 h-5" style={{ color: 'var(--ink)' }} />
-            </button>
-          </div>
-
-          {/* Links */}
-          <div className="flex flex-col divide-y" style={{ borderColor: 'var(--border)' }}>
-            {navItems.map((item, index) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="group flex items-center justify-between py-6"
-              >
-                <div className="flex items-baseline gap-4">
-                  <span
-                    className="text-[11px] font-bold tabular-nums"
-                    style={{ color: 'var(--muted)' }}
+        {/* ── Mobile Menu Overlay ── */}
+        {mobileOpen && (
+          <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-white z-[90] mobile-fade-in flex flex-col">
+            <div className="flex flex-col p-6 gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`py-4 text-lg font-medium border-b border-[var(--border)] transition-colors ${
+                    isActiveLink(item.href) ? 'text-[var(--accent)]' : 'text-[var(--ink)]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              
+              {!isAuthenticated && (
+                <div className="flex flex-col gap-4 mt-6">
+                  <Link 
+                    href="/login" 
+                    onClick={() => setMobileOpen(false)}
+                    className="text-center py-3 font-medium text-[var(--ink)]"
                   >
-                    0{index + 1}
-                  </span>
-                  <span
-                    className="text-4xl font-['Syne'] font-extrabold tracking-tight transition-colors duration-300 group-hover:text-blue-600"
-                    style={{ color: 'var(--ink)' }}
+                    Login
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    onClick={() => setMobileOpen(false)}
+                    className="nav-cta py-4 text-base"
                   >
-                    {item.label}
-                  </span>
+                    Join Free
+                  </Link>
                 </div>
-                <ArrowUpRight
-                  className="w-6 h-6 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                  style={{ color: 'var(--accent)' }}
-                />
-              </Link>
-            ))}
+              )}
+            </div>
           </div>
-
-          {/* Bottom CTA */}
-          <div className="mt-auto">
-            {!isAuthenticated && (
-              <Link
-                href="/register"
-                onClick={() => setMobileOpen(false)}
-                className="nav-cta block text-center w-full py-4 text-base"
-              >
-                Rejoindre gratuitement →
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </nav>
+      {/* Spacer pour compenser la nav fixed */}
+      <div className="h-16" />
     </>
   )
 }

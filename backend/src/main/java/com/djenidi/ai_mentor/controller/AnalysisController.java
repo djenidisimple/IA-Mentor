@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/analysis")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('USER')")
+@PreAuthorize("hasAuthority('ROLE_USER')")
 public class AnalysisController {
 
     private final AnalysisService analysisService;
-    // ✅ FIX : SubmissionRepository et GitHubService supprimés du controller
+    // FIX : SubmissionRepository et GitHubService supprimés du controller
     //    La logique appartient au service, pas au controller
 
     @PostMapping("/submission")
@@ -35,7 +35,7 @@ public class AnalysisController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    // ✅ FIX : logique déplacée dans AnalysisService
+    // FIX : logique déplacée dans AnalysisService
     @GetMapping("/submission/{submissionId}/repository")
     public ResponseEntity<ApiResponse<RepositoryContentResponse>> getRepositoryContent(
             @PathVariable Long submissionId) {

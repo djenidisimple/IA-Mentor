@@ -1,4 +1,3 @@
-// src/main/java/com/djenidi/ai_mentor/controller/AuthController.java
 package com.djenidi.ai_mentor.controller;
 
 import com.djenidi.ai_mentor.dto.request.LoginRequest;
@@ -123,8 +122,7 @@ public class AuthController {
             + "; Max-Age=" + COOKIE_MAX_AGE
             + "; Path=/api/auth"
             + "; HttpOnly"
-            // Retire "; Secure" si tu testes en HTTP local
-            + "; Secure"
+            // + "; Secure" // Désactivé pour le développement local en HTTP
             + "; SameSite=Strict"
         );
     }
@@ -135,7 +133,7 @@ public class AuthController {
             + "; Max-Age=0"
             + "; Path=/api/auth"
             + "; HttpOnly"
-            + "; Secure"
+            // + "; Secure" // Désactivé pour le développement local en HTTP
             + "; SameSite=Strict"
         );
     }

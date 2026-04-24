@@ -12,33 +12,51 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/submissions")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('USER')")
+@PreAuthorize("hasAuthority('ROLE_USER')")
 public class SubmissionController {
 
     private final SubmissionService submissionService;
     private final UserService userService;
 
-    /**
-     * Helper pour extraire l'utilisateur du token
-     */
-    private User getUserFromAuthHeader(String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        return userService.getUserFromToken(token);
+    // Helper pour extraire l'utilisateur authentifié du SecurityContext
+    private User getAuthenticatedUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            // Il est préférable de lancer une exception plus spécifique ici, mais AccessDeniedException est suffisant pour le moment.
+            throw new AccessDeniedException("User not authenticated");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        } else if (principal instanceof UserDetails) {
+            // Si le principal est un UserDetails mais pas directement un User, on essaie de le récupérer par username.
+            String username = ((UserDetails) principal).getUsername();
+            // Il est crucial que userService.findByUsername retourne un User complet avec les bonnes autorités.
+            return userService.findByUsername(username);
+        } else if (principal instanceof String) {
+            // Fallback si le principal est juste une chaîne de caractères (ex: username)
+            return userService.findByUsername((String) principal);
+        }
+        // Si le principal n'est d'aucun type attendu, lancer une exception.
+        throw new IllegalStateException("Unexpected principal type: " + principal.getClass().getName());
     }
 
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<SubmissionResponse>> startChallenge(
-            @RequestHeader("Authorization") String authHeader,
+            Authentication authentication,
             @Valid @RequestBody StartChallengeRequest request) {
         
-        User user = getUserFromAuthHeader(authHeader);
+        User user = getAuthenticatedUser(authentication);
         
         try {
             SubmissionResponse submission = submissionService.startChallenge(user.getId(), request.getChallengeId());
@@ -52,10 +70,10 @@ public class SubmissionController {
 
     @PostMapping("/submit")
     public ResponseEntity<ApiResponse<SubmissionResponse>> submitChallenge(
-            @RequestHeader("Authorization") String authHeader,
+            Authentication authentication,
             @Valid @RequestBody SubmitChallengeRequest request) {
         
-        User user = getUserFromAuthHeader(authHeader);
+        User user = getAuthenticatedUser(authentication);
         
         try {
             SubmissionResponse submission = submissionService.submitChallenge(
@@ -72,27 +90,27 @@ public class SubmissionController {
 
     @GetMapping("/user/me")
     public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getMyActivity(
-            @RequestHeader("Authorization") String authHeader) {  // CORRIGÉ
+            Authentication authentication) { 
         
-        User user = getUserFromAuthHeader(authHeader);
+        User user = getAuthenticatedUser(authentication);
         List<SubmissionResponse> activity = submissionService.getUserActivity(user.getId());
         return ResponseEntity.ok(ApiResponse.success(activity));
     }
 
     @GetMapping("/user/me/in-progress")
     public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getMyInProgress(
-            @RequestHeader("Authorization") String authHeader) {  // CORRIGÉ
+            Authentication authentication) { 
         
-        User user = getUserFromAuthHeader(authHeader);
+        User user = getAuthenticatedUser(authentication);
         List<SubmissionResponse> inProgress = submissionService.getUserChallengesInProgress(user.getId());
         return ResponseEntity.ok(ApiResponse.success(inProgress));
     }
 
     @GetMapping("/user/me/completed")
     public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getMyCompleted(
-            @RequestHeader("Authorization") String authHeader) {  // CORRIGÉ
+            Authentication authentication) { 
         
-        User user = getUserFromAuthHeader(authHeader);
+        User user = getAuthenticatedUser(authentication);
         List<SubmissionResponse> completed = submissionService.getUserChallengesCompleted(user.getId());
         return ResponseEntity.ok(ApiResponse.success(completed));
     }
@@ -103,7 +121,7 @@ public class SubmissionController {
         return ResponseEntity.ok(ApiResponse.success(submission));
     }
     @GetMapping("/completed")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse<List<SubmissionResponse>>> getAllCompletedSubmissions() {
         List<SubmissionResponse> completed = submissionService.getAllCompletedSubmissions();
         return ResponseEntity.ok(ApiResponse.success(completed));

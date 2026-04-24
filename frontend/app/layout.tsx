@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
-import AuthProvider from '@/components/providers/AuthProvider'
+import { AuthProvider } from '@/components/providers/AuthProvider'
 import BlueprintBackground from '@/components/layouts/BlueprintBackground'
 import TokenExpirationAlert from '@/components/TokenExpirationAlert'
 

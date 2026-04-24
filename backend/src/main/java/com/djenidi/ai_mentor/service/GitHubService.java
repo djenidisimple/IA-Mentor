@@ -28,9 +28,9 @@ public class GitHubService {
 
     private static final String GITHUB_API_URL = "https://api.github.com";
     private static final int MAX_FILE_SIZE = 500 * 1024; // 500 KB
-    private static final int MAX_DEPTH = 6; // ✅ FIX 2 : limite de profondeur de récursion
+    private static final int MAX_DEPTH = 6; //  FIX 2 : limite de profondeur de récursion
 
-    // ✅ FIX 3 : constante statique, plus de List.of() recréé à chaque appel
+    //  FIX 3 : constante statique, plus de List.of() recréé à chaque appel
     private static final Set<String> IGNORED_DIRECTORIES = Set.of(
         "node_modules", "target", "build", "dist", ".git",
         ".idea", ".vscode", "vendor", "__pycache__", ".next", "out"
@@ -73,7 +73,7 @@ public class GitHubService {
     private List<RepositoryContentResponse.FileContent> fetchAllFiles(
             String owner, String repo, String branch, String path, int depth) {
 
-        // ✅ FIX 2 : stop si profondeur maximale atteinte
+        //  FIX 2 : stop si profondeur maximale atteinte
         if (depth > MAX_DEPTH) {
             log.warn("Profondeur maximale atteinte pour le path: {}", path);
             return Collections.emptyList();
@@ -92,7 +92,7 @@ public class GitHubService {
                 String name = item.path("name").asText();
 
                 if ("file".equals(type)) {
-                    // ✅ FIX 1 : filtre sur l'extension — uniquement les fichiers supportés
+                    //  FIX 1 : filtre sur l'extension — uniquement les fichiers supportés
                     if (!isSupportedFile(name)) {
                         log.debug("Fichier ignoré (extension non supportée): {}", name);
                         continue;
@@ -117,7 +117,7 @@ public class GitHubService {
                             .build());
 
                 } else if ("dir".equals(type) && !IGNORED_DIRECTORIES.contains(name.toLowerCase())) {
-                    // ✅ FIX 2 : depth + 1 à chaque niveau
+                    //  FIX 2 : depth + 1 à chaque niveau
                     files.addAll(fetchAllFiles(owner, repo, branch, item.path("path").asText(), depth + 1));
                 }
             }
@@ -224,7 +224,7 @@ public class GitHubService {
         }
     }
 
-    // ✅ Extraction des headers communs pour éviter la duplication
+    //  Extraction des headers communs pour éviter la duplication
     private HttpHeaders buildHeaders() {
         HttpHeaders headers = new HttpHeaders();
         if (githubToken != null && !githubToken.isEmpty()) {
@@ -234,7 +234,7 @@ public class GitHubService {
         return headers;
     }
 
-    // ✅ FIX 1 : méthode maintenant utilisée
+    //  FIX 1 : méthode maintenant utilisée
     private boolean isSupportedFile(String fileName) {
         return SUPPORTED_EXTENSIONS.stream().anyMatch(fileName::endsWith);
     }

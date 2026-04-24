@@ -8,17 +8,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.djenidi.ai_mentor.dto.request.CommentRequest;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/social")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ROLE_USER')")
 public class SocialController {
 
     private final SocialService socialService;
 
     @GetMapping("/posts")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<PostDTO>> getFeed() {
         return ResponseEntity.ok(socialService.getCommunityFeed());
     }
@@ -34,9 +39,11 @@ public class SocialController {
     }
 
     @PostMapping("/like/{submissionId}")
-    public ResponseEntity<Void> toggleLike(@AuthenticationPrincipal User user, @PathVariable Long submissionId) {
-        socialService.toggleLike(user, submissionId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<LikeResponseDTO> toggleLike(
+            @AuthenticationPrincipal User user, 
+            @PathVariable Long submissionId) {
+        LikeResponseDTO response = socialService.toggleLike(user, submissionId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/follow/{userId}")
