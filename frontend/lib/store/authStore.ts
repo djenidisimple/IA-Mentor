@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthState>()(
       // Appelé silencieusement par l'intercepteur Axios quand le JWT expire
       refreshAccessToken: async () => {
         try {
-          const res = await api.post<{ accessToken: string; user: User }>(
+          const res = await api.post(
             '/api/auth/refresh',
             {},
             {
@@ -61,14 +61,26 @@ export const useAuthStore = create<AuthState>()(
               withCredentials: true,
               // Flag pour ne pas re-intercepter cette requête (évite la boucle infinie)
               _isRefreshCall: true,
+              // On s'assure de NE PAS envoyer l'ancien token expiré
+              headers: { Authorization: '' }
             } as any
           )
 
-          const { accessToken, user } = res.data
-          set({ token: accessToken, user, isAuthenticated: true })
-          return accessToken
+          // Le backend renvoie { token, email, username, role }
+          const { token, email, username, role } = res.data as any
+          
+          const updatedUser = get().user ? {
+            ...get().user!,
+            email,
+            username,
+            role
+          } : { email, username, role } as User
 
-        } catch {
+          set({ token, user: updatedUser, isAuthenticated: true })
+          return token
+
+        } catch (error) {
+          console.error('[AuthStore] Refresh failed', error)
           // Refresh token expiré ou révoqué → vrai logout
           set({ token: null, user: null, isAuthenticated: false })
           return null

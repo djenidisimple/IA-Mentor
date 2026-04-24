@@ -37,6 +37,14 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "email", email));
     }
 
+    /**
+     * Récupère un utilisateur par nom d'utilisateur
+     */
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "username", username));
+    }
+
     public UserProfileResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "id", userId));

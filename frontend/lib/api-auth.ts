@@ -1,154 +1,42 @@
 import { ApiError } from './api-errors'
 import { AuthResponse } from '@/types/auth.types'
+import { useAuthStore } from '@/lib/store/authStore' // Import de useAuthStore
 
-/**
- * Récupère le token d'authentification depuis le localStorage
- */
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null
+let refreshTokenPromise: Promise<AuthResponse | null> = null // Garder pour la promesse de refresh unique
 
-  try {
-    const authStorage = localStorage.getItem('auth-storage')
-    if (!authStorage) return null
-
-    const parsed = JSON.parse(authStorage)
-    return parsed.state?.token || null
-  } catch (e) {
-    console.error('[Auth] Failed to parse auth-storage', e)
-    return null
-  }
-}
-
-/**
- * Sauvegarde les données d'authentification dans le localStorage
- */
-function saveAuthData(authResponse: AuthResponse): void {
-  if (typeof window === 'undefined') return
-
-  try {
-    const authStorage = localStorage.getItem('auth-storage')
-    if (!authStorage) return
-
-    const parsed = JSON.parse(authStorage)
-    parsed.state = {
-      ...parsed.state,
-      token: authResponse.token,
-      email: authResponse.email,
-      username: authResponse.username,
-      role: authResponse.role,
-    }
-
-    localStorage.setItem('auth-storage', JSON.stringify(parsed))
-    localStorage.setItem('user', JSON.stringify({
-      email: authResponse.email,
-      username: authResponse.username,
-      role: authResponse.role,
-    }))
-  } catch (e) {
-    console.error('[Auth] Failed to save auth data', e)
-  }
-}
-
-// Suivi des refresh en cours pour éviter les appels concurrents
-let refreshTokenPromise: Promise<AuthResponse> | null = null
-
-/**
- * Renouvelle le token JWT
- * Retourne la nouvelle AuthResponse ou null si le refresh échoue
- */
 export async function refreshToken(): Promise<AuthResponse | null> {
-  if (typeof window === 'undefined') return null
-
-  // Si un refresh est déjà en cours, attendre le résultat
-  if (refreshTokenPromise) {
-    try {
-      return await refreshTokenPromise
-    } catch (e) {
-      return null
+  // Utilise la logique de refresh centralisée dans authStore
+  const newAccessToken = await useAuthStore.getState().refreshAccessToken()
+  if (newAccessToken) {
+    // Le backend ne renvoie plus l'objet User complet au refresh.
+    // Pour être complet, on pourrait refetch l'utilisateur si nécessaire.
+    // Pour l'instant, on considère que le `user` dans `authStore` est à jour ou non essentiel pour le seul `refreshToken`.
+    // Cependant, le AuthResponse du backend contient `email`, `username`, `role`. On peut les utiliser pour mettre à jour l'état du user dans Zustand.
+    const { user } = useAuthStore.getState()
+    if (user) {
+        // Si l'utilisateur est présent, on suppose qu'il est déjà à jour par l'intercepteur Axios
+        // via le `set({ token: accessToken, user, isAuthenticated: true })` de `refreshAccessToken`
     }
+    return { token: newAccessToken } as AuthResponse // Retourne un AuthResponse partiel avec le nouveau token
   }
-
-  // Créer une nouvelle promesse de refresh
-  refreshTokenPromise = new Promise(async (resolve, reject) => {
-    try {
-      const token = getAuthToken()
-      if (!token) {
-        reject(new Error('No token available'))
-        return
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/refresh`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          credentials: 'include',
-        }
-      )
-
-      if (!response.ok) {
-        reject(new Error(`Refresh failed with status ${response.status}`))
-        return
-      }
-
-      const authResponse: AuthResponse = await response.json()
-      saveAuthData(authResponse)
-      resolve(authResponse)
-    } catch (error) {
-      console.error('[Auth] Token refresh failed:', error)
-      reject(error)
-    } finally {
-      // Réinitialiser après le refresh
-      refreshTokenPromise = null
-    }
-  })
-
-  return refreshTokenPromise
+  return null
 }
 
-/**
- * Service d'authentification centralisé
- * Gère l'accès au token et la déconnexion
- */
 export const AuthService = {
-  /**
-   * Récupère le token JWT actuel
-   */
-  getToken: getAuthToken,
+  getToken: useAuthStore.getState().token, // Récupère le token directement de Zustand
 
-  /**
-   * Vérifie si l'utilisateur est authentifié
-   */
-  isAuthenticated: (): boolean => {
-    return !!getAuthToken()
-  },
+  isAuthenticated: (): boolean => useAuthStore.getState().isAuthenticated,
 
-  /**
-   * Effectue la déconnexion de l'utilisateur
-   */
   logout: (redirectPath: string = '/login') => {
+    useAuthStore.getState().logout() // Appelle le logout centralisé de Zustand
     if (typeof window === 'undefined') return
-
-    // Nettoie le localStorage
-    localStorage.removeItem('auth-storage')
-    localStorage.removeItem('user')
-
-    // Notifie les stores (Zustand, etc.)
     window.dispatchEvent(new CustomEvent('auth:logout'))
-
-    // Redirige vers la page de login
     window.location.href = redirectPath
   },
 }
 
-/**
- * Construit les headers HTTP incluant l'authentification
- */
 export function getAuthHeaders(): HeadersInit {
-  const token = getAuthToken()
+  const token = useAuthStore.getState().token
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
