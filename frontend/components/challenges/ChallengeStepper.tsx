@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type ChallengeStep = 1 | 2 | 3 | 4;
+export type ChallengeStep = 1 | 2 | 3;
 
 interface ChallengeStepperProps {
   currentStep: ChallengeStep;
@@ -13,8 +13,7 @@ export default function ChallengeStepper({ currentStep, setStep }: ChallengeStep
   const steps = [
     { id: 1 as const, step: "Step 1", title: "Start challenge" },
     { id: 2 as const, step: "Step 2", title: "Submit solution" },
-    { id: 3 as const, step: "Step 3", title: "Improve solution" },
-    { id: 4 as const, step: "Step 4", title: "Review solutions" },
+    { id: 3 as const, step: "Step 3", title: "Review solutions" },
   ];
 
   return (
