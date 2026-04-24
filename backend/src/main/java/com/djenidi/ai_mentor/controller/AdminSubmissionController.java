@@ -20,7 +20,7 @@ public class AdminSubmissionController {
     private final AnalysisService analysisService;
 
     /**
-     * ✅ DÉCLENCHER L'ANALYSE OLLAMA (GEMMA2) POUR UNE SOUMISSION
+     *  DÉCLENCHER L'ANALYSE OLLAMA (GEMMA2) POUR UNE SOUMISSION
      * (Normalement déclenchée automatiquement via POST /submissions/submit)
      */
     @PostMapping("/{id}/analyze")

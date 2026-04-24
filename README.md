@@ -4,7 +4,7 @@
 
 ## 📊 État du Projet (April 2026)
 
-✅ **Production Ready** - Backend + Frontend compilés et testés
+ **Production Ready** - Backend + Frontend compilés et testés
 - Backend: Java 21 + Spring Boot 3.4.1 ✓
 - Frontend: Next.js 14 + React 18 ✓
 - **Ollama (Gemma2:2b) AI Integration: Opérationnel ✓** (migré de Gemini)
@@ -285,7 +285,7 @@ ollama serve
 ```bash
 cd backend
 mvn spring-boot:run
-# Logs avec emojis 🔍📁📝✅ pour tracking Ollama
+# Logs avec emojis 🔍📁📝 pour tracking Ollama
 ```
 
 **Terminal 3 - Frontend**
@@ -320,7 +320,7 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   "serviceAvailable": true,
   "connectionSuccessful": true,
   "modelAvailable": true,
-  "testMessage": "✅ Simple test successful - Ollama (Gemma2) is working | ✅ JSON parsing OK"
+  "testMessage": " Simple test successful - Ollama (Gemma2) is working |  JSON parsing OK"
 }
 ```
 
@@ -347,7 +347,7 @@ server.port=8081
   - 🔍 Démarrage analyse Ollama
   - 🌐 Appel de l'API Ollama
   - 📤 Envoi de la requête
-  - ✅ Réponse reçue (ou ❌ Erreur)
+  -  Réponse reçue (ou ❌ Erreur)
 
 ### Frontend ne se connecte pas au backend
 ```bash
@@ -373,7 +373,7 @@ docker start postgres-ai-mentor
 
 ## 🗺 Roadmap
 
-### Phase 1: MVP ✅ COMPLETED
+### Phase 1: MVP  COMPLETED
 - [x] Backend: Java 21 + Spring Boot
 - [x] Frontend: Next.js + React + TypeScript
 - [x] Database: PostgreSQL avec JPA
@@ -457,32 +457,32 @@ d:\IA-Mentor
 
 ## 🔑 Key Features Implemented
 
-### ✅ Authentication & Authorization
+###  Authentication & Authorization
 - JWT-based token authentication
 - Role-based access control (USER, ADMIN)
 - Secure password hashing
 - Session persistence
 
-### ✅ Submission Management
+###  Submission Management
 - GitHub repository URL submission
 - Automatic status tracking (IN_PROGRESS → SUBMITTED → REVIEWED)
 - Real-time submission history
 - User-specific submission isolation
 
-### ✅ AI Analysis Engine
+###  AI Analysis Engine
 - **Async Processing**: @Async annotations pour non-blocking analysis
 - **Retry Logic**: 3 attempts with exponential backoff
 - **Error Handling**: Graceful fallback et error messages
 - **Real-time Feedback**: Polling-based frontend updates
 - **Data Sync**: Analysis results synced to Submission entity
 
-### ✅ GitHub Integration
+###  GitHub Integration
 - Automatic repository cloning
 - Support for public and private repos
 - Source code extraction
 - File type filtering
 
-### ✅ Frontend Polish
+###  Frontend Polish
 - Responsive Tailwind CSS design
 - Real-time loading states
 - Error boundaries

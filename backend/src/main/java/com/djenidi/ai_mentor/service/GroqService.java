@@ -187,7 +187,7 @@ public class GroqService implements AIService {
                 throw new RuntimeException("Groq a retourné un contenu texte vide");
             }
             
-            log.info("✅ Texte extrait avec succès de la réponse Groq (longueur: {})", result.length());
+            log.info(" Texte extrait avec succès de la réponse Groq (longueur: {})", result.length());
             return result;
             
         } catch (Exception e) {
@@ -328,7 +328,7 @@ public class GroqService implements AIService {
                     groqApiUrl, HttpMethod.POST, entity, String.class);
             
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("✅ Connexion à Groq réussie!");
+                log.info(" Connexion à Groq réussie!");
                 return true;
             }
         } catch (Exception e) {
@@ -355,12 +355,12 @@ public class GroqService implements AIService {
             response.setServiceAvailable(connected);
             response.setConnectionSuccessful(connected);
             response.setModelAvailable(connected);
-            response.setTestMessage(connected ? "✅ Groq API is accessible" : "❌ Groq API not accessible");
+            response.setTestMessage(connected ? " Groq API is accessible" : "❌ Groq API not accessible");
             if (!connected) {
                 response.setErrorDetails("Failed to connect - check GROQ_API_KEY");
                 response.setOllamaErrorMessage("Connection failed");
             }
-            log.info("✅ Groq diagnostics completed: connected={}", connected);
+            log.info(" Groq diagnostics completed: connected={}", connected);
         } catch (Exception e) {
             response.setServiceAvailable(false);
             response.setConnectionSuccessful(false);

@@ -1,6 +1,6 @@
 # 📋 Résumé des Refactorisations - IA-Mentor
 
-## ✅ Travail Complété
+##  Travail Complété
 
 ### 1️⃣ Suppression des Fichiers Inutiles
 
@@ -143,11 +143,11 @@ frontend/
 
 | Métrique | Avant | Après | Impact |
 |----------|-------|-------|--------|
-| Fichiers supprimés | - | 5 | ✅ Moins de clutter |
-| Composants monolithiques | 1 (400+ lignes) | 5 (50-80 lignes chacun) | ✅ Réutilisabilité +100% |
-| Modules API | 1 gros | 4 spécialisés | ✅ Maintenabilité +200% |
-| Composants Challenge | 2 (30 lignes code) | 6 (15 lignes code chacun) | ✅ Composabilité +300% |
-| Nouveaux fichiers | - | 11 | ✅ Meilleure organisation |
+| Fichiers supprimés | - | 5 |  Moins de clutter |
+| Composants monolithiques | 1 (400+ lignes) | 5 (50-80 lignes chacun) |  Réutilisabilité +100% |
+| Modules API | 1 gros | 4 spécialisés |  Maintenabilité +200% |
+| Composants Challenge | 2 (30 lignes code) | 6 (15 lignes code chacun) |  Composabilité +300% |
+| Nouveaux fichiers | - | 11 |  Meilleure organisation |
 
 ---
 
@@ -181,7 +181,7 @@ frontend/
 
 ## 🔍 Qualité du Code
 
-### ✅ Appliqué:
+###  Appliqué:
 - **SRP** (Single Responsibility Principle) - Chaque fichier a une responsabilité unique
 - **DRY** (Don't Repeat Yourself) - Pas de duplication de code
 - **SOLID** - Principes respectés

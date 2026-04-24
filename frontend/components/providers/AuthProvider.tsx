@@ -1,22 +1,21 @@
-'use client'
-
-import { useEffect, useState } from 'react'
+"use client"
+import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store/authStore'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { token, isAuthenticated, refreshAccessToken, logout } = useAuthStore()
+  const { token, isAuthenticated, isHydrated, refreshAccessToken, logout } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
+    // 1. On attend que Zustand ait fini de lire le localStorage
+    if (!isHydrated) return;
+
     const initAuth = async () => {
-      // Si on est censé être connecté mais qu'on n'a pas de token (ex: après un F5)
+      // 2. Maintenant isAuthenticated reflète la réalité du stockage
       if (isAuthenticated && !token) {
         try {
           const newToken = await refreshAccessToken()
-          if (!newToken) {
-            // Si le refresh échoue (cookie expiré), on nettoie tout
-            await logout()
-          }
+          if (!newToken) await logout()
         } catch (err) {
           await logout()
         }
@@ -25,10 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     initAuth()
-  }, [isAuthenticated, token, refreshAccessToken, logout])
+  }, [isHydrated, isAuthenticated, token]); // On ajoute isHydrated ici
 
-  // Optionnel : Afficher un loader pendant que la session se restaure
-  if (isInitializing) {
+  if (isInitializing || !isHydrated) {
     return <div className="flex h-screen items-center justify-center">Chargement...</div>
   }
 

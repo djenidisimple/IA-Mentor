@@ -24,7 +24,7 @@ export const socialApi = {
    * Like ou Unlike une soumission
    */
   toggleLike: (submissionId: number) => 
-    apiFetch<void>(`/api/social/like/${submissionId}`, { 
+    apiFetch<{ liked: boolean; likesCount: number }>(`/api/social/like/${submissionId}`, { 
       method: 'POST' 
     }),
 

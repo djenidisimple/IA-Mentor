@@ -57,7 +57,7 @@ Votre clé API Gemini **EST configurée**, mais l'analyse échoue quand même. V
 
 ## 🔧 Comment diagnostiquer
 
-### Option 1: Tester via l'API (FACILE) ✅
+### Option 1: Tester via l'API (FACILE) 
 
 ```bash
 # 1. Test simple (pas de login requis)
@@ -75,7 +75,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
   "connectionSuccessful": true,
   "model": "gemini-2.0-flash",
   "quotaAvailable": true,
-  "testMessage": "✅ Simple test successful - Gemini API is reachable",
+  "testMessage": " Simple test successful - Gemini API is reachable",
   "responseTimeMs": 1250
 }
 ```
@@ -158,7 +158,7 @@ Si Gemini répond bien ici, le problème est dans votre config ou réseau.
 
 ---
 
-## ✅ Checklist de vérification
+##  Checklist de vérification
 
 - [ ] Clé API dans `backend/.env`?
 - [ ] Clé API valide sur [Google AI Studio](https://aistudio.google.com/app/apikeys)?

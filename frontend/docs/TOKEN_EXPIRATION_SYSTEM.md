@@ -23,10 +23,10 @@ Hook personnalisé qui:
 
 ### 3. **Composant d'Alerte** (`components/TokenExpirationAlert.tsx`)
 Affiche une notification sticky quand le token expire dans < 5 minutes:
-- ✅ Bouton "Renouveler" pour prolonger la session
-- ✅ Bouton "✕" pour fermer l'alerte
-- ✅ Animations fluides (slide-in/out)
-- ✅ Responsive et accessible
+-  Bouton "Renouveler" pour prolonger la session
+-  Bouton "✕" pour fermer l'alerte
+-  Animations fluides (slide-in/out)
+-  Responsive et accessible
 
 ### 4. **Endpoint Backend** (`POST /api/auth/refresh`)
 Contrôleur: `AuthController.java`
@@ -128,10 +128,10 @@ window.addEventListener('auth:logout', () => {
 
 ## 🔒 Sécurité
 
-✅ **Tokens HTTP-Only (recommandé)**: Ajouter un cookie HttpOnly côté serveur
-✅ **Refresh automatique**: Aucune interaction requise après l'alerte
-✅ **Validation backend**: Chaque refresh vérifie l'authentification
-✅ **Logout automatique**: Après 401 ou expiration
+ **Tokens HTTP-Only (recommandé)**: Ajouter un cookie HttpOnly côté serveur
+ **Refresh automatique**: Aucune interaction requise après l'alerte
+ **Validation backend**: Chaque refresh vérifie l'authentification
+ **Logout automatique**: Après 401 ou expiration
 
 ## 🐛 Dépannage
 
@@ -184,5 +184,5 @@ backend/
 
 ---
 
-**Statut**: ✅ En production
+**Statut**:  En production
 **Dernière mise à jour**: 2026-04-20

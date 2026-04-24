@@ -20,10 +20,12 @@ export async function apiFetch<T>(
 
     const response = await api.request(axiosOptions) // Utilisation de l'instance Axios
 
-    if (response.status === 204) return {} as T
+    const result = response.data;
 
-    // Axios renvoie directement .data pour les réponses JSON
-    return response.data.data // Assurez-vous que le format de réponse correspond à ApiResponse<T>
+    if (result && Object.prototype.hasOwnProperty.call(result, 'data')) {
+        return result.data;
+    }
+    return result;
   } catch (error: any) {
     if (error.response) {
       // Erreur de l'API (ex: 401, 403)

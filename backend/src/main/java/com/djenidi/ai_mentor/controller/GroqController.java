@@ -43,7 +43,7 @@ public class GroqController {
     public ResponseEntity<OllamaDiagnosticResponse> diagnoseGroqAdmin() {
         log.info("🔍 Running Groq diagnostics (admin)");
 
-        // ✅ FIX 1 + 3 : délègue à runDiagnostics() qui mesure le vrai temps de réponse
+        //  FIX 1 + 3 : délègue à runDiagnostics() qui mesure le vrai temps de réponse
         OllamaDiagnosticResponse response = groqService.runDiagnostics();
 
         return ResponseEntity.ok(response);
@@ -51,14 +51,14 @@ public class GroqController {
 
     /**
      * Test simple de connexion — authentifié
-     * ✅ FIX 2 : @PreAuthorize("permitAll()") supprimé,
+     *  FIX 2 : @PreAuthorize("permitAll()") supprimé,
      *    gérer les routes publiques dans SecurityConfig avec .permitAll()
      */
     @GetMapping("/test")
     public ResponseEntity<OllamaDiagnosticResponse> testGroq() {
         log.info("🧪 Running Groq connection test");
 
-        long start = System.currentTimeMillis(); // ✅ FIX 1 : mesure la durée réelle
+        long start = System.currentTimeMillis(); //  FIX 1 : mesure la durée réelle
 
         boolean isConnected = groqService.testConnection();
 
@@ -67,10 +67,10 @@ public class GroqController {
                 .connectionSuccessful(isConnected)
                 .modelAvailable(isConnected)
                 .testMessage(isConnected
-                        ? "✅ Groq API is accessible"
+                        ? " Groq API is accessible"
                         : "❌ Failed to connect - Verify GROQ_API_KEY")
                 .ollamaErrorMessage(isConnected ? null : "Connection failed - Check your API key")
-                .responseTimeMs(System.currentTimeMillis() - start) // ✅ durée réelle en ms
+                .responseTimeMs(System.currentTimeMillis() - start) //  durée réelle en ms
                 .build();
 
         return ResponseEntity.ok(response);

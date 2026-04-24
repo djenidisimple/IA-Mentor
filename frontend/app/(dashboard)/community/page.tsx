@@ -26,8 +26,6 @@ export default function CommunityPage() {
       setLoading(true)
       setError(null)
       try {
-        const test = await socialApi.getFeed();
-        console.log(test);
         const [postsData, trendingData, usersData] = await Promise.all([
           socialApi.getFeed(),
           socialApi.getTrending(),

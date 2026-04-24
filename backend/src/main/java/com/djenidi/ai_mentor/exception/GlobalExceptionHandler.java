@@ -14,7 +14,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ✅ FIX : GitHubApiException retournait un 500 via le catch-all
+    //  FIX : GitHubApiException retournait un 500 via le catch-all
     //    C'est une erreur liée à l'input utilisateur (URL GitHub invalide ou inaccessible)
     @ExceptionHandler(GitHubApiException.class)
     public ResponseEntity<ApiResponse<Void>> handleGitHubApiException(GitHubApiException ex) {

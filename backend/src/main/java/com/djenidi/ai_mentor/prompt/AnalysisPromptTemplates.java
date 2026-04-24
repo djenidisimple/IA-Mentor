@@ -65,7 +65,7 @@ public class AnalysisPromptTemplates {
             repo.getRepo(),
             repo.getTotalFiles(),
             sizeKb,
-            codeContent  // ✅ FIX 1 : était absent !
+            codeContent  //  FIX 1 : était absent !
         );
     }
 

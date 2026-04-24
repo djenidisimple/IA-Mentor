@@ -13,7 +13,7 @@ declare module 'axios' {
 // ── Instance principale ───────────────────────────────────────────────────────
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080',
-  withCredentials: true, // ✅ Envoie toujours les cookies HttpOnly (refresh token)
+  withCredentials: true, //  Envoie toujours les cookies HttpOnly (refresh token)
   headers: {
     'Content-Type': 'application/json',
   },
@@ -98,7 +98,7 @@ api.interceptors.response.use(
         return Promise.reject(error)
       }
 
-      // ✅ Relancer toutes les requêtes en attente avec le nouveau token
+      //  Relancer toutes les requêtes en attente avec le nouveau token
       processQueue(null, newToken)
 
       originalRequest.headers.Authorization = `Bearer ${newToken}`

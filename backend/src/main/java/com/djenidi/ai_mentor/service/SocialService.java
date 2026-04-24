@@ -13,6 +13,20 @@ import com.djenidi.ai_mentor.dto.UserSummaryDTO;
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.HashSet;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
+import com.djenidi.ai_mentor.dto.TrendingTopicDTO;
+import com.djenidi.ai_mentor.dto.PostDTO;
+import com.djenidi.ai_mentor.dto.LikeResponseDTO;
+import com.djenidi.ai_mentor.repository.ChallengeRepository;
+import com.djenidi.ai_mentor.repository.CommentRepository;
+import com.djenidi.ai_mentor.repository.SubmissionLikeRepository;
+import com.djenidi.ai_mentor.repository.SubmissionRepository;
+import com.djenidi.ai_mentor.repository.UserRepository;
+
 
 @Service
 @RequiredArgsConstructor
@@ -35,28 +49,32 @@ public class SocialService {
     @Transactional(readOnly = true)
     public List<PostDTO> getCommunityFeed() {
         List<Submission> subs = submissionRepository.findAllByOrderBySubmittedAtDesc();
-        if (subs.isEmpty()) return new ArrayList<>();
-        
         User currentUser = getCurrentUser();
-        return subs.stream().map(sub -> mapToDTO(sub, currentUser)).toList();
+        Set<Long> userLikeIds = new HashSet<>();
+        if (currentUser != null) {
+            userLikeIds = likeRepository.findAllByUser(currentUser).stream()
+                .map(like -> like.getSubmission().getId())
+                .collect(Collectors.toSet());
+        }
+        final Set<Long> finalLikes = userLikeIds;
+        return subs.stream()
+            .map(sub -> mapToDTO(sub, finalLikes.contains(sub.getId())))
+            .toList();
     }
 
-    private PostDTO mapToDTO(Submission sub, User currentUser) {
-        boolean isLiked = currentUser != null && 
-            likeRepository.findByUserAndSubmission(currentUser, sub).isPresent();
-        
-        return new PostDTO(
-            sub.getId(),
-            convertToSummary(sub.getUser()),
-            "A complété le challenge : " + sub.getChallenge().getTitle(),
-            new CodeSnippetDTO("GitHub", sub.getGithubUrl()),
-            new ArrayList<>(),
-            (long) sub.getLikeCount(),
-            (long) sub.getCommentCount(),
-            0L,
-            sub.getSubmittedAt() != null ? sub.getSubmittedAt() : sub.getStartedAt(),
-            isLiked
-        );
+    private PostDTO mapToDTO(Submission sub, boolean isLiked) {
+        return PostDTO.builder()
+            .id(sub.getId())
+            .author(convertToSummary(sub.getUser()))
+            .content("A complété le challenge : " + sub.getChallenge().getTitle())
+            .code(new CodeSnippetDTO("GitHub", sub.getGithubUrl()))
+            .likes((long) sub.getLikeCount())
+            .comments((long) sub.getCommentCount())
+            .shares(0L)
+            .tags(new ArrayList<>())
+            .createdAt(sub.getSubmittedAt() != null ? sub.getSubmittedAt() : sub.getStartedAt())
+            .isLiked(isLiked)
+            .build();
     }
 
     public List<TrendingTopicDTO> getTrendingTopics() {
@@ -83,17 +101,28 @@ public class SocialService {
         );
     }
 
-    // --- LIKES ---
+    
     @Transactional
-    public void toggleLike(User user, Long submissionId) {
-        Submission submission = submissionRepository.findById(submissionId)
+    public LikeResponseDTO toggleLike(User user, Long submissionId) {
+        Submission sub = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new EntityNotFoundException("Soumission non trouvée"));
 
-        likeRepository.findByUserAndSubmission(user, submission)
-            .ifPresentOrElse(
-                likeRepository::delete,
-                () -> likeRepository.save(SubmissionLike.builder().user(user).submission(submission).build())
-            );
+        boolean liked = false;
+        Optional<SubmissionLike> existingLike = likeRepository.findByUserAndSubmission(user, sub);
+
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+        } else {
+            likeRepository.save(SubmissionLike.builder()
+                    .user(user)
+                    .submission(sub)
+                    .build());
+            liked = true;
+        }
+
+        likeRepository.flush(); 
+        
+        return new LikeResponseDTO(liked, (long) sub.getLikeCount());
     }
 
     // --- FOLLOW ---

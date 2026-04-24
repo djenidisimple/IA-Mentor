@@ -18,7 +18,7 @@ interface ChallengeStepLayoutProps {
 
 export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutProps) {
   const [currentStep, setCurrentStep] = useState<ChallengeStep>(1);
-  const [submissionId, setSubmissionId] = useState<number | null>(null); // ✅ AJOUTÉ
+  const [submissionId, setSubmissionId] = useState<number | null>(null); //  AJOUTÉ
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,14 +89,14 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
             {currentStep === 2 && (
               <ChallengeSubmissionForm 
                 challengeId={challenge.id}
-                onSubmissionCreated={(id) => setSubmissionId(id)} // ✅ Callback for submissionId
+                onSubmissionCreated={(id) => setSubmissionId(id)} //  Callback for submissionId
               />
             )}
 
             {currentStep === 3 && (
               <ChallengeAIFeedback  
                 challengeId={challenge.id}
-                submissionId={submissionId} // ✅ USE REAL SUBMISSION ID
+                submissionId={submissionId} //  USE REAL SUBMISSION ID
                 challengeTitle={challenge.title}
                 challengeContext={challenge.description}
               />

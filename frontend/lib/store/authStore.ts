@@ -18,9 +18,11 @@ interface AuthState {
   // Le token vit UNIQUEMENT en mémoire (Zustand State)
   token: string | null
   user: User | null
+  isHydrated: boolean // Pour savoir si le localStorage a été lu
   isAuthenticated: boolean
 
   setAuth: (token: string, user: User) => void
+  setHydrated: () => void
   logout: () => Promise<void>
   refreshAccessToken: () => Promise<string | null>
   hasRole: (role: string) => boolean
@@ -31,7 +33,10 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       token: null,
       user: null,
+      isHydrated: false,
       isAuthenticated: false,
+
+      setHydrated: () => set({ isHydrated: true }),
 
       // 1. Connexion initiale (Login/Register)
       setAuth: (token, user) => {
@@ -72,7 +77,6 @@ export const useAuthStore = create<AuthState>()(
           )
 
           // Le backend doit renvoyer { token, email, username, role, ... }
-          // On déstructure les données pour reconstruire l'objet user
           const { token, ...userData } = res.data
 
           // Si on a déjà un user partiel en cache, on merge les données
@@ -102,7 +106,6 @@ export const useAuthStore = create<AuthState>()(
       // 4. Vérification des rôles
       hasRole: (role: string) => {
         const user = get().user
-        // Supporte à la fois user.role (string) et user.roles (array)
         if (user?.role === role) return true
         return user?.roles?.includes(role) ?? false
       },
@@ -111,20 +114,21 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
 
-      // ✅ STRATÉGIE DE SÉCURITÉ :
-      // On persiste le user et le flag isAuthenticated pour l'UI immédiate au refresh,
-      // mais on ne persiste JAMAIS le token JWT (sécurité XSS).
+      // On ne persiste que l'utilisateur et son statut pour l'UI
+      // Le token n'est jamais mis dans le localStorage (Sécurité)
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
 
-      // Au moment de la réhydratation (quand la page charge)
+      // Au rechargement de la page
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Le token est forcément null au refresh car non persisté
-          state.token = null
-          console.log('[AuthStore] Rehydrated: session pending refresh')
+          // On marque que l'hydratation est finie
+          state.setHydrated();
+          // Le token est null au démarrage car non persisté
+          state.token = null;
+          console.log('[AuthStore] Rehydrated: Ready to refresh');
         }
       },
     }
