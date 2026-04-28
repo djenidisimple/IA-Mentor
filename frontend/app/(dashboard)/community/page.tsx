@@ -157,9 +157,9 @@ export default function CommunityPage() {
                         </span>
                       </div>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link href={`community/${post.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowUpRight className="w-5 h-5 text-slate-300 hover:text-[#0052FF]" />
-                    </button>
+                    </Link>
                   </div>
 
                   <p className="text-[16px] leading-relaxed text-slate-600 mb-6 max-w-2xl">

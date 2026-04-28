@@ -49,7 +49,8 @@ public class SocialService {
     public List<CommentDTO> getCommentsForSubmission(Long submissionId) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new EntityNotFoundException("Soumission non trouvée"));
-        
+        Long likeCount = likeRepository.getLikeCountBySubmissionId(submissionId);
+
         return submission.getComments().stream()
                 .map(comment -> new CommentDTO(
                         comment.getId(),
@@ -59,6 +60,7 @@ public class SocialService {
                                 comment.getUser().getUsername(),
                                 comment.getUser().getAvatarUrl()
                         ),
+                        likeCount,
                         comment.getCreatedAt()
                 ))
                 .toList();
@@ -170,11 +172,13 @@ public class SocialService {
                 .build();
                 
         Comment saved = commentRepository.save(comment);
+        Long likeCount = likeRepository.getLikeCountBySubmissionId(submissionId);
 
         return new CommentDTO(
             saved.getId(),
             saved.getContent(),
             new UserSummaryDTO(user.getId(), user.getUsername(), user.getAvatarUrl()),
+            likeCount,
             saved.getCreatedAt()
         );
     }
@@ -196,6 +200,7 @@ public class SocialService {
             saved.getId(),
             saved.getContent(),
             new UserSummaryDTO(user.getId(), user.getUsername(), user.getAvatarUrl()),
+            0L,
             saved.getCreatedAt()
         );
     }

@@ -6,5 +6,6 @@ public record CommentDTO(
     Long id,
     String content,
     UserSummaryDTO user,
+    Long likesCount,
     LocalDateTime createdAt
 ) {}

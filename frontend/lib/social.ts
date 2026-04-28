@@ -1,3 +1,4 @@
+import { get } from 'http';
 import { apiFetch } from './api'
 import { CommunityPost, SuggestedUser, TrendingTopic, Comment } from '@/types/social.types'
 
@@ -19,6 +20,9 @@ export const socialApi = {
    */
   getSuggestions: () => 
     apiFetch<SuggestedUser[]>('/api/social/suggestions'),
+
+  getCommentsForSubmission: (submissionId: number) =>
+    apiFetch<Comment>(`/api/social/comments/submission/${submissionId}`),
 
   /**
    * Like ou Unlike une soumission
