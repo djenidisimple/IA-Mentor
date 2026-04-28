@@ -56,6 +56,21 @@ export default function CommunityPage() {
     return `Il y a ${Math.floor(hours / 24)}j`;
   };
 
+  const addComment = async (postId: number) => {
+    if (!newComment.trim()) return;
+    try {
+      const comment = await socialApi.addCommentToSubmission(postId, newComment);
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? { ...post, comments: post.comments + 1 } : post
+      ));
+      setNewComment("");
+      setCommentingOn(null);
+    }
+    catch (err) {
+      console.error("Erreur lors de l'ajout du commentaire:", err);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit']">
@@ -118,14 +133,21 @@ export default function CommunityPage() {
                 <article key={post.id} className="group border-b border-slate-100 pb-12 last:border-0">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-[13px] text-[#0D0D0D]">
+                      <div 
+                        className="
+                          w-10 h-10 
+                        bg-slate-100 border 
+                        border-slate-200 flex items-center justify-center font-bold text-[13px] text-[#0D0D0D]
+                          rounded-full overflow-hidden
+                        "
+                      >
                         {post.author.avatar ? (
                           <img src={post.author.avatar} alt="" className="w-full h-full object-cover" />
                         ) : post.author.username[0].toUpperCase()}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[15px] text-[#0D0D0D]">{post.author.username}</span>
+                          <span className="font-bold text-[15px] text-[#0D0D0D]">@{post.author.username}</span>
                           {post.author.isPremium && (
                             <span className="text-[9px] font-black border border-amber-200 text-amber-600 px-1.5 py-0.5">PRO</span>
                           )}
@@ -135,9 +157,9 @@ export default function CommunityPage() {
                         </span>
                       </div>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link href={`community/${post.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowUpRight className="w-5 h-5 text-slate-300 hover:text-[#0052FF]" />
-                    </button>
+                    </Link>
                   </div>
 
                   <p className="text-[16px] leading-relaxed text-slate-600 mb-6 max-w-2xl">
@@ -192,7 +214,7 @@ export default function CommunityPage() {
                         placeholder="Ajouter une revue technique..."
                         className="flex-1 border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-[#0052FF] transition-colors"
                       />
-                      <button className="text-[#0052FF] font-bold text-xs uppercase tracking-widest">Publier</button>
+                      <button className="text-[#0052FF] font-bold text-xs uppercase tracking-widest" onClick={() => addComment(post.id)}>Publier</button>
                     </div>
                   )}
                 </article>

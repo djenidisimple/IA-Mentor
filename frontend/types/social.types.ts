@@ -9,6 +9,7 @@ export interface Comment {
   content: string
   user: UserSummary
   createdAt: string
+  likeCount: number
 }
 export interface CommunityPost {
   id: number

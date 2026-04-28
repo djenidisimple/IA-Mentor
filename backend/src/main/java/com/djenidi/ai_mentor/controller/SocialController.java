@@ -61,6 +61,11 @@ public class SocialController {
         return ResponseEntity.ok(socialService.addCommentToSubmission(user, submissionId, request.content()));
     }
 
+    @GetMapping("/comments/submission/{submissionId}")
+    public ResponseEntity<List<CommentDTO>> getCommentsForSubmission(@PathVariable Long submissionId) {
+        return ResponseEntity.ok(socialService.getCommentsForSubmission(submissionId));
+    }
+
     // Commenter un challenge (existant)
     @PostMapping("/comment/challenge/{challengeId}")
     public ResponseEntity<CommentDTO> addCommentToChallenge(
