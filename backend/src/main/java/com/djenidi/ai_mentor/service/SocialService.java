@@ -46,6 +46,24 @@ public class SocialService {
         return null;
     }
 
+    public List<CommentDTO> getCommentsForSubmission(Long submissionId) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new EntityNotFoundException("Soumission non trouvée"));
+        
+        return submission.getComments().stream()
+                .map(comment -> new CommentDTO(
+                        comment.getId(),
+                        comment.getContent(),
+                        new UserSummaryDTO(
+                                comment.getUser().getId(),
+                                comment.getUser().getUsername(),
+                                comment.getUser().getAvatarUrl()
+                        ),
+                        comment.getCreatedAt()
+                ))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public List<PostDTO> getCommunityFeed() {
         List<Submission> subs = submissionRepository.findAllByOrderBySubmittedAtDesc();
