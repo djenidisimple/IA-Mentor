@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Folder, File, ChevronRight, ChevronDown, Loader2, AlertCircle, Database, Code } from "lucide-react";
 import { analysisApi } from "@/lib/analysis";
+import { GithubIcon } from "../icon";
 
 interface FileContent {
   path: string;
@@ -128,6 +129,16 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
       ".jsx": "React JSX",
       ".tsx": "React TSX",
       ".py": "Python",
+      ".c": "C",
+      ".cpp": "C++",
+      ".h": "C Header",
+      ".hpp": "C++ Header",
+      ".cs": "C#",
+      ".rb": "Ruby",
+      ".php": "PHP",
+      ".swift": "Swift",
+      ".html": "HTML",
+      ".css": "CSS",
       ".go": "Go",
       ".rs": "Rust",
       ".sql": "SQL",
@@ -221,7 +232,7 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Database size={18} className="text-gray-500" />
+            <GithubIcon size={18} className="text-gray-500" />
             <div>
               <h3 className="font-mono text-sm font-bold text-gray-800">
                 {repoContent?.owner}/{repoContent?.repo}

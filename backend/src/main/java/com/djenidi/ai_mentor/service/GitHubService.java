@@ -38,7 +38,7 @@ public class GitHubService {
 
     private static final Set<String> SUPPORTED_EXTENSIONS = Set.of(
         ".java", ".kt", ".js", ".ts", ".jsx", ".tsx", ".py", ".go", ".rs",
-        ".c", ".cpp", ".h", ".hpp", ".cs", ".rb", ".php", ".swift", ".sql"
+        ".c", ".cpp", ".h", ".hpp", ".cs", ".rb", ".php", ".swift", ".sql", ".html", ".css"
     );
 
     public RepositoryContentResponse fetchRepositoryContent(String githubUrl) {

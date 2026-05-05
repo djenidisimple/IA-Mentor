@@ -1,6 +1,5 @@
 import { apiFetch } from './api'
 import { Challenge, Category } from '@/types/challenge.types'
-import { axiosInstance } from './axios'
 
 export const challengesApi = {
 

@@ -13,6 +13,7 @@ import {
   Send,
   AlertCircle,
 } from "lucide-react";
+import RepositoryViewer from "@/components/challenges/RepositoryViewer";
 
 export default function InfoCommunityPage({
   params,
@@ -119,6 +120,7 @@ export default function InfoCommunityPage({
               </h1>
             </div>
 
+            
             {/* Compteur */}
             <div className="flex items-center gap-2 pb-1">
               <MessageCircle className="w-4 h-4 text-slate-300" />
@@ -131,8 +133,8 @@ export default function InfoCommunityPage({
       </header>
 
       <main className="max-w-[1200px] mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-
+        <RepositoryViewer submissionId={submissionId} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 mt-10">
           {/* ── Liste des commentaires ── */}
           <div className="lg:col-span-2 space-y-12">
             {comments.length > 0 ? (
