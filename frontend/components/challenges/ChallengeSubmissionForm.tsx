@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Send, GitBranch, MessageSquare, CheckCircle2, AlertCircle, Loader2, ExternalLink } from "lucide-react";
 import { submissionsApi } from "@/lib/submissions";
+import { GithubIcon } from "../icon";
 
 // Types
 interface ExistingSubmission {
@@ -298,7 +299,7 @@ export default function ChallengeSubmissionForm({
             Repository URL <span className="text-red-400">*</span>
           </label>
           <div className="relative">
-            <GitBranch
+            <GithubIcon
               className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
                 urlError ? "text-red-300" : "text-gray-300"
               }`}
