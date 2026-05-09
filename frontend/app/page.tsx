@@ -199,7 +199,7 @@ const StepCard = ({ step, icon: Icon, title, desc, isLast = false }: { step: str
 // --- Page Principale : DevChallenge ---
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('tous')
-  
+
   const languages = [
     { name: 'JavaScript', icon: Code2, color: '#F7DF1E', count: 45 },
     { name: 'Python', icon: Terminal, color: '#3776AB', count: 38 },
