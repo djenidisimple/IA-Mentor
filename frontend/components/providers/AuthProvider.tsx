@@ -1,8 +1,11 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store/authStore'
+import LoadingScreen from '../ui/LoadingScreen'
+import { useRouter } from 'next/navigation'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const { token, isAuthenticated, isHydrated, refreshAccessToken, logout } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(true)
 
@@ -19,15 +22,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           await logout()
         }
+      } else if (isAuthenticated && token) {
+        router.replace('/home')
       }
       setIsInitializing(false)
     }
 
     initAuth()
-  }, [isHydrated, isAuthenticated, token]); // On ajoute isHydrated ici
+  }, [isHydrated, isAuthenticated, token]);
 
-  if (isInitializing || !isHydrated) {
-    return <div className="flex h-screen items-center justify-center">Chargement...</div>
+  if (isInitializing || (isAuthenticated && !token) || !isHydrated) {
+    return <LoadingScreen minDuration={0} />
   }
 
   return <>{children}</>
