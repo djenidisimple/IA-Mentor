@@ -2,7 +2,8 @@ import { ApiError } from './api-errors'
 import { AuthResponse } from '@/types/auth.types'
 import { useAuthStore } from '@/lib/store/authStore' // Import de useAuthStore
 
-let refreshTokenPromise: Promise<AuthResponse | null> = null // Garder pour la promesse de refresh unique
+
+let refreshTokenPromise: Promise<AuthResponse | null>;
 
 export async function refreshToken(): Promise<AuthResponse | null> {
   // Utilise la logique de refresh centralisée dans authStore
