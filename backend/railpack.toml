@@ -1,0 +1,6 @@
+[build]
+builder = "ghcr.io/railwayapp/railpack-builder:mise-2026.3.17"
+buildCommand = "chmod +x mvnw && ./mvnw clean package -DskipTests"
+
+[deploy]
+startCommand = "java -jar target/*.jar"
