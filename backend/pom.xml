@@ -12,7 +12,14 @@
         <version>3.4.1</version>
         <relativePath/>
     </parent>
-
+    <build>
+        <finalName>app</finalName> <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
     <groupId>com.fullstackmentor</groupId>
     <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
