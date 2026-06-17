@@ -58,9 +58,9 @@ export default function InfoCommunityPage({
   /* ── État de chargement ── */
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit']">
-        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0052FF] animate-spin mb-4" />
-        <p className="text-[13px] font-medium uppercase tracking-widest text-slate-400">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center ">
+        <div className="w-8 h-8 border-2 border-[var(--border-pink)] border-t-[var(--blue)] animate-spin mb-4" />
+        <p className="text-[13px] font-medium uppercase tracking-widest text-[var(--gray)]">
           Chargement des commentaires
         </p>
       </div>
@@ -70,14 +70,14 @@ export default function InfoCommunityPage({
   /* ── État d'erreur ── */
   if (error) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit'] gap-4">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center  gap-4">
         <AlertCircle className="w-8 h-8 text-red-400" />
-        <p className="text-[13px] font-medium uppercase tracking-widest text-slate-400">
+        <p className="text-[13px] font-medium uppercase tracking-widest text-[var(--gray)]">
           {error}
         </p>
         <Link
           href="/community"
-          className="text-[11px] font-bold uppercase tracking-widest text-[#0052FF] border-b border-[#0052FF] pb-0.5"
+          className="text-[11px] font-bold uppercase tracking-widest text-[var(--blue)] border-b border-[var(--blue)] pb-0.5"
         >
           Retour à la communauté
         </Link>
@@ -86,45 +86,45 @@ export default function InfoCommunityPage({
   }
 
   return (
-    <div className="min-h-screen bg-white font-['Outfit']">
+    <div className="min-h-screen bg-white ">
 
       {/* ── En-tête ── */}
-      <header className="border-b border-slate-100">
+      <header className="border-b border-[var(--border-pink)]">
         <div className="max-w-[1200px] mx-auto px-6 py-12">
 
           {/* Fil d'Ariane */}
           <nav className="flex items-center gap-2 mb-8 text-[11px] font-bold uppercase tracking-widest">
             <Link
               href="/community"
-              className="text-slate-400 hover:text-[#0052FF] transition-colors flex items-center gap-1.5"
+              className="text-[var(--gray)] hover:text-[var(--blue)] transition-colors flex items-center gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Communauté
             </Link>
-            <ChevronRight className="w-3 h-3 text-slate-300" />
-            <span className="text-[#0D0D0D]">Publication #{submissionId}</span>
+            <ChevronRight className="w-3 h-3 text-[var(--gray)]" />
+            <span className="text-[var(--navy)]">Publication #{submissionId}</span>
           </nav>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 bg-[#0052FF] rotate-45" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0052FF]">
+                <span className="w-2 h-2 bg-[var(--blue)] rotate-45" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--blue)]">
                   Fil de discussion
                 </span>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-[#0D0D0D]">
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--navy)]">
                 Commentaires{" "}
-                <span className="text-slate-300">/</span>{" "}
-                <span className="text-slate-400 text-3xl">#{submissionId}</span>
+                <span className="text-[var(--gray)]">/</span>{" "}
+                <span className="text-[var(--gray)] text-3xl">#{submissionId}</span>
               </h1>
             </div>
 
             
             {/* Compteur */}
             <div className="flex items-center gap-2 pb-1">
-              <MessageCircle className="w-4 h-4 text-slate-300" />
-              <span className="text-[13px] font-bold text-slate-400 uppercase tracking-widest">
+              <MessageCircle className="w-4 h-4 text-[var(--gray)]" />
+              <span className="text-[13px] font-bold text-[var(--gray)] uppercase tracking-widest">
                 {comments.length} réponse{comments.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -141,7 +141,7 @@ export default function InfoCommunityPage({
               comments.map((comment, index) => (
                 <article
                   key={comment.id ?? index}
-                  className="group border-b border-slate-100 pb-12 last:border-0"
+                  className="group border-b border-[var(--border-pink)] pb-12 last:border-0"
                 >
                   {/* Auteur + date */}
                   <div className="flex items-start justify-between mb-6">
@@ -149,9 +149,9 @@ export default function InfoCommunityPage({
                       <div
                         className="
                           w-10 h-10
-                          bg-slate-100 border border-slate-200
+                          bg-[var(--cream)] border border-[var(--border-pink)]
                           flex items-center justify-center
-                          font-bold text-[13px] text-[#0D0D0D]
+                          font-bold text-[13px] text-[var(--navy)]
                           rounded-full overflow-hidden
                         "
                       >
@@ -167,12 +167,12 @@ export default function InfoCommunityPage({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[15px] text-[#0D0D0D]">
+                          <span className="font-bold text-[15px] text-[var(--navy)]">
                             @{comment.user?.username ?? "anonyme"}
                           </span>
                         </div>
                         {comment.createdAt && (
-                          <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="text-[11px] font-medium text-[var(--gray)] uppercase tracking-wider flex items-center gap-1.5">
                             <Clock className="w-3 h-3" />
                             {formatDate(comment.createdAt)}
                           </span>
@@ -181,19 +181,19 @@ export default function InfoCommunityPage({
                     </div>
 
                     {/* Numéro de position */}
-                    <span className="text-[11px] font-bold text-slate-200 tabular-nums">
+                    <span className="text-[11px] font-bold text-[var(--gray)] tabular-nums">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </div>
 
                   {/* Contenu */}
-                  <p className="text-[16px] leading-relaxed text-slate-600 mb-6 max-w-2xl">
+                  <p className="text-[16px] leading-relaxed text-[var(--gray)] mb-6 max-w-2xl">
                     {comment.content}
                   </p>
 
                   {/* Actions */}
                   <div className="flex items-center gap-6">
-                    <button className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#0D0D0D] transition-colors">
+                    <button className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-[var(--gray)] hover:text-[var(--navy)] transition-colors">
                       <Heart className="w-4 h-4" />
                       {comment.likeCount ?? 0}
                     </button>
@@ -205,7 +205,7 @@ export default function InfoCommunityPage({
                             : (comment.id ?? index)
                         )
                       }
-                      className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#0D0D0D] transition-colors"
+                      className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-[var(--gray)] hover:text-[var(--navy)] transition-colors"
                     >
                       <MessageCircle className="w-4 h-4" />
                       Répondre
@@ -219,7 +219,7 @@ export default function InfoCommunityPage({
                         value={newReply}
                         onChange={(e) => setNewReply(e.target.value)}
                         placeholder="Écrire une réponse..."
-                        className="flex-1 border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-[#0052FF] transition-colors bg-transparent"
+                        className="flex-1 border-b border-[var(--border-pink)] py-2 text-sm focus:outline-none focus:border-[var(--blue)] transition-colors bg-transparent"
                       />
                       <button
                         onClick={() => {
@@ -228,7 +228,7 @@ export default function InfoCommunityPage({
                           setNewReply("");
                           setReplyingTo(null);
                         }}
-                        className="text-[#0052FF] hover:text-[#0D0D0D] transition-colors"
+                        className="text-[var(--blue)] hover:text-[var(--navy)] transition-colors"
                       >
                         <Send className="w-4 h-4" />
                       </button>
@@ -237,12 +237,12 @@ export default function InfoCommunityPage({
                 </article>
               ))
             ) : (
-              <div className="text-center py-20 border border-dashed border-slate-200">
-                <MessageCircle className="w-6 h-6 text-slate-200 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">
+              <div className="text-center py-20 border border-dashed border-[var(--border-pink)]">
+                <MessageCircle className="w-6 h-6 text-[var(--gray)] mx-auto mb-3" />
+                <p className="text-[var(--gray)] text-sm">
                   Aucun commentaire pour l'instant.
                 </p>
-                <p className="text-[11px] text-slate-300 uppercase tracking-widest mt-1">
+                <p className="text-[11px] text-[var(--gray)] uppercase tracking-widest mt-1">
                   Soyez le premier à réagir
                 </p>
               </div>
@@ -255,8 +255,8 @@ export default function InfoCommunityPage({
             {/* Stats de la discussion */}
             <section>
               <div className="flex items-center gap-2 mb-8">
-                <MessageCircle className="w-4 h-4 text-[#0052FF]" />
-                <h3 className="text-[12px] font-black uppercase tracking-[0.15em] text-[#0D0D0D]">
+                <MessageCircle className="w-4 h-4 text-[var(--blue)]" />
+                <h3 className="text-[12px] font-black uppercase tracking-[0.15em] text-[var(--navy)]">
                   Résumé
                 </h3>
               </div>
@@ -275,11 +275,11 @@ export default function InfoCommunityPage({
                     value: new Set(comments.map((c) => c.user?.username)).size,
                   },
                 ].map((stat) => (
-                  <div key={stat.label} className="flex justify-between items-baseline border-b border-slate-100 pb-4">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  <div key={stat.label} className="flex justify-between items-baseline border-b border-[var(--border-pink)] pb-4">
+                    <p className="text-[11px] font-bold text-[var(--gray)] uppercase tracking-widest">
                       {stat.label}
                     </p>
-                    <span className="text-[22px] font-black text-[#0D0D0D] tabular-nums">
+                    <span className="text-[22px] font-black text-[var(--navy)] tabular-nums">
                       {stat.value}
                     </span>
                   </div>
@@ -288,15 +288,15 @@ export default function InfoCommunityPage({
             </section>
 
             {/* CTA retour */}
-            <section className="p-8 border-2 border-[#0D0D0D] relative">
-              <div className="w-2 h-2 bg-[#0052FF] rotate-45 mb-4" />
-              <h3 className="text-lg font-bold mb-2">Explorer plus</h3>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            <section className="p-8 bg-white border border-[var(--border-pink)] rounded-xl sm:rounded-2xl">
+              <span className="w-3 h-3 bg-[var(--blue)] rounded-full block mb-4" />
+              <h3 className="text-lg font-bold text-[var(--navy)] mb-2">Explorer plus</h3>
+              <p className="text-sm text-[var(--gray)] mb-6 leading-relaxed">
                 Retrouvez toutes les soumissions et discussions de la communauté.
               </p>
               <Link
                 href="/community"
-                className="flex items-center justify-center w-full py-3 bg-[#0D0D0D] text-white text-[11px] font-bold uppercase tracking-widest hover:bg-[#0052FF] transition-colors"
+                className="flex items-center justify-center w-full py-3 bg-[var(--navy)] text-white rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-[#2A3050] transition-all shadow-lg shadow-[var(--navy)]/10"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-2" />
                 Retour au fil

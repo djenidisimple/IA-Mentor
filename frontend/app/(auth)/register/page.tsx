@@ -26,14 +26,14 @@ const PillBadge = ({ children, variant = 'default' }: { children: React.ReactNod
   
   if (variant === 'accent') {
     return (
-      <span className={`${baseClasses} bg-[#1A1F36] text-white`}>
+      <span className={`${baseClasses} bg-[var(--navy)] text-white`}>
         {children}
       </span>
     )
   }
   
   return (
-    <span className={`${baseClasses} bg-white border border-[#F0E0E0] text-[#1A1F36]`}>
+    <span className={`${baseClasses} bg-white border border-[var(--border-pink)] text-[var(--navy)]`}>
       {children}
     </span>
   )
@@ -52,12 +52,12 @@ const SolidButton = ({
   disabled?: boolean,
   loading?: boolean
 }) => {
-  const baseClasses = "inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1A1F36]/20"
+  const baseClasses = "inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 ease-out active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--navy)]/20"
   
   const variantClasses = {
-    navy: 'bg-[#1A1F36] text-white hover:bg-[#2A3050] shadow-lg shadow-[#1A1F36]/10',
-    white: 'bg-white text-[#1A1F36] border border-[#F0E0E0] hover:bg-gray-50',
-    yellow: 'bg-[#FFD93D] text-[#1A1F36] font-extrabold hover:brightness-105 shadow-lg shadow-[#FFD93D]/20',
+    navy: 'bg-[var(--navy)] text-white hover:bg-[#2A3050] shadow-lg shadow-[var(--navy)]/10',
+    white: 'bg-white text-[var(--navy)] border border-[var(--border-pink)] hover:bg-gray-50',
+    yellow: 'bg-[var(--yellow)] text-[var(--navy)] font-extrabold hover:brightness-105 shadow-lg shadow-[var(--yellow)]/20',
   }
 
   return (
@@ -206,7 +206,7 @@ export default function RegisterPage() {
 
     if (score <= 2) return { level: 1, label: 'Faible', color: '#EF4444' }
     if (score <= 3) return { level: 2, label: 'Moyen', color: '#F59E0B' }
-    if (score <= 4) return { level: 3, label: 'Bon', color: '#4A90D9' }
+    if (score <= 4) return { level: 3, label: 'Bon', color: 'var(--blue)' }
     return { level: 4, label: 'Excellent', color: '#10B981' }
   }
 
@@ -217,86 +217,53 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFDF7] font-['Plus_Jakarta_Sans',_'Inter'] selection:bg-[#1A1F36]/10 overflow-x-hidden flex items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-[var(--cream)]  selection:bg-[var(--navy)]/10 overflow-x-hidden flex items-center justify-center px-6 py-10">
       
       {/* Grille abstraite de fond */}
       <div 
         className="fixed inset-0 -z-10 opacity-[0.025] pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(#1A1F36 1px, transparent 1px),
-            linear-gradient(90deg, #1A1F36 1px, transparent 1px)
+            linear-gradient(var(--navy) 1px, transparent 1px),
+            linear-gradient(90deg, var(--navy) 1px, transparent 1px)
           `,
           backgroundSize: '80px 80px',
           backgroundPosition: 'center center',
         }}
       />
 
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-        :root {
-          --cream:       #FFFDF7;
-          --navy:        #1A1F36;
-          --border-pink: #F0E0E0;
-          --yellow:      #FFD93D;
-          --orange:      #FF8C42;
-          --blue:        #4A90D9;
-          --purple:      #6C5CE7;
-          --gray:        #6B7280;
-        }
-
-        body {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-
-        @keyframes fadeUpSoft {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fade-up {
-          animation: fadeUpSoft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-          opacity: 0;
-        }
-
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        .delay-4 { animation-delay: 0.4s; }
-      `}</style>
 
       {/* Carte principale */}
       <div className="w-full max-w-md animate-fade-up">
-        <div className="bg-white border border-[#F0E0E0] rounded-2xl shadow-xl relative overflow-hidden">
+        <div className="bg-white border border-[var(--border-pink)] rounded-2xl shadow-xl relative overflow-hidden">
           
           {/* Décorations */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#FFD93D]/10 blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#4A90D9]/10 blur-2xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[var(--yellow)]/10 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[var(--blue)]/10 blur-2xl pointer-events-none" />
 
           <div className="relative z-10 p-8">
             
             {/* Logo + Marque */}
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-2 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-[#1A1F36] flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-[var(--navy)] flex items-center justify-center shadow-md">
                   <Code2 className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-[#1A1F36] text-xl tracking-tight">
-                  Dev<span className="text-[#4A90D9]">Challenge</span>
+                <span className="font-bold text-[var(--navy)] text-xl tracking-tight">
+                  Dev<span className="text-[var(--blue)]">Challenge</span>
                 </span>
               </div>
 
               <PillBadge>
-                <span className="w-2 h-2 rounded-full bg-[#FFD93D] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[var(--yellow)] animate-pulse" />
                 Nouveau développeur
               </PillBadge>
 
-              <h1 className="text-2xl md:text-3xl font-extrabold text-[#1A1F36] mt-5 mb-2 tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--navy)] mt-5 mb-2 tracking-tight">
                 Rejoignez l&apos;aventure
               </h1>
-              <p className="text-[#6B7280] text-[14px] max-w-xs mx-auto leading-relaxed">
+              <p className="text-[var(--gray)] text-[14px] max-w-xs mx-auto leading-relaxed">
                 Créez votre compte et commencez à relever des défis dès aujourd&apos;hui.
               </p>
             </div>
@@ -306,8 +273,8 @@ export default function RegisterPage() {
               
               {/* Champ Nom d'utilisateur */}
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36] uppercase tracking-[0.08em]">
-                  <User size={14} className={focusedField === 'username' ? 'text-[#4A90D9]' : 'text-[#6B7280]'} />
+                <label className="flex items-center gap-2 text-[11px] font-bold text-[var(--navy)] uppercase tracking-[0.08em]">
+                  <User size={14} className={focusedField === 'username' ? 'text-[var(--blue)]' : 'text-[var(--gray)]'} />
                   Nom d&apos;utilisateur
                 </label>
                 <div className="relative">
@@ -321,7 +288,7 @@ export default function RegisterPage() {
                     placeholder="votre-pseudo"
                     required
                     maxLength={30}
-                    className="w-full bg-[#FFFDF7] text-[#1A1F36] text-[14px] font-medium px-4 py-3.5 rounded-xl outline-none placeholder:text-[#6B7280]/50 border border-[#F0E0E0] focus:border-[#4A90D9] focus:bg-white focus:ring-4 focus:ring-[#4A90D9]/5 transition-all duration-200"
+                    className="w-full bg-[var(--cream)] text-[var(--navy)] text-[14px] font-medium px-4 py-3.5 rounded-xl outline-none placeholder:text-[var(--gray)]/50 border border-[var(--border-pink)] focus:border-[var(--blue)] focus:bg-white focus:ring-4 focus:ring-[var(--blue)]/5 transition-all duration-200"
                   />
                   {form.username.length >= 3 && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -333,8 +300,8 @@ export default function RegisterPage() {
 
               {/* Champ Email */}
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36] uppercase tracking-[0.08em]">
-                  <Mail size={14} className={focusedField === 'email' ? 'text-[#4A90D9]' : 'text-[#6B7280]'} />
+                <label className="flex items-center gap-2 text-[11px] font-bold text-[var(--navy)] uppercase tracking-[0.08em]">
+                  <Mail size={14} className={focusedField === 'email' ? 'text-[var(--blue)]' : 'text-[var(--gray)]'} />
                   Email
                 </label>
                 <div className="relative">
@@ -347,7 +314,7 @@ export default function RegisterPage() {
                     onBlur={() => setFocusedField(null)}
                     placeholder="dev@example.com"
                     required
-                    className="w-full bg-[#FFFDF7] text-[#1A1F36] text-[14px] font-medium px-4 py-3.5 rounded-xl outline-none placeholder:text-[#6B7280]/50 border border-[#F0E0E0] focus:border-[#4A90D9] focus:bg-white focus:ring-4 focus:ring-[#4A90D9]/5 transition-all duration-200"
+                    className="w-full bg-[var(--cream)] text-[var(--navy)] text-[14px] font-medium px-4 py-3.5 rounded-xl outline-none placeholder:text-[var(--gray)]/50 border border-[var(--border-pink)] focus:border-[var(--blue)] focus:bg-white focus:ring-4 focus:ring-[var(--blue)]/5 transition-all duration-200"
                   />
                   {form.email.includes('@') && form.email.includes('.') && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -359,8 +326,8 @@ export default function RegisterPage() {
 
               {/* Champ Mot de passe */}
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36] uppercase tracking-[0.08em]">
-                  <Lock size={14} className={focusedField === 'password' ? 'text-[#4A90D9]' : 'text-[#6B7280]'} />
+                <label className="flex items-center gap-2 text-[11px] font-bold text-[var(--navy)] uppercase tracking-[0.08em]">
+                  <Lock size={14} className={focusedField === 'password' ? 'text-[var(--blue)]' : 'text-[var(--gray)]'} />
                   Mot de passe
                 </label>
                 <div className="relative">
@@ -373,12 +340,12 @@ export default function RegisterPage() {
                     onBlur={() => setFocusedField(null)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#FFFDF7] text-[#1A1F36] text-[14px] font-medium px-4 py-3.5 pr-12 rounded-xl outline-none placeholder:text-[#6B7280]/50 border border-[#F0E0E0] focus:border-[#4A90D9] focus:bg-white focus:ring-4 focus:ring-[#4A90D9]/5 transition-all duration-200"
+                    className="w-full bg-[var(--cream)] text-[var(--navy)] text-[14px] font-medium px-4 py-3.5 pr-12 rounded-xl outline-none placeholder:text-[var(--gray)]/50 border border-[var(--border-pink)] focus:border-[var(--blue)] focus:bg-white focus:ring-4 focus:ring-[var(--blue)]/5 transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1A1F36] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--gray)] hover:text-[var(--navy)] transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -392,7 +359,7 @@ export default function RegisterPage() {
                           key={level}
                           className="h-1 flex-1 rounded-full transition-all duration-300"
                           style={{
-                            backgroundColor: level <= passwordStrength.level ? passwordStrength.color : '#F0E0E0',
+                            backgroundColor: level <= passwordStrength.level ? passwordStrength.color : 'var(--border-pink)',
                           }}
                         />
                       ))}
@@ -409,8 +376,8 @@ export default function RegisterPage() {
 
               {/* Champ Confirmation mot de passe */}
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-[#1A1F36] uppercase tracking-[0.08em]">
-                  <Lock size={14} className={focusedField === 'confirmPassword' ? 'text-[#4A90D9]' : 'text-[#6B7280]'} />
+                <label className="flex items-center gap-2 text-[11px] font-bold text-[var(--navy)] uppercase tracking-[0.08em]">
+                  <Lock size={14} className={focusedField === 'confirmPassword' ? 'text-[var(--blue)]' : 'text-[var(--gray)]'} />
                   Confirmer le mot de passe
                 </label>
                 <div className="relative">
@@ -423,12 +390,12 @@ export default function RegisterPage() {
                     onBlur={() => setFocusedField(null)}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-[#FFFDF7] text-[#1A1F36] text-[14px] font-medium px-4 py-3.5 pr-12 rounded-xl outline-none placeholder:text-[#6B7280]/50 border border-[#F0E0E0] focus:border-[#4A90D9] focus:bg-white focus:ring-4 focus:ring-[#4A90D9]/5 transition-all duration-200"
+                    className="w-full bg-[var(--cream)] text-[var(--navy)] text-[14px] font-medium px-4 py-3.5 pr-12 rounded-xl outline-none placeholder:text-[var(--gray)]/50 border border-[var(--border-pink)] focus:border-[var(--blue)] focus:bg-white focus:ring-4 focus:ring-[var(--blue)]/5 transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1A1F36] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--gray)] hover:text-[var(--navy)] transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -447,19 +414,19 @@ export default function RegisterPage() {
                   onClick={() => setAcceptedTerms(!acceptedTerms)}
                   className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
                     acceptedTerms 
-                      ? 'bg-[#1A1F36] border-[#1A1F36]' 
-                      : 'bg-white border-[#F0E0E0] hover:border-[#4A90D9]'
+                      ? 'bg-[var(--navy)] border-[var(--navy)]' 
+                      : 'bg-white border-[var(--border-pink)] hover:border-[var(--blue)]'
                   }`}
                 >
                   {acceptedTerms && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                 </button>
-                <label className="text-[12px] text-[#6B7280] leading-relaxed cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
+                <label className="text-[12px] text-[var(--gray)] leading-relaxed cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
                   J&apos;accepte les{' '}
-                  <Link href="/conditions" className="text-[#4A90D9] font-bold hover:underline">
+                  <Link href="/conditions" className="text-[var(--blue)] font-bold hover:underline">
                     conditions d&apos;utilisation
                   </Link>
                   {' '}et la{' '}
-                  <Link href="/confidentialite" className="text-[#4A90D9] font-bold hover:underline">
+                  <Link href="/confidentialite" className="text-[var(--blue)] font-bold hover:underline">
                     politique de confidentialité
                   </Link>
                 </label>
@@ -485,20 +452,20 @@ export default function RegisterPage() {
 
               {/* Séparateur */}
               <div className="relative flex items-center py-2">
-                <div className="flex-grow border-t border-[#F0E0E0]" />
-                <span className="flex-shrink-0 mx-4 text-[#6B7280] text-[10px] font-bold uppercase tracking-[0.1em]">
+                <div className="flex-grow border-t border-[var(--border-pink)]" />
+                <span className="flex-shrink-0 mx-4 text-[var(--gray)] text-[10px] font-bold uppercase tracking-[0.1em]">
                   ou
                 </span>
-                <div className="flex-grow border-t border-[#F0E0E0]" />
+                <div className="flex-grow border-t border-[var(--border-pink)]" />
               </div>
 
               {/* Bouton GitHub */}
               <a
                 href="http://localhost:8080/oauth2/authorization/github"
-                className="flex items-center justify-center gap-3 w-full bg-white border border-[#F0E0E0] hover:border-[#1A1F36] hover:shadow-md text-[#1A1F36] py-3.5 px-4 rounded-full text-[12px] font-bold tracking-wide uppercase transition-all duration-300 group relative overflow-hidden"
+                className="flex items-center justify-center gap-3 w-full bg-white border border-[var(--border-pink)] hover:border-[var(--navy)] hover:shadow-md text-[var(--navy)] py-3.5 px-4 rounded-full text-[12px] font-bold tracking-wide uppercase transition-all duration-300 group relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-[#1A1F36] translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-full" />
-                <GithubIcon className="relative z-10 w-5 h-5 text-[#1A1F36] group-hover:text-white transition-colors duration-300" />
+                <div className="absolute inset-0 bg-[var(--navy)] translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-full" />
+                <GithubIcon className="relative z-10 w-5 h-5 text-[var(--navy)] group-hover:text-white transition-colors duration-300" />
                 <span className="relative z-10 group-hover:text-white transition-colors duration-300">
                   S&apos;inscrire avec GitHub
                 </span>
@@ -507,11 +474,11 @@ export default function RegisterPage() {
             </form>
 
             {/* Lien de connexion */}
-            <p className="text-center text-[#6B7280] text-[13px] font-medium mt-6">
+            <p className="text-center text-[var(--gray)] text-[13px] font-medium mt-6">
               Déjà un compte ?{' '}
               <Link 
                 href="/login" 
-                className="text-[#4A90D9] font-bold hover:text-[#1A1F36] transition-colors inline-flex items-center gap-1 group"
+                className="text-[var(--blue)] font-bold hover:text-[var(--navy)] transition-colors inline-flex items-center gap-1 group"
               >
                 Se connecter
                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

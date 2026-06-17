@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
-import { X, LogOut, User, Menu } from 'lucide-react'
+import { X, LogOut, User, Menu, Code2 } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -45,23 +45,11 @@ export default function Navbar() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
-
-        :root {
-          --accent: #0052FF;
-          --ink:    #0D0D0D;
-          --muted:  #888888;
-          --border: #E5E5E5;
-          --bg:     #FFFFFF;
-        }
-
         .nav-link {
           position: relative;
-          font-family: 'Outfit', sans-serif;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 500;
-          letter-spacing: 0.01em;
-          color: var(--muted);
+          color: var(--gray);
           transition: color 0.2s ease;
         }
         .nav-link::after {
@@ -71,36 +59,19 @@ export default function Navbar() {
           left: 0;
           width: 0;
           height: 1.5px;
-          background: var(--ink);
+          background: var(--yellow);
           transition: width 0.25s ease;
         }
         .nav-link:hover,
         .nav-link.active {
-          color: var(--ink);
+          color: var(--navy);
         }
         .nav-link:hover::after,
         .nav-link.active::after {
           width: 100%;
         }
         .nav-link.active::after {
-          background: var(--accent);
-        }
-
-        .nav-cta {
-          font-family: 'Outfit', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          padding: 8px 22px;
-          border: 1.5px solid var(--ink);
-          color: var(--ink);
-          background: transparent;
-          transition: background 0.2s ease, color 0.2s ease;
-          text-align: center;
-        }
-        .nav-cta:hover {
-          background: var(--ink);
-          color: white;
+          background: var(--yellow);
         }
 
         @keyframes fadeIn {
@@ -116,22 +87,20 @@ export default function Navbar() {
         .dropdown-enter { animation: fadeUp 0.2s ease forwards; }
       `}</style>
 
-      <nav className="fixed top-0 w-full z-[100] bg-white font-['Outfit'] border-b border-[var(--border)]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-          
-          {/* ── Logo ── */}
+      <nav className="fixed top-0 w-full z-[100] bg-[var(--cream)]/80 backdrop-blur-md border-b border-[var(--border-pink)]">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 sm:py-5 flex items-center justify-between">
+
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-            <div
-              className="w-7 h-7 flex-shrink-0 transition-transform duration-300 group-hover:rotate-45"
-              style={{
-                background: 'var(--accent)',
-                clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-              }}
-            />
-            <span className="font-bold text-lg tracking-tight">Logo</span>
+            <div className="w-9 h-9 rounded-xl bg-[var(--navy)] flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+              <Code2 className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg tracking-tight text-[var(--navy)]">
+              Dev<span className="text-[var(--blue)]">Challenge</span>
+            </span>
           </Link>
 
-          {/* ── Desktop Nav ── */}
+          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-10">
             {navItems.map((item) => (
               <Link
@@ -144,7 +113,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* ── Right actions ── */}
+          {/* Right actions */}
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
@@ -153,38 +122,32 @@ export default function Navbar() {
                   className="flex items-center gap-3 group"
                 >
                   <div className="hidden sm:block text-right leading-none">
-                    <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--ink)]">
+                    <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--navy)]">
                       {user?.username}
                     </p>
                   </div>
-                  <div
-                    className="w-9 h-9 border flex items-center justify-center text-[13px] font-bold uppercase transition-colors"
-                    style={{
-                      borderColor: userMenuOpen ? 'var(--ink)' : 'var(--border)',
-                      color: 'var(--ink)',
-                    }}
-                  >
+                  <div className="w-9 h-9 rounded-full bg-[var(--navy)] flex items-center justify-center text-[13px] font-bold uppercase text-white">
                     {user?.username?.[0]}
                   </div>
                 </button>
 
                 {userMenuOpen && (
-                  <div className="dropdown-enter absolute right-0 top-12 w-52 bg-white border border-[var(--border)] shadow-xl z-50">
-                    <div className="px-4 py-3 border-b border-[var(--border)]">
-                      <p className="text-[12px] font-bold uppercase text-[var(--ink)]">{user?.username}</p>
-                      <p className="text-[11px] text-[var(--muted)] truncate">{user?.email}</p>
+                  <div className="dropdown-enter absolute right-0 top-12 w-52 bg-white border border-[var(--border-pink)] rounded-xl shadow-xl z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-[var(--border-pink)]">
+                      <p className="text-[12px] font-bold uppercase text-[var(--navy)]">{user?.username}</p>
+                      <p className="text-[11px] text-[var(--gray)] truncate">{user?.email}</p>
                     </div>
                     <Link
                       href="/profile"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-[13px] font-medium text-[var(--ink)]"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--cream)] text-[13px] font-medium text-[var(--navy)]"
                     >
-                      <User className="w-4 h-4 text-[var(--muted)]" />
+                      <User className="w-4 h-4 text-[var(--gray)]" />
                       Mon profil
                     </Link>
                     <button
                       onClick={() => { logout(); setUserMenuOpen(false) }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-[13px] font-medium text-red-500 border-t border-[var(--border)]"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-[13px] font-medium text-red-500 border-t border-[var(--border-pink)]"
                     >
                       <LogOut className="w-4 h-4" />
                       Déconnexion
@@ -195,14 +158,19 @@ export default function Navbar() {
             ) : (
               <div className="hidden sm:flex items-center gap-6">
                 <Link href="/login" className="nav-link">Login</Link>
-                <Link href="/register" className="nav-cta">Join Free</Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-bold tracking-wide bg-[var(--navy)] text-white hover:bg-[#2A3050] shadow-lg shadow-[var(--navy)]/10 transition-all duration-300 ease-out active:scale-95"
+                >
+                  Commencer
+                </Link>
               </div>
             )}
 
             {/* Mobile Burger Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 text-[var(--ink)]"
+              className="lg:hidden p-2 text-[var(--navy)]"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -210,38 +178,38 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Mobile Menu Overlay ── */}
+        {/* Mobile Menu Overlay */}
         {mobileOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-white z-[90] mobile-fade-in flex flex-col">
+          <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[var(--cream)] z-[90] mobile-fade-in flex flex-col">
             <div className="flex flex-col p-6 gap-2">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`py-4 text-lg font-medium border-b border-[var(--border)] transition-colors ${
-                    isActiveLink(item.href) ? 'text-[var(--accent)]' : 'text-[var(--ink)]'
+                  className={`py-4 text-lg font-medium border-b border-[var(--border-pink)] transition-colors ${
+                    isActiveLink(item.href) ? 'text-[var(--navy)]' : 'text-[var(--gray)]'
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              
+
               {!isAuthenticated && (
                 <div className="flex flex-col gap-4 mt-6">
-                  <Link 
-                    href="/login" 
+                  <Link
+                    href="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="text-center py-3 font-medium text-[var(--ink)]"
+                    className="text-center py-3 font-medium text-[var(--navy)]"
                   >
                     Login
                   </Link>
-                  <Link 
-                    href="/register" 
+                  <Link
+                    href="/register"
                     onClick={() => setMobileOpen(false)}
-                    className="nav-cta py-4 text-base"
+                    className="text-center py-3 rounded-full text-[13px] font-bold tracking-wide bg-[var(--navy)] text-white"
                   >
-                    Join Free
+                    Commencer
                   </Link>
                 </div>
               )}

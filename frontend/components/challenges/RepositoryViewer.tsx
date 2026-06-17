@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Folder, File, ChevronRight, ChevronDown, Loader2, AlertCircle, Database, Code } from "lucide-react";
+import { Folder, File, ChevronRight, ChevronDown, Loader2, AlertCircle, Code } from "lucide-react";
 import { analysisApi } from "@/lib/analysis";
 import { GithubIcon } from "../icon";
 
@@ -50,11 +50,10 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
     try {
       const content = await analysisApi.getRepositoryContent(submissionId);
       setRepoContent(content);
-      
+
       const tree = buildFileTree(content.files);
       setFileTree(tree);
-      
-      // Expand root folders by default
+
       const rootFolders = new Set<string>();
       tree.forEach(node => {
         if (node.type === "directory") {
@@ -63,7 +62,7 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
       });
       setExpandedFolders(rootFolders);
     } catch (err: any) {
-      setError(err.message || "Erreur lors de la recuperation du repository");
+      setError(err.message || "Erreur lors de la récupération du repository");
     } finally {
       setLoading(false);
     }
@@ -122,31 +121,13 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
 
   const getLanguageFromExtension = (extension: string): string => {
     const map: { [key: string]: string } = {
-      ".java": "Java",
-      ".kt": "Kotlin",
-      ".js": "JavaScript",
-      ".ts": "TypeScript",
-      ".jsx": "React JSX",
-      ".tsx": "React TSX",
-      ".py": "Python",
-      ".c": "C",
-      ".cpp": "C++",
-      ".h": "C Header",
-      ".hpp": "C++ Header",
-      ".cs": "C#",
-      ".rb": "Ruby",
-      ".php": "PHP",
-      ".swift": "Swift",
-      ".html": "HTML",
-      ".css": "CSS",
-      ".go": "Go",
-      ".rs": "Rust",
-      ".sql": "SQL",
-      ".json": "JSON",
-      ".xml": "XML",
-      ".yml": "YAML",
-      ".yaml": "YAML",
-      ".md": "Markdown",
+      ".java": "Java", ".kt": "Kotlin", ".js": "JavaScript", ".ts": "TypeScript",
+      ".jsx": "React JSX", ".tsx": "React TSX", ".py": "Python",
+      ".c": "C", ".cpp": "C++", ".h": "C Header", ".hpp": "C++ Header",
+      ".cs": "C#", ".rb": "Ruby", ".php": "PHP", ".swift": "Swift",
+      ".html": "HTML", ".css": "CSS", ".go": "Go", ".rs": "Rust",
+      ".sql": "SQL", ".json": "JSON", ".xml": "XML", ".yml": "YAML",
+      ".yaml": "YAML", ".md": "Markdown",
     };
     return map[extension] || extension.slice(1).toUpperCase();
   };
@@ -159,18 +140,18 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
       return (
         <div key={node.path}>
           <div
-            className="flex items-center py-1.5 px-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+            className="flex items-center py-1.5 px-2 hover:bg-[var(--cream)] rounded-lg cursor-pointer transition-colors"
             style={{ paddingLeft: `${paddingLeft}px` }}
             onClick={() => toggleFolder(node.path)}
           >
             {isExpanded ? (
-              <ChevronDown size={16} className="text-gray-400 mr-1" />
+              <ChevronDown size={16} className="text-[var(--gray)] mr-1" />
             ) : (
-              <ChevronRight size={16} className="text-gray-400 mr-1" />
+              <ChevronRight size={16} className="text-[var(--gray)] mr-1" />
             )}
-            <Folder size={16} className="text-yellow-500 mr-2" />
-            <span className="text-sm font-mono text-gray-700">{node.name}</span>
-            <span className="ml-2 text-[10px] text-gray-400">
+            <Folder size={16} className="text-[var(--yellow)] mr-2" />
+            <span className="text-sm font-bold text-[var(--navy)]">{node.name}</span>
+            <span className="ml-2 text-[10px] text-[var(--gray)]">
               ({node.children?.length || 0})
             </span>
           </div>
@@ -191,14 +172,14 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
     return (
       <div
         key={node.path}
-        className="flex items-center py-1.5 px-2 hover:bg-blue-50 rounded cursor-pointer transition-colors"
+        className="flex items-center py-1.5 px-2 hover:bg-[var(--blue)]/5 rounded-lg cursor-pointer transition-colors"
         style={{ paddingLeft: `${paddingLeft}px` }}
         onClick={() => setSelectedFile(node.file || null)}
       >
-        <File size={14} className="text-gray-400 mr-2 flex-shrink-0" />
-        <span className="text-sm font-mono text-gray-700 truncate">{node.name}</span>
+        <File size={14} className="text-[var(--gray)] mr-2 flex-shrink-0" />
+        <span className="text-sm font-bold text-[var(--navy)] truncate">{node.name}</span>
         {node.file && (
-          <span className="ml-2 text-[10px] text-gray-400 flex-shrink-0">
+          <span className="ml-2 text-[10px] text-[var(--gray)] flex-shrink-0">
             {formatFileSize(node.file.size)}
           </span>
         )}
@@ -208,9 +189,9 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-blue-500 animate-spin mr-3" />
-        <span className="text-sm font-mono text-gray-600">Recuperation du repository...</span>
+      <div className="bg-white border border-[var(--border-pink)] rounded-xl p-8 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-[var(--blue)] animate-spin mr-3" />
+        <span className="text-sm font-bold text-[var(--gray)]">Récupération du repository...</span>
       </div>
     );
   }
@@ -220,24 +201,23 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
       <div className="bg-red-50 border border-red-200 rounded-xl p-6">
         <div className="flex items-center gap-3 text-red-700">
           <AlertCircle size={20} />
-          <span className="text-sm font-mono">{error}</span>
+          <span className="text-sm font-bold">{error}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
+    <div className="bg-white border border-[var(--border-pink)] rounded-xl overflow-hidden">
+      <div className="bg-[var(--cream)] border-b border-[var(--border-pink)] px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <GithubIcon size={18} className="text-gray-500" />
+            <GithubIcon size={18} className="text-[var(--gray)]" />
             <div>
-              <h3 className="font-mono text-sm font-bold text-gray-800">
+              <h3 className="text-sm font-bold text-[var(--navy)]">
                 {repoContent?.owner}/{repoContent?.repo}
               </h3>
-              <p className="text-[10px] font-mono text-gray-500">
+              <p className="text-[10px] font-bold text-[var(--gray)]">
                 Branch: {repoContent?.defaultBranch} • {repoContent?.totalFiles} fichiers • {formatFileSize(repoContent?.totalSize || 0)}
               </p>
             </div>
@@ -245,11 +225,9 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex h-[500px]">
-        {/* File Tree */}
-        <div className="w-1/2 border-r border-gray-200 overflow-y-auto p-3">
-          <div className="text-[10px] font-mono text-gray-400 uppercase mb-2 px-2">
+        <div className="w-1/2 border-r border-[var(--border-pink)] overflow-y-auto p-3">
+          <div className="text-[10px] font-bold text-[var(--gray)] uppercase mb-2 px-2">
             Structure du projet
           </div>
           {fileTree
@@ -260,15 +238,14 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
             .map(node => renderTreeNode(node))}
         </div>
 
-        {/* File Preview */}
-        <div className="w-1/2 overflow-y-auto bg-gray-50">
+        <div className="w-1/2 overflow-y-auto bg-[var(--cream)]">
           {selectedFile ? (
             <div>
-              <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 sticky top-0">
+              <div className="bg-white border-b border-[var(--border-pink)] px-4 py-2 sticky top-0">
                 <div className="flex items-center gap-2">
-                  <Code size={14} className="text-gray-500" />
-                  <span className="text-xs font-mono text-gray-700">{selectedFile.path}</span>
-                  <span className="text-[10px] font-mono text-gray-400 ml-auto">
+                  <Code size={14} className="text-[var(--gray)]" />
+                  <span className="text-xs font-bold text-[var(--navy)]">{selectedFile.path}</span>
+                  <span className="text-[10px] font-bold text-[var(--gray)] ml-auto">
                     {getLanguageFromExtension(selectedFile.extension)} • {formatFileSize(selectedFile.size)}
                   </span>
                 </div>
@@ -278,10 +255,10 @@ export default function RepositoryViewer({ submissionId }: { submissionId: numbe
               </pre>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-[var(--gray)]">
               <File size={40} className="mb-3 opacity-30" />
-              <p className="text-sm font-mono">Selectionnez un fichier</p>
-              <p className="text-[10px] font-mono mt-1">pour voir son contenu</p>
+              <p className="text-sm font-bold">Sélectionnez un fichier</p>
+              <p className="text-[10px] font-bold mt-1">pour voir son contenu</p>
             </div>
           )}
         </div>

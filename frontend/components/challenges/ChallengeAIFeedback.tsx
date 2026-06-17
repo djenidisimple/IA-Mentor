@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Sparkles, Brain, BarChart3, Terminal, ShieldCheck,
+  Sparkles, Brain, BarChart3, ShieldCheck,
   Zap, Loader2, AlertCircle, CheckCircle2, ThumbsUp,
   ThumbsDown, Lightbulb, FileText, RefreshCw, GitBranch,
   Activity, Target, Cpu, ChevronRight, Code2, Database
@@ -31,7 +31,6 @@ export default function ChallengeAIFeedback({
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Animation d'entrée
   useEffect(() => {
     setIsVisible(true);
   }, []);
@@ -49,7 +48,6 @@ export default function ChallengeAIFeedback({
     }
   }, [submissionId]);
 
-  // Simulation de progression visuelle
   useEffect(() => {
     if (status === 'analyzing') {
       const timer = setInterval(() => {
@@ -115,7 +113,7 @@ export default function ChallengeAIFeedback({
     const messages: Record<string, string> = {
       'PENDING': "En attente d'analyse...",
       'FETCHING': 'Récupération du repository GitHub...',
-      'ANALYZING': 'Analyse par Groq AI en cours...',
+      'ANALYZING': 'Analyse par IA en cours...',
     };
     return messages[analysisStatus] || 'Traitement en cours...';
   };
@@ -150,17 +148,16 @@ export default function ChallengeAIFeedback({
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  // Score Ring Component (CSS pur)
   const ScoreRing = ({ score }: { score: number | null }) => {
     const validScore = score ?? 0;
     const radius = 48;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (validScore / 100) * circumference;
 
-    const getColorClass = () => {
-      if (validScore >= 80) return "text-emerald-500";
-      if (validScore >= 60) return "text-amber-500";
-      return "text-rose-500";
+    const getColor = () => {
+      if (validScore >= 80) return "#10B981";
+      if (validScore >= 60) return "#FF8C42";
+      return "#EF4444";
     };
 
     return (
@@ -169,15 +166,13 @@ export default function ChallengeAIFeedback({
           <circle
             cx="60" cy="60" r={radius}
             strokeWidth="5"
-            stroke="currentColor"
-            className="text-slate-100"
+            stroke="var(--border-pink)"
             fill="transparent"
           />
           <circle
             cx="60" cy="60" r={radius}
             strokeWidth="5"
-            stroke="currentColor"
-            className={`${getColorClass()} transition-all duration-1000 ease-out`}
+            stroke={getColor()}
             fill="transparent"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -186,274 +181,211 @@ export default function ChallengeAIFeedback({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-4xl font-black tabular-nums ${getColorClass()}`}>
+          <span className="text-4xl font-black tabular-nums" style={{ color: getColor() }}>
             {score ?? '—'}
           </span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">/100</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--gray)]">/100</span>
         </div>
       </div>
     );
   };
 
-  // Styles d'animation personnalisés
-  const customStyles = `
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes scaleIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-    .animate-slide-in {
-      animation: slideIn 0.4s ease-out forwards;
-    }
-    .animate-scale-in {
-      animation: scaleIn 0.3s ease-out forwards;
-    }
-    .animate-pulse-glow {
-      animation: pulseGlow 2s ease-in-out infinite;
-    }
-  `;
-
-  // ÉTAT : Pas de soumission
   if (!submissionId) {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className={`relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20 transition-all duration-500 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}>
-          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-            <div className="rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 p-1.5 text-white">
-              <Cpu size={16} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Analyse IA</h3>
-              <p className="font-mono text-[10px] text-slate-400">En attente</p>
-            </div>
+      <div className={`p-6 sm:p-8 transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-lg bg-[var(--navy)] p-1.5 text-white">
+            <Cpu size={16} />
           </div>
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <div className="mb-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-              <BarChart3 size={40} className="text-slate-300" />
-            </div>
-            <h4 className="text-lg font-semibold text-slate-800">En attente de soumission</h4>
-            <p className="mt-1 max-w-xs text-sm text-slate-500">
-              Soumettez votre projet GitHub pour recevoir une analyse détaillée.
-            </p>
+          <div>
+            <h3 className="text-sm font-bold text-[var(--navy)]">Analyse IA</h3>
+            <p className="text-[10px] font-bold text-[var(--gray)]">En attente</p>
           </div>
         </div>
-      </>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="mb-6 rounded-2xl bg-[var(--cream)] p-4 border border-[var(--border-pink)]">
+            <BarChart3 size={40} className="text-[var(--gray)]" />
+          </div>
+          <h4 className="text-lg font-bold text-[var(--navy)]">En attente de soumission</h4>
+          <p className="mt-1 max-w-xs text-sm text-[var(--gray)]">
+            Soumettez votre projet GitHub pour recevoir une analyse détaillée.
+          </p>
+        </div>
+      </div>
     );
   }
 
-  // ÉTAT : Chargement initial
   if (status === 'loading') {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className="relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-            <div className="rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 p-1.5 text-white">
-              <Loader2 size={16} className="animate-spin" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Initialisation</h3>
-              <p className="font-mono text-[10px] text-slate-400">Préparation...</p>
-            </div>
+      <div className="p-6 sm:p-8">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-lg bg-[var(--navy)] p-1.5 text-white">
+            <Loader2 size={16} className="animate-spin" />
           </div>
-          <div className="flex items-center justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <div>
+            <h3 className="text-sm font-bold text-[var(--navy)]">Initialisation</h3>
+            <p className="text-[10px] font-bold text-[var(--gray)]">Préparation...</p>
           </div>
         </div>
-      </>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--orange)]" />
+        </div>
+      </div>
     );
   }
 
-  // ÉTAT : Analyse en cours
   if (status === 'analyzing') {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className="relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 p-1.5 text-white shadow-md shadow-orange-500/20">
-                <Brain size={16} className="animate-pulse-glow" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Analyse en cours</h3>
-                <p className="font-mono text-[10px] text-slate-400">Groq AI • Llama 3.3</p>
-              </div>
+      <div className="p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-gradient-to-br from-[var(--orange)] to-[var(--yellow)] p-1.5 text-white shadow-md">
+              <Brain size={16} />
             </div>
-            <span className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-700 border border-orange-200">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-orange-500"></span>
-              </span>
-              En cours
+            <div>
+              <h3 className="text-sm font-bold text-[var(--navy)]">Analyse en cours</h3>
+              <p className="text-[10px] font-bold text-[var(--gray)]">IA • Analyse de code</p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full bg-[var(--orange)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--orange)] border border-[var(--orange)]/20">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--orange)] opacity-75"></span>
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--orange)]"></span>
             </span>
+            En cours
+          </span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-6">
+          <div className="relative mb-6 flex h-24 w-24 items-center justify-center">
+            <div className="absolute inset-0 animate-ping rounded-full bg-[var(--orange)]/20"></div>
+            <div className="absolute inset-4 animate-pulse rounded-full bg-[var(--orange)]/30"></div>
+            <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg border border-[var(--border-pink)]">
+              <Brain size={28} className="text-[var(--orange)]" />
+            </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center p-8">
-            <div className="relative mb-6 flex h-24 w-24 items-center justify-center">
-              <div className="absolute inset-0 animate-ping rounded-full bg-orange-400/20"></div>
-              <div className="absolute inset-4 animate-pulse rounded-full bg-orange-500/30"></div>
-              <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg">
-                <Brain size={28} className="text-orange-500" />
-              </div>
-            </div>
+          <h4 className="text-lg font-bold text-[var(--navy)]">L&apos;IA analyse votre code</h4>
+          <p className="mt-1 text-sm text-[var(--gray)]">{progress}</p>
 
-            <h4 className="text-lg font-semibold text-slate-800">Groq AI analyse votre code</h4>
-            <p className="mt-1 text-sm text-slate-500">{progress}</p>
+          <div className="mt-6 h-1.5 w-64 overflow-hidden rounded-full bg-[var(--border-pink)]">
+            <div
+              className="h-full bg-gradient-to-r from-[var(--orange)] to-[var(--yellow)] transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${(progressStep + 1) * 33.33}%` }}
+            />
+          </div>
 
-            {/* Barre de progression */}
-            <div className="mt-6 h-1.5 w-64 overflow-hidden rounded-full bg-slate-100">
-              <div 
-                className="h-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all duration-500 ease-out"
-                style={{ width: `${(progressStep + 1) * 33.33}%` }}
-              />
-            </div>
-
-            {/* Étapes */}
-            <div className="mt-8 w-full max-w-xs space-y-3">
-              {[
-                { label: "Récupération du code source", icon: GitBranch },
-                { label: "Analyse par Groq AI", icon: Brain },
-                { label: "Génération du rapport", icon: FileText },
-              ].map((step, idx) => (
-                <div key={step.label} className="flex items-center gap-3">
-                  <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold transition-all duration-300 ${
-                    idx < progressStep ? 'bg-emerald-100 text-emerald-700' : 
-                    idx === progressStep ? 'bg-orange-100 text-orange-700 scale-110 ring-2 ring-orange-500/30' : 
-                    'bg-slate-100 text-slate-400'
-                  }`}>
-                    {idx < progressStep ? <CheckCircle2 size={14} /> : idx + 1}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <step.icon size={12} className={idx <= progressStep ? 'text-slate-600' : 'text-slate-300'} />
-                    <span className={`text-sm font-medium ${
-                      idx <= progressStep ? 'text-slate-700' : 'text-slate-400'
-                    }`}>
-                      {step.label}
-                    </span>
-                  </div>
-                  {idx === progressStep && (
-                    <Loader2 size={14} className="ml-auto animate-spin text-orange-500" />
-                  )}
+          <div className="mt-8 w-full max-w-xs space-y-3">
+            {[
+              { label: "Récupération du code source", icon: GitBranch },
+              { label: "Analyse par IA", icon: Brain },
+              { label: "Génération du rapport", icon: FileText },
+            ].map((step, idx) => (
+              <div key={step.label} className="flex items-center gap-3">
+                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold transition-all duration-300 ${
+                  idx < progressStep ? 'bg-green-100 text-green-700' :
+                  idx === progressStep ? 'bg-[var(--orange)]/10 text-[var(--orange)] scale-110 ring-2 ring-[var(--orange)]/30' :
+                  'bg-[var(--border-pink)] text-[var(--gray)]'
+                }`}>
+                  {idx < progressStep ? <CheckCircle2 size={14} /> : idx + 1}
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-2">
+                  <step.icon size={12} className={idx <= progressStep ? 'text-[var(--navy)]' : 'text-[var(--gray)]'} />
+                  <span className={`text-sm font-bold ${
+                    idx <= progressStep ? 'text-[var(--navy)]' : 'text-[var(--gray)]'
+                  }`}>
+                    {step.label}
+                  </span>
+                </div>
+                {idx === progressStep && (
+                  <Loader2 size={14} className="ml-auto animate-spin text-[var(--orange)]" />
+                )}
+              </div>
+            ))}
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
-  // ÉTAT : Erreur
   if (status === 'error') {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className="relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-            <div className="rounded-lg bg-gradient-to-br from-rose-500 to-red-500 p-1.5 text-white">
-              <AlertCircle size={16} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Erreur d'analyse</h3>
-              <p className="font-mono text-[10px] text-slate-400">Échec</p>
-            </div>
+      <div className="p-6 sm:p-8">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-lg bg-red-500 p-1.5 text-white">
+            <AlertCircle size={16} />
           </div>
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <div className="mb-6 rounded-full bg-rose-50 p-4">
-              <AlertCircle size={32} className="text-rose-500" />
-            </div>
-            <h4 className="text-lg font-semibold text-slate-800">Analyse échouée</h4>
-            <p className="mt-1 max-w-xs text-sm text-slate-500">{error}</p>
-            <button
-              onClick={handleRetry}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
-            >
-              <RefreshCw size={14} />
-              Réessayer
-            </button>
+          <div>
+            <h3 className="text-sm font-bold text-[var(--navy)]">Erreur d'analyse</h3>
+            <p className="text-[10px] font-bold text-[var(--gray)]">Échec</p>
           </div>
         </div>
-      </>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="mb-6 rounded-full bg-red-50 p-4 border border-red-200">
+            <AlertCircle size={32} className="text-red-500" />
+          </div>
+          <h4 className="text-lg font-bold text-[var(--navy)]">Analyse échouée</h4>
+          <p className="mt-1 max-w-xs text-sm text-[var(--gray)]">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--border-pink)] bg-white px-6 py-2.5 text-sm font-bold text-[var(--navy)] shadow-sm transition-all hover:bg-gray-50 active:scale-95"
+          >
+            <RefreshCw size={14} />
+            Réessayer
+          </button>
+        </div>
+      </div>
     );
   }
 
-  // ÉTAT : En attente de lancement
   if (status === 'idle') {
     return (
-      <>
-        <style>{customStyles}</style>
-        <div className={`relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20 transition-all duration-500 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}>
-          <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
-            <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-1.5 text-white shadow-md shadow-emerald-500/20">
-              <Sparkles size={16} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Analyse IA Disponible</h3>
-              <p className="font-mono text-[10px] text-slate-400">Groq • Llama 3.3 70B</p>
-            </div>
+      <div className={`p-6 sm:p-8 transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-1.5 text-white shadow-md">
+            <Sparkles size={16} />
           </div>
-
-          <div className="p-6">
-            <div className="animate-slide-in flex flex-col items-center text-center">
-              <div className="mb-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 p-4 border border-emerald-100">
-                <BarChart3 size={40} className="text-emerald-500" />
-              </div>
-              <h4 className="text-lg font-semibold text-slate-800">Prêt pour l'analyse</h4>
-              <p className="mt-1 max-w-xs text-sm text-slate-500">
-                Groq AI analysera votre code pour évaluer la qualité, la performance et l'architecture.
-              </p>
-
-              {/* Features */}
-              <div className="mt-6 grid w-full grid-cols-3 gap-2">
-                {[
-                  { icon: Target, label: "Adéquation", color: "emerald" },
-                  { icon: ShieldCheck, label: "Qualité", color: "blue" },
-                  { icon: Activity, label: "Performance", color: "amber" },
-                ].map(({ icon: Icon, label, color }) => (
-                  <div key={label} className="flex flex-col items-center gap-1 rounded-lg bg-slate-50 p-2">
-                    <Icon size={14} className={`text-${color}-500`} />
-                    <span className="text-[10px] font-medium text-slate-600">{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={handleStartAnalysis}
-                className="group mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:shadow-emerald-500/30 active:scale-[0.98]"
-              >
-                <Sparkles size={16} />
-                Lancer l'analyse IA
-                <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
-              </button>
-
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-blue-50/50 p-3 border border-blue-100">
-                <Terminal size={14} className="text-blue-500 shrink-0" />
-                <p className="text-[10px] text-blue-700 font-mono">
-                  <span className="font-bold">Groq AI • Llama 3.3 70B</span><br />
-                  Analyse de code, détection de patterns et scoring automatique.
-                </p>
-              </div>
-            </div>
+          <div>
+            <h3 className="text-sm font-bold text-[var(--navy)]">Analyse IA Disponible</h3>
+            <p className="text-[10px] font-bold text-[var(--gray)]">Analyse de code</p>
           </div>
         </div>
-      </>
+
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-6 rounded-2xl bg-green-50 p-4 border border-green-100">
+            <BarChart3 size={40} className="text-green-500" />
+          </div>
+          <h4 className="text-lg font-bold text-[var(--navy)]">Prêt pour l'analyse</h4>
+          <p className="mt-1 max-w-xs text-sm text-[var(--gray)]">
+            L&apos;IA analysera votre code pour évaluer la qualité, la performance et l&apos;architecture.
+          </p>
+
+          <div className="mt-6 grid w-full grid-cols-3 gap-2 max-w-xs">
+            {[
+              { icon: Target, label: "Adéquation", color: "green" },
+              { icon: ShieldCheck, label: "Qualité", color: "blue" },
+              { icon: Activity, label: "Performance", color: "orange" },
+            ].map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex flex-col items-center gap-1 rounded-lg bg-[var(--cream)] p-3 border border-[var(--border-pink)]">
+                <Icon size={14} className={`text-${color}-500`} />
+                <span className="text-[10px] font-bold text-[var(--gray)]">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleStartAnalysis}
+            className="group mt-8 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            <Sparkles size={16} />
+            Lancer l'analyse IA
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     );
   }
 
-  // ÉTAT : Complété (Résultats)
   const metrics = [
     {
       label: "Qualité",
@@ -461,13 +393,13 @@ export default function ChallengeAIFeedback({
         ? Math.max(0, Math.round(100 - analysis.codeQualityMetrics.complexityScore * 10))
         : null,
       icon: ShieldCheck,
-      color: "emerald"
+      color: "green"
     },
     {
       label: "Maintenabilité",
       value: analysis?.codeQualityMetrics?.maintainabilityIndex ?? null,
       icon: Zap,
-      color: "amber"
+      color: "orange"
     },
     {
       label: "Commentaires",
@@ -480,156 +412,141 @@ export default function ChallengeAIFeedback({
   ];
 
   return (
-    <>
-      <style>{customStyles}</style>
-      <div className={`relative h-full w-full rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/20 transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}>
-        
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-1.5 text-white shadow-md shadow-emerald-500/20">
-              <Sparkles size={16} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-tight text-slate-700">Analyse IA</h3>
-              <p className="font-mono text-[10px] text-slate-400">
-                Groq AI • {formatDate(analysis?.completedAt ?? null)}
-              </p>
-            </div>
+    <div className={`transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="flex items-center justify-between p-6 sm:p-8 border-b border-[var(--border-pink)]">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-1.5 text-white shadow-md">
+            <Sparkles size={16} />
           </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200">
-            <CheckCircle2 size={10} /> Complété
-          </span>
+          <div>
+            <h3 className="text-sm font-bold text-[var(--navy)]">Analyse IA</h3>
+            <p className="text-[10px] font-bold text-[var(--gray)]">
+              Complété le {formatDate(analysis?.completedAt ?? null)}
+            </p>
+          </div>
         </div>
-
-        {/* Content */}
-        <div className="animate-scale-in space-y-5 p-6">
-          
-          {/* Score + Summary */}
-          <div className="flex items-start gap-5">
-            <ScoreRing score={analysis?.score ?? null} />
-            <div className="flex-1 space-y-2 pt-2">
-              {analysis?.summary && (
-                <p className="text-sm font-medium leading-relaxed text-slate-600">
-                  {analysis.summary}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">
-                  <GitBranch size={10} /> {analysis?.codeQualityMetrics?.filesAnalyzed || 0} fichiers
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">
-                  <Database size={10} /> {analysis?.codeQualityMetrics?.detectedLanguages?.length || 0} langages
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Métriques */}
-          <div className="grid grid-cols-3 gap-2">
-            {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
-                <metric.icon size={14} className={`mx-auto mb-1 text-${metric.color}-500`} />
-                <p className="text-xl font-black tabular-nums text-slate-800">
-                  {metric.value != null ? metric.value : '—'}
-                  {metric.value != null && <span className="text-[9px] font-normal text-slate-400">%</span>}
-                </p>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{metric.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Forces & Faiblesses */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-emerald-50/20 p-3">
-              <div className="mb-2 flex items-center gap-1.5">
-                <ThumbsUp size={12} className="text-emerald-600" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Points forts</span>
-              </div>
-              <ul className="space-y-1.5">
-                {analysis?.strengths?.slice(0, 2).map((s, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[11px] text-emerald-800">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-emerald-500"></span>
-                    <span className="leading-relaxed">{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50/50 to-amber-50/20 p-3">
-              <div className="mb-2 flex items-center gap-1.5">
-                <ThumbsDown size={12} className="text-amber-600" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">À améliorer</span>
-              </div>
-              <ul className="space-y-1.5">
-                {analysis?.weaknesses?.slice(0, 2).map((w, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[11px] text-amber-800">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500"></span>
-                    <span className="leading-relaxed">{w}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Suggestions */}
-          {analysis?.suggestions && analysis.suggestions.length > 0 && (
-            <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/30 to-blue-50/10 p-3">
-              <div className="mb-2 flex items-center gap-1.5">
-                <Lightbulb size={12} className="text-blue-600" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Suggestions</span>
-              </div>
-              <ul className="space-y-1.5">
-                {analysis.suggestions.slice(0, 2).map((s, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[11px] text-blue-800">
-                    <span className="text-blue-400">→</span>
-                    <span className="leading-relaxed">{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Métriques détaillées */}
-          {analysis?.codeQualityMetrics && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
-              <div className="grid grid-cols-4 gap-1 text-center">
-                {[
-                  { label: "Fichiers", value: analysis.codeQualityMetrics.filesAnalyzed || '—' },
-                  { label: "Langages", value: analysis.codeQualityMetrics.detectedLanguages?.length || '—' },
-                  { label: "README", value: analysis.codeQualityMetrics.hasReadme ? '✓' : '✗' },
-                  { label: "Tests", value: analysis.codeQualityMetrics.hasTests ? '✓' : '✗' },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">{label}</p>
-                    <p className="text-sm font-bold text-slate-700">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Feedback détaillé - Accordéon CSS pur */}
-          {analysis?.detailedFeedback && (
-            <details className="group rounded-xl border border-slate-200 bg-slate-50/30 transition-all">
-              <summary className="flex cursor-pointer list-none items-center justify-between p-3 text-sm font-medium text-slate-700">
-                <span className="flex items-center gap-2">
-                  <FileText size={12} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Feedback détaillé</span>
-                </span>
-                <ChevronRight size={12} className="transition-transform duration-200 group-open:rotate-90" />
-              </summary>
-              <div className="border-t border-slate-200 p-3 text-[11px] leading-relaxed text-slate-600">
-                {analysis.detailedFeedback.length > 250
-                  ? analysis.detailedFeedback.substring(0, 250) + '...'
-                  : analysis.detailedFeedback}
-              </div>
-            </details>
-          )}
-        </div>
+        <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700 border border-green-200">
+          <CheckCircle2 size={10} /> Complété
+        </span>
       </div>
-    </>
+
+      <div className="space-y-5 p-6 sm:p-8">
+        <div className="flex items-start gap-5">
+          <ScoreRing score={analysis?.score ?? null} />
+          <div className="flex-1 space-y-2 pt-2">
+            {analysis?.summary && (
+              <p className="text-sm font-medium leading-relaxed text-[var(--gray)]">
+                {analysis.summary}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--cream)] px-2.5 py-1 text-[10px] font-bold text-[var(--gray)] border border-[var(--border-pink)]">
+                <GitBranch size={10} /> {analysis?.codeQualityMetrics?.filesAnalyzed || 0} fichiers
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--cream)] px-2.5 py-1 text-[10px] font-bold text-[var(--gray)] border border-[var(--border-pink)]">
+                <Database size={10} /> {analysis?.codeQualityMetrics?.detectedLanguages?.length || 0} langages
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-xl border border-[var(--border-pink)] bg-white p-3 text-center">
+              <metric.icon size={14} className={`mx-auto mb-1 text-${metric.color}-500`} />
+              <p className="text-xl font-black tabular-nums text-[var(--navy)]">
+                {metric.value != null ? metric.value : '—'}
+                {metric.value != null && <span className="text-[9px] font-normal text-[var(--gray)]">%</span>}
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--gray)]">{metric.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-green-100 bg-gradient-to-br from-green-50 to-green-50/50 p-3">
+            <div className="mb-2 flex items-center gap-1.5">
+              <ThumbsUp size={12} className="text-green-600" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-green-700">Points forts</span>
+            </div>
+            <ul className="space-y-1.5">
+              {analysis?.strengths?.slice(0, 2).map((s, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px] text-green-800">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-green-500"></span>
+                  <span className="leading-relaxed">{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-[var(--orange)]/20 bg-gradient-to-br from-[var(--orange)]/5 to-[var(--orange)]/5 p-3">
+            <div className="mb-2 flex items-center gap-1.5">
+              <ThumbsDown size={12} className="text-[var(--orange)]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--orange)]">À améliorer</span>
+            </div>
+            <ul className="space-y-1.5">
+              {analysis?.weaknesses?.slice(0, 2).map((w, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px] text-[var(--orange)]">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--orange)]"></span>
+                  <span className="leading-relaxed">{w}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {analysis?.suggestions && analysis.suggestions.length > 0 && (
+          <div className="rounded-xl border border-[var(--blue)]/20 bg-gradient-to-br from-[var(--blue)]/5 to-[var(--blue)]/5 p-3">
+            <div className="mb-2 flex items-center gap-1.5">
+              <Lightbulb size={12} className="text-[var(--blue)]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--blue)]">Suggestions</span>
+            </div>
+            <ul className="space-y-1.5">
+              {analysis.suggestions.slice(0, 2).map((s, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px] text-[var(--blue)]">
+                  <span className="text-[var(--blue)]">→</span>
+                  <span className="leading-relaxed">{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {analysis?.codeQualityMetrics && (
+          <div className="rounded-xl border border-[var(--border-pink)] bg-[var(--cream)] p-3">
+            <div className="grid grid-cols-4 gap-1 text-center">
+              {[
+                { label: "Fichiers", value: analysis.codeQualityMetrics.filesAnalyzed || '—' },
+                { label: "Langages", value: analysis.codeQualityMetrics.detectedLanguages?.length || '—' },
+                { label: "README", value: analysis.codeQualityMetrics.hasReadme ? '✓' : '✗' },
+                { label: "Tests", value: analysis.codeQualityMetrics.hasTests ? '✓' : '✗' },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--gray)]">{label}</p>
+                  <p className="text-sm font-bold text-[var(--navy)]">{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {analysis?.detailedFeedback && (
+          <details className="group rounded-xl border border-[var(--border-pink)] bg-[var(--cream)] transition-all">
+            <summary className="flex cursor-pointer list-none items-center justify-between p-3 text-sm font-bold text-[var(--navy)]">
+              <span className="flex items-center gap-2">
+                <FileText size={12} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Feedback détaillé</span>
+              </span>
+              <ChevronRight size={12} className="transition-transform duration-200 group-open:rotate-90" />
+            </summary>
+            <div className="border-t border-[var(--border-pink)] p-3 text-[11px] leading-relaxed text-[var(--gray)]">
+              {analysis.detailedFeedback.length > 250
+                ? analysis.detailedFeedback.substring(0, 250) + '...'
+                : analysis.detailedFeedback}
+            </div>
+          </details>
+        )}
+      </div>
+    </div>
   );
 }

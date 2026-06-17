@@ -335,34 +335,6 @@ export default function LandingPage() {
       />
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-        :root {
-          --cream:       #FFFDF7;
-          --navy:        #1A1F36;
-          --border-pink: #F0E0E0;
-          --yellow:      #FFD93D;
-          --orange:      #FF8C42;
-          --blue:        #4A90D9;
-          --purple:      #6C5CE7;
-          --gray:        #6B7280;
-        }
-
-        /* Empêche tout débordement horizontal sur mobile */
-        *, *::before, *::after {
-          box-sizing: border-box;
-        }
-        html, body {
-          max-width: 100%;
-          overflow-x: hidden;
-        }
-
-        body {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Bande multicolore — masquée en dessous de 1024px */
         .multicolor-stripe {
           position: absolute;
           top: -10%;
@@ -391,23 +363,6 @@ export default function LandingPage() {
           stroke-dasharray: 8 6;
           animation: dash 4s linear infinite;
         }
-
-        @keyframes fadeUpSoft {
-          from { opacity: 0; transform: translateY(30px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up {
-          animation: fadeUpSoft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-          opacity: 0;
-        }
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        .delay-4 { animation-delay: 0.4s; }
-        .delay-5 { animation-delay: 0.5s; }
-        .delay-6 { animation-delay: 0.6s; }
-        .delay-7 { animation-delay: 0.7s; }
-        .delay-8 { animation-delay: 0.8s; }
       `}</style>
 
       {/* Bande verticale multicolore (desktop only) */}
