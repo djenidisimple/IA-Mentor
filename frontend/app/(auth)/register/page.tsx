@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
@@ -19,6 +19,7 @@ import { authApi } from '@/lib/auth'
 import { useAuthStore } from '@/lib/store/authStore'
 import { User as UserType } from '@/types/auth.types'
 import { GithubIcon } from '@/components/icon'
+import { FormSkeleton } from '@/components/ui/Skeleton'
 
 const PillBadge = ({ children, variant = 'default' }: { children: React.ReactNode, variant?: 'default' | 'accent' }) => {
   const baseClasses = "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-[0.08em] transition-all duration-300"
@@ -80,6 +81,12 @@ const SolidButton = ({
 export default function RegisterPage() {
   const router = useRouter()
   const { setAuth } = useAuthStore()
+
+  const [pageReady, setPageReady] = useState(false)
+
+  useEffect(() => {
+    setPageReady(true)
+  }, [])
   
   const [form, setForm] = useState({
     username: '',
@@ -108,12 +115,32 @@ export default function RegisterPage() {
       setError('Le nom d\'utilisateur doit contenir au moins 3 caractères')
       return false
     }
+    if (form.username.length > 30) {
+      setError('Le nom d\'utilisateur ne doit pas dépasser 30 caractères')
+      return false
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(form.username)) {
+      setError('Le nom d\'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores')
+      return false
+    }
     if (!form.email.includes('@') || !form.email.includes('.')) {
       setError('Veuillez entrer une adresse email valide')
       return false
     }
     if (form.password.length < 8) {
       setError('Le mot de passe doit contenir au moins 8 caractères')
+      return false
+    }
+    if (!/[A-Z]/.test(form.password)) {
+      setError('Le mot de passe doit contenir au moins une majuscule')
+      return false
+    }
+    if (!/[0-9]/.test(form.password)) {
+      setError('Le mot de passe doit contenir au moins un chiffre')
+      return false
+    }
+    if (!/[!@#$%^&+=]/.test(form.password)) {
+      setError('Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&+=)')
       return false
     }
     if (form.password !== form.confirmPassword) {
@@ -145,7 +172,7 @@ export default function RegisterPage() {
       })
       
       const user: UserType = {
-        id: Date.now(),
+        id: response.id,
         username: response.username || form.username,
         email: response.email || form.email,
         avatarUrl: (response as any).avatarUrl || (response as any).picture || '',
@@ -184,6 +211,10 @@ export default function RegisterPage() {
   }
 
   const passwordStrength = form.password ? getPasswordStrength(form.password) : null
+
+  if (!pageReady) {
+    return <FormSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] font-['Plus_Jakarta_Sans',_'Inter'] selection:bg-[#1A1F36]/10 overflow-x-hidden flex items-center justify-center px-6 py-10">
@@ -289,6 +320,7 @@ export default function RegisterPage() {
                     onBlur={() => setFocusedField(null)}
                     placeholder="votre-pseudo"
                     required
+                    maxLength={30}
                     className="w-full bg-[#FFFDF7] text-[#1A1F36] text-[14px] font-medium px-4 py-3.5 rounded-xl outline-none placeholder:text-[#6B7280]/50 border border-[#F0E0E0] focus:border-[#4A90D9] focus:bg-white focus:ring-4 focus:ring-[#4A90D9]/5 transition-all duration-200"
                   />
                   {form.username.length >= 3 && (

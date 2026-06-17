@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useSubmissions } from '@/hooks/useSubmissions'
+import Skeleton from '@/components/ui/Skeleton'
 
 export default function Home() {
   const { submissions, loading } = useSubmissions()
@@ -19,9 +20,26 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-100 border-t-[#0052FF] rounded-full animate-spin mb-4" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Initialisation...</p>
+      <div className="min-h-screen bg-white p-6 max-w-[1200px] mx-auto">
+        <div className="bg-slate-900 rounded-2xl p-8 md:p-12 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-5 w-16 rounded-sm bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer" />
+            <div className="h-4 w-24 rounded-full bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+          <div className="h-16 w-96 rounded-full bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer mb-6" />
+          <div className="h-4 w-64 rounded-full bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer mb-8" />
+          <div className="h-12 w-40 rounded-xl bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 bg-[length:200%_100%] animate-shimmer" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-8">
+            <div className="h-64 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+            <div className="h-48 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+          <div className="lg:col-span-4 space-y-6">
+            <div className="h-80 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+            <div className="h-40 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+        </div>
       </div>
     )
   }

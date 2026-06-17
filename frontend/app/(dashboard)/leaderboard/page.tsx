@@ -9,45 +9,27 @@ import {
   Sparkles,
   Search,
   Flame,
-  Target,
-  Award,
   Zap,
   ArrowUpRight
 } from "lucide-react"
-
-interface LeaderboardUser {
-  id: number
-  username: string
-  points: number
-  rank: number
-  previousRank?: number
-  challengesCompleted: number
-  averageScore: number
-  streak: number
-  badges: string[]
-  isPremium?: boolean
-}
+import { leaderboardApi, LeaderboardEntry } from "@/lib/leaderboard"
 
 export default function LeaderboardPage() {
-  const [users, setUsers] = useState<LeaderboardUser[]>([])
+  const [users, setUsers] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [timeFilter, setTimeFilter] = useState<'all' | 'month' | 'week'>('all')
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
-    const mockUsers: LeaderboardUser[] = [
-      { id: 1, username: "CodeMaster", points: 12500, rank: 1, previousRank: 2, challengesCompleted: 45, averageScore: 94, streak: 15, badges: ["🏆", "⚡"], isPremium: true },
-      { id: 2, username: "DevQueen", points: 11200, rank: 2, previousRank: 1, challengesCompleted: 42, averageScore: 91, streak: 12, badges: ["👑"], isPremium: true },
-      { id: 3, username: "AlgoPro", points: 10800, rank: 3, previousRank: 4, challengesCompleted: 38, averageScore: 89, streak: 8, badges: ["🚀"], isPremium: false },
-      { id: 4, username: "ReactNinja", points: 9500, rank: 4, previousRank: 3, challengesCompleted: 35, averageScore: 87, streak: 10, badges: ["⚛️"], isPremium: true },
-      { id: 5, username: "Pythonista", points: 8900, rank: 5, previousRank: 5, challengesCompleted: 32, averageScore: 85, streak: 6, badges: ["🐍"], isPremium: false },
-    ]
-    setUsers(mockUsers)
-    setLoading(false)
+    leaderboardApi.getAll()
+      .then(data => {
+        setUsers(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
-  const getRankChange = (current: number, previous?: number) => {
-    if (!previous) return { icon: Minus, color: "text-slate-400", text: "" }
+  const getRankChange = (current: number, previous: number | null) => {
+    if (previous == null) return { icon: Minus, color: "text-slate-400", text: "" }
     if (current < previous) return { icon: TrendingUp, color: "text-[#10B981]", text: `${previous - current}` }
     if (current > previous) return { icon: TrendingDown, color: "text-[#EF4444]", text: `${current - previous}` }
     return { icon: Minus, color: "text-slate-400", text: "" }
@@ -59,9 +41,41 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit']">
-        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0052FF] animate-spin mb-4" />
-        <p className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Calcul des rangs...</p>
+      <div className="min-h-screen bg-white font-['Outfit']">
+        <header className="border-b border-slate-100">
+          <div className="max-w-[1000px] mx-auto px-6 py-10">
+            <div className="h-3 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+            <div className="h-10 w-72 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-4" />
+            <div className="h-4 w-64 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+        </header>
+        <main className="max-w-[1000px] mx-auto px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`p-6 border-2 border-slate-100 ${i === 0 ? 'md:-translate-y-4' : ''}`}>
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-4" />
+                <div className="h-4 w-24 mx-auto rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-2" />
+                <div className="h-3 w-16 mx-auto rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-4" />
+                <div className="border-t border-slate-100 pt-4 flex justify-around">
+                  <div className="h-8 w-16 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                  <div className="h-8 w-16 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border border-slate-100">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                  <div className="h-3 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                </div>
+                <div className="h-6 w-20 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     )
   }
@@ -91,11 +105,11 @@ export default function LeaderboardPage() {
             <div className="flex gap-4">
               <div className="bg-slate-50 border border-slate-100 p-4 min-w-[120px]">
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Participants</p>
-                <p className="text-xl font-bold text-[#0D0D0D]">{users.length * 124}</p>
+                <p className="text-xl font-bold text-[#0D0D0D]">{users.length}</p>
               </div>
               <div className="bg-[#0052FF]/5 border border-[#0052FF]/10 p-4 min-w-[120px]">
                 <p className="text-[10px] font-bold text-[#0052FF] uppercase mb-1">XP Distribués</p>
-                <p className="text-xl font-bold text-[#0052FF]">12.4M</p>
+                <p className="text-xl font-bold text-[#0052FF]">{users.reduce((sum, u) => sum + u.points, 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -118,17 +132,9 @@ export default function LeaderboardPage() {
             </div>
             
             <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
-              {['all', 'month', 'week'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setTimeFilter(f as any)}
-                  className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                    timeFilter === f ? 'bg-white text-[#0D0D0D] shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  {f === 'all' ? 'Global' : f === 'month' ? 'Mensuel' : 'Hebdo'}
-                </button>
-              ))}
+              <span className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {users.length} membres
+              </span>
             </div>
           </div>
         </div>
@@ -165,8 +171,8 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="w-px bg-slate-100" />
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase">Série</p>
-                  <p className="font-black text-[#EF4444]">{user.streak}j</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase">Défis</p>
+                  <p className="font-black text-[#0052FF]">{user.challengesCompleted}</p>
                 </div>
               </div>
             </div>
@@ -201,7 +207,7 @@ export default function LeaderboardPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900">{user.username}</span>
-                      {user.streak >= 10 && <Flame size={14} className="text-[#EF4444]" />}
+                      {user.challengesCompleted >= 10 && <Flame size={14} className="text-[#EF4444]" />}
                     </div>
                     <span className="text-xs text-slate-400 font-medium">{user.challengesCompleted} défis réussis</span>
                   </div>
@@ -211,7 +217,7 @@ export default function LeaderboardPage() {
                 <div className="hidden md:flex items-center gap-12 mr-8">
                   <div className="text-right">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Précision</p>
-                    <p className="text-sm font-bold text-slate-900">{user.averageScore}%</p>
+                    <p className="text-sm font-bold text-slate-900">{Math.round(user.averageScore)}%</p>
                   </div>
                   <div className="text-right min-w-[80px]">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Points XP</p>

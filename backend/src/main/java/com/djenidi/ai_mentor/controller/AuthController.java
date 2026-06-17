@@ -42,7 +42,8 @@ public class AuthController {
         AuthResponse authResponse = authService.register(request);
 
         // 2. Récupérer le user pour créer le refresh token
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new com.djenidi.ai_mentor.exception.ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
 
         // 3. Refresh token en cookie HttpOnly
         RefreshToken refreshToken = refreshTokenService.createOrRenew(user);
@@ -61,7 +62,8 @@ public class AuthController {
         AuthResponse authResponse = authService.login(request);
 
         // 2. Récupérer le user
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new com.djenidi.ai_mentor.exception.ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
 
         // 3. Refresh token en cookie HttpOnly
         RefreshToken refreshToken = refreshTokenService.createOrRenew(user);
@@ -93,6 +95,7 @@ public class AuthController {
         setRefreshTokenCookie(response, refreshToken.getToken());
 
         return ResponseEntity.ok(AuthResponse.builder()
+                .id(user.getId())
                 .token(newJwt)
                 .email(user.getEmail())
                 .username(user.getUsername())

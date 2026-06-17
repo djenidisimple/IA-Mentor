@@ -1,4 +1,3 @@
-import { get } from 'http';
 import { apiFetch } from './api'
 import { CommunityPost, SuggestedUser, TrendingTopic, Comment } from '@/types/social.types'
 

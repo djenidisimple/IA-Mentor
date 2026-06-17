@@ -2,6 +2,7 @@ package com.djenidi.ai_mentor.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -17,6 +18,8 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, message = "Le mot de passe doit faire au moins 8 caractères")
+    @Size(min = 8, max = 100, message = "Le mot de passe doit faire entre 8 et 100 caractères")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$",
+             message = "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial")
     private String password;
 }

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/store/authStore'
+import Skeleton, { CardSkeleton, FormSkeleton } from '@/components/ui/Skeleton'
 import { 
   User as UserIcon, 
   Mail, 
@@ -41,7 +42,36 @@ export default function ProfilePage() {
   }, [])
 
   if (!user) {
-    return null
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <div className="max-w-[1200px] mx-auto px-5 md:px-8 py-8 md:py-12">
+          <div className="animate-pulse space-y-6">
+            <div className="h-12 w-48 rounded-xl bg-slate-200" />
+            <div className="rounded-3xl border border-slate-200 bg-white p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="h-28 w-28 rounded-2xl bg-slate-200" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 w-32 rounded bg-slate-200" />
+                  <div className="h-8 w-64 rounded bg-slate-200" />
+                  <div className="h-4 w-48 rounded bg-slate-200" />
+                </div>
+                <div className="h-32 w-36 rounded-2xl bg-slate-200" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="space-y-6">
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+              <div className="lg:col-span-2 space-y-6">
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const joinDate = user.createdAt 

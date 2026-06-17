@@ -11,21 +11,37 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   try {
+    let dataPayload: any = undefined;
+    if (options.body) {
+      const bodyStr = options.body.toString();
+      try {
+        dataPayload = JSON.parse(bodyStr);
+      } catch {
+        dataPayload = bodyStr;
+      }
+    }
+
     const axiosOptions: any = {
       method: options.method || 'GET',
       url: normalizeEndpoint(endpoint),
-      data: options.body ? JSON.parse(options.body.toString()) : undefined,
+      data: dataPayload,
       headers: options.headers,
     }
 
-    const response = await api.request(axiosOptions) // Utilisation de l'instance Axios
+    if (axiosOptions.headers && axiosOptions.headers['Content-Type']) {
+      axiosOptions.headers['Content-Type'] = axiosOptions.headers['Content-Type'];
+    }
+
+    const response = await api.request(axiosOptions)
 
     const result = response.data;
 
-    if (result && Object.prototype.hasOwnProperty.call(result, 'data')) {
-        return result.data;
+    // Certaines réponses sont directement ApiResponse{success, data, message}
+    // d'autres sont des listes ou objets simples
+    if (result && typeof result === 'object' && 'success' in result && 'data' in result) {
+        return result.data as T;
     }
-    return result;
+    return result as T;
   } catch (error: any) {
     if (error.response) {
       // Erreur de l'API (ex: 401, 403)

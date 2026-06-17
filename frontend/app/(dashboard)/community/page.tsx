@@ -73,9 +73,54 @@ export default function CommunityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit']">
-        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0052FF] animate-spin mb-4" />
-        <p className="text-[13px] font-medium uppercase tracking-widest text-slate-400">Chargement de la communauté</p>
+      <div className="min-h-screen bg-white font-['Outfit']">
+        <header className="border-b border-slate-100">
+          <div className="max-w-[1200px] mx-auto px-6 py-12">
+            <div className="h-3 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+            <div className="h-10 w-80 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+        </header>
+        <main className="max-w-[1200px] mx-auto px-6 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+            <div className="lg:col-span-2 space-y-12">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border-b border-slate-100 pb-12">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    <div className="space-y-2">
+                      <div className="h-3 w-32 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                      <div className="h-2 w-20 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 w-full rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    <div className="h-4 w-3/4 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                  </div>
+                  <div className="flex gap-6">
+                    <div className="h-4 w-16 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    <div className="h-4 w-16 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <aside className="space-y-16">
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-2 w-16 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    <div className="h-4 w-32 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                    <div className="h-3 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+                  </div>
+                ))}
+              </div>
+              <div className="h-64 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer p-8">
+                <div className="h-5 w-5 rounded-full bg-slate-200 mb-4" />
+                <div className="h-5 w-32 rounded-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 bg-[length:200%_100%] animate-shimmer mb-2" />
+                <div className="h-3 w-48 rounded-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 bg-[length:200%_100%] animate-shimmer" />
+              </div>
+            </aside>
+          </div>
+        </main>
       </div>
     );
   }

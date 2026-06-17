@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/store/authStore'
 import { 
   ArrowUpRight, 
   Star,
@@ -270,6 +272,15 @@ const StepCard = ({
 
 // --- Page Principale ---
 export default function LandingPage() {
+  const { isAuthenticated, token } = useAuthStore()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      router.replace('/home')
+    }
+  }, [isAuthenticated, token, router])
+
   const [activeTab, setActiveTab] = useState('tous')
 
   const languages = [

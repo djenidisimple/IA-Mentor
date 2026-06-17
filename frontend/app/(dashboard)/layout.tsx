@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import Navbar from "@/components/Navbar"
-import LoadingScreen from '@/components/ui/LoadingScreen'
+import { DashboardSkeleton } from '@/components/ui/Skeleton'
 
 export default function DashboardLayout({
     children
@@ -25,7 +25,7 @@ export default function DashboardLayout({
     }, [isAuthenticated, token, router])
 
     if (isChecking) {
-      return <LoadingScreen minDuration={0} />
+      return <DashboardSkeleton />
     }
 
     return (

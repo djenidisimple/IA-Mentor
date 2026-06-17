@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,6 +50,7 @@ public class ChallengeController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ChallengeResponse>> createChallenge(
             @Valid @RequestBody CreateChallengeRequest request) {
         ChallengeResponse challenge = challengeService.createChallenge(request);
@@ -57,6 +59,7 @@ public class ChallengeController {
     }
 
     @DeleteMapping("/{slug}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteChallenge(@PathVariable String slug) {
         challengeService.deleteChallenge(slug);
         return ResponseEntity.ok(ApiResponse.success("Challenge supprimé", null));

@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.djenidi.ai_mentor.entity.Challenge;
+import com.djenidi.ai_mentor.entity.User;
 import com.djenidi.ai_mentor.repository.ChallengeRepository;
+import com.djenidi.ai_mentor.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +38,7 @@ public class AnalysisService {
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
     private final ChallengeRepository challengeRepository; 
+    private final UserRepository userRepository;
 
     //  FIX 1 : constructeur manuel pour que @Qualifier soit respecté
     public AnalysisService(
@@ -45,7 +48,8 @@ public class AnalysisService {
             @Qualifier("groqService") AIService aiService,
             ApplicationContext applicationContext,
             ObjectMapper objectMapper,
-            ChallengeRepository challengeRepository
+            ChallengeRepository challengeRepository,
+            UserRepository userRepository
     ) {
         this.analysisRepository = analysisRepository;
         this.submissionRepository = submissionRepository;
@@ -54,6 +58,7 @@ public class AnalysisService {
         this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
         this.challengeRepository = challengeRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -162,6 +167,14 @@ public class AnalysisService {
             submission.setStatus(SubmissionStatus.REVIEWED);
             submission.setReviewedAt(LocalDateTime.now());
             submissionRepository.save(submission);
+
+            if (challenge != null && submission.getScore() != null && submission.getScore() > 0) {
+                User user = submission.getUser();
+                user.setPoints(user.getPoints() + challenge.getPoints());
+                userRepository.save(user);
+                log.info("Points awarded: {} points to user {} for completing challenge {}",
+                    challenge.getPoints(), user.getUsername(), challenge.getTitle());
+            }
 
             log.info(" Analysis completed for submission {}: score={}", submission.getId(), aiResult.score());
 

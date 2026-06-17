@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
-import LoadingScreen from '@/components/ui/LoadingScreen'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -19,7 +19,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }, [isAuthenticated, token, router])
 
   if (isChecking) {
-    return <LoadingScreen minDuration={0} />
+    return <PageSkeleton />
   }
 
   return <>{children}</>

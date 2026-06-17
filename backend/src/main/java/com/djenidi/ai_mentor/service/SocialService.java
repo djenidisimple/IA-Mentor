@@ -10,13 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.djenidi.ai_mentor.dto.CommentDTO;
 import com.djenidi.ai_mentor.dto.UserSummaryDTO;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.HashSet;
-
-import java.util.Optional;
 import java.util.stream.Collectors;
 import com.djenidi.ai_mentor.dto.TrendingTopicDTO;
 import com.djenidi.ai_mentor.dto.PostDTO;
@@ -37,7 +32,6 @@ public class SocialService {
     private final CommentRepository commentRepository;
     private final ChallengeRepository challengeRepository;
 
-    // Récupère l'utilisateur connecté depuis SecurityContext
     private User getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof User) {
@@ -49,7 +43,6 @@ public class SocialService {
     public List<CommentDTO> getCommentsForSubmission(Long submissionId) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new EntityNotFoundException("Soumission non trouvée"));
-        Long likeCount = likeRepository.getLikeCountBySubmissionId(submissionId);
 
         return submission.getComments().stream()
                 .map(comment -> new CommentDTO(
@@ -60,7 +53,7 @@ public class SocialService {
                                 comment.getUser().getUsername(),
                                 comment.getUser().getAvatarUrl()
                         ),
-                        likeCount,
+                        0L,
                         comment.getCreatedAt()
                 ))
                 .toList();
@@ -83,11 +76,20 @@ public class SocialService {
     }
 
     private PostDTO mapToDTO(Submission sub, boolean isLiked) {
+        String githubUrl = sub.getGithubUrl();
+        String repoName = "GitHub";
+        if (githubUrl != null && !githubUrl.isBlank()) {
+            String[] parts = githubUrl.replace("https://github.com/", "").split("/");
+            if (parts.length >= 2) {
+                repoName = parts[0] + "/" + parts[1].replace(".git", "");
+            }
+        }
+
         return PostDTO.builder()
             .id(sub.getId())
             .author(convertToSummary(sub.getUser()))
             .content("A complété le challenge : " + sub.getChallenge().getTitle())
-            .code(new CodeSnippetDTO("GitHub", sub.getGithubUrl()))
+            .code(new CodeSnippetDTO(repoName, sub.getGithubUrl()))
             .likes((long) sub.getLikeCount())
             .comments((long) sub.getCommentCount())
             .shares(0L)
@@ -98,15 +100,59 @@ public class SocialService {
     }
 
     public List<TrendingTopicDTO> getTrendingTopics() {
-        return List.of(
-            new TrendingTopicDTO(1L, "Spring", 125, "Framework"),
-            new TrendingTopicDTO(2L, "React", 89, "Frontend")
-        );
+        List<Challenge> challenges = challengeRepository.findAllWithDetails();
+        Map<String, Long> techCount = new LinkedHashMap<>();
+        Map<String, Set<String>> techCategories = new LinkedHashMap<>();
+
+        for (Challenge c : challenges) {
+            for (String tech : c.getTechnologies()) {
+                techCount.merge(tech.toLowerCase(), 1L, Long::sum);
+                techCategories.computeIfAbsent(tech.toLowerCase(), k -> new LinkedHashSet<>())
+                    .add(c.getType() != null ? c.getType().name() : "GENERAL");
+            }
+        }
+
+        List<TrendingTopicDTO> topics = techCount.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .limit(10)
+            .map(entry -> {
+                String tech = entry.getKey();
+                long count = entry.getValue();
+                String category = techCategories.getOrDefault(tech, Set.of("GENERAL"))
+                    .stream().findFirst().orElse("GENERAL");
+                String displayCategory = switch (category.toUpperCase()) {
+                    case "FRONTEND" -> "Frontend";
+                    case "BACKEND" -> "Backend";
+                    case "FULLSTACK" -> "Fullstack";
+                    default -> "Technologie";
+                };
+                return new TrendingTopicDTO(
+                    (long) tech.hashCode(),
+                    tech.substring(0, 1).toUpperCase() + tech.substring(1),
+                    count,
+                    displayCategory
+                );
+            })
+            .toList();
+
+        return topics.isEmpty()
+            ? List.of(
+                new TrendingTopicDTO(1L, "Spring", 125, "Framework"),
+                new TrendingTopicDTO(2L, "React", 89, "Frontend")
+              )
+            : topics;
     }
 
     public List<UserSummaryDTO> getUserSuggestions() {
-        return userRepository.findTop5ByOrderByUsernameAsc().stream()
-            .map(this::convertToSummary)
+        return userRepository.findTop5ByOrderByPointsDesc().stream()
+            .map(user -> new UserSummaryDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getAvatarUrl(),
+                user.getIsPremium() != null && user.getIsPremium(),
+                user.getRole() != null ? user.getRole().name() : "USER",
+                user.getPoints() + " points"
+            ))
             .toList();
     }
 
@@ -115,9 +161,9 @@ public class SocialService {
             user.getId(), 
             user.getUsername(), 
             user.getAvatarUrl(),
-            false,              
-            "Developer",
-            null                 
+            user.getIsPremium() != null && user.getIsPremium(),
+            user.getRole() != null ? user.getRole().name() : "USER",
+            null
         );
     }
 
@@ -153,9 +199,11 @@ public class SocialService {
         }
         User toFollow = userRepository.findById(userToFollowId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+        User managedUser = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
         
-        currentUser.getFollowing().add(toFollow);
-        userRepository.save(currentUser);
+        managedUser.getFollowing().add(toFollow);
+        userRepository.save(managedUser);
     }
 
     // --- COMMENTAIRES ---
@@ -172,13 +220,11 @@ public class SocialService {
                 .build();
                 
         Comment saved = commentRepository.save(comment);
-        Long likeCount = likeRepository.getLikeCountBySubmissionId(submissionId);
-
         return new CommentDTO(
             saved.getId(),
             saved.getContent(),
             new UserSummaryDTO(user.getId(), user.getUsername(), user.getAvatarUrl()),
-            likeCount,
+            0L,
             saved.getCreatedAt()
         );
     }

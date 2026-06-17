@@ -5,6 +5,7 @@ import { challengesApi } from "@/lib/challenges";
 import { Challenge, ChallengeType } from "@/types/challenge.types";
 import { Search, Trophy, Target, Zap, Filter } from "lucide-react";
 import ChallengeCard from "@/components/challenges/ChallengeCard";
+import { CardGridSkeleton } from "@/components/ui/Skeleton";
 
 export default function ChallengesPage(): React.ReactElement {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -52,9 +53,17 @@ export default function ChallengesPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center font-['Outfit']">
-        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0052FF] animate-spin mb-4" />
-        <p className="text-[13px] font-medium uppercase tracking-widest text-slate-400">Préparation des défis</p>
+      <div className="min-h-screen bg-white font-['Outfit']">
+        <header className="border-b border-slate-100">
+          <div className="max-w-[1200px] mx-auto px-6 py-12">
+            <div className="h-3 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-3" />
+            <div className="h-10 w-96 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer mb-4" />
+            <div className="h-4 w-64 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer" />
+          </div>
+        </header>
+        <div className="max-w-[1200px] mx-auto px-6 py-12">
+          <CardGridSkeleton count={6} />
+        </div>
       </div>
     );
   }

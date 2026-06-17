@@ -56,27 +56,3 @@ export interface SuggestedUser {
   role?: string        // Titre professionnel (ex: "Senior Dev", "Java Expert")
 }
 
-/**
- * Rappel : Interface Post pour la cohérence globale
- */
-export interface CommunityPost {
-  id: number
-  author: {
-    id: number
-    username: string
-    avatar?: string
-    isPremium?: boolean
-    role?: string
-  }
-  content: string
-  code?: {
-    language: string
-    snippet: string
-  }
-  tags: string[]
-  likes: number
-  comments: number
-  shares: number
-  createdAt: string
-  isLiked: boolean
-}

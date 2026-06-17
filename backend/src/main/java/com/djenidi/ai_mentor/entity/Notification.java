@@ -37,11 +37,7 @@ public class Notification {
 
     // === LIFECYCLE ===
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

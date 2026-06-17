@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { submissionsApi } from "@/lib/submissions";
 import AdminGuard from "@/components/providers/AdminGuard";
+import { CardSkeleton } from "@/components/ui/Skeleton";
 
 export default function AdminSubmissionsPage(): React.ReactElement {
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -34,7 +35,7 @@ export default function AdminSubmissionsPage(): React.ReactElement {
     setActionLoading(id);
     setError(null);
     try {
-      const res = await submissionsApi.review(id);
+      const res = await submissionsApi.triggerAnalysis(id);
       setSubmissions((s) => s.map((it) => (it.id === id ? res : it)));
     } catch (err: any) {
       console.error('Review failed', err);
@@ -87,7 +88,20 @@ export default function AdminSubmissionsPage(): React.ReactElement {
         </div>
 
         {loading ? (
-          <div>Chargement...</div>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="border rounded p-3 flex items-center justify-between animate-pulse">
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 w-64 rounded bg-slate-200" />
+                  <div className="h-3 w-32 rounded bg-slate-200" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-16 rounded bg-slate-200" />
+                  <div className="h-8 w-16 rounded bg-slate-200" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="space-y-3">
             {filtered.length === 0 ? (

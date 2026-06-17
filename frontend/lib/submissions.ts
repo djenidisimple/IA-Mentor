@@ -30,9 +30,9 @@ export const submissionsApi = {
   getSubmission: (id: number) =>
     apiFetch<SubmissionResponse>(`/api/submissions/${id}`),
 
-  // Admin: trigger review for a submission (ADMIN role required)
-  review: (id: number) =>
-    apiFetch<SubmissionResponse>(`/api/admin/submissions/${id}/review`, {
+  // Admin: trigger analysis for a submission (ADMIN role required)
+  triggerAnalysis: (id: number) =>
+    apiFetch<SubmissionResponse>(`/api/admin/submissions/${id}/analyze`, {
       method: 'POST',
     }),
 

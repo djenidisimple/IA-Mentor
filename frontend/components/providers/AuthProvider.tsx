@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store/authStore'
-import LoadingScreen from '../ui/LoadingScreen'
+import { PageSkeleton } from '../ui/Skeleton'
 import { useRouter } from 'next/navigation'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isHydrated, isAuthenticated, token]);
 
   if (isInitializing || (isAuthenticated && !token) || !isHydrated) {
-    return <LoadingScreen minDuration={0} />
+    return <PageSkeleton />
   }
 
   return <>{children}</>

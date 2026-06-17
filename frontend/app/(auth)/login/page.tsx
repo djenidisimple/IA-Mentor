@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
@@ -18,6 +18,7 @@ import { authApi } from '@/lib/auth'
 import { useAuthStore } from '@/lib/store/authStore'
 import { User } from '@/types/auth.types'
 import { GithubIcon } from '@/components/icon'
+import { FormSkeleton } from '@/components/ui/Skeleton'
 
 const PillBadge = ({ children, variant = 'default' }: { children: React.ReactNode, variant?: 'default' | 'accent' }) => {
   const baseClasses = "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-[0.08em] transition-all duration-300"
@@ -79,6 +80,12 @@ const SolidButton = ({
 export default function LoginPage() {
   const router = useRouter()
   const { setAuth } = useAuthStore()
+
+  const [pageReady, setPageReady] = useState(false)
+
+  useEffect(() => {
+    setPageReady(true)
+  }, [])
   
   const [form, setForm] = useState({
     email: '',
@@ -103,7 +110,7 @@ export default function LoginPage() {
       const response = await authApi.login(form)
       
       const user: User = {
-        id: Date.now(),
+        id: response.id,
         username: response.username,
         email: response.email,
         avatarUrl: (response as any).avatarUrl || (response as any).picture || '',
@@ -124,6 +131,10 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!pageReady) {
+    return <FormSkeleton />
   }
 
   return (

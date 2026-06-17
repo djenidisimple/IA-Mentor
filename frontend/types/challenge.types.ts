@@ -34,7 +34,7 @@ export interface ApiResponse<T> {
   timestamp: string
 }
 
-export type SubmissionStatus = 'EN_COURS' | 'SOUMIS' | 'TERMINE' | 'ECHEC'
+export type SubmissionStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'REVIEWED'
 
 export interface SubmissionResponse {
   id: number

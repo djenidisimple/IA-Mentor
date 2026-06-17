@@ -1,6 +1,7 @@
 package com.djenidi.ai_mentor.controller;
 
 import com.djenidi.ai_mentor.dto.*;
+import com.djenidi.ai_mentor.dto.response.ApiResponse;
 import com.djenidi.ai_mentor.entity.Comment;
 import com.djenidi.ai_mentor.entity.User;
 import com.djenidi.ai_mentor.service.SocialService;
@@ -17,28 +18,30 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/social")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_USER')")
 public class SocialController {
 
     private final SocialService socialService;
 
     @GetMapping("/posts")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<List<PostDTO>> getFeed() {
-        return ResponseEntity.ok(socialService.getCommunityFeed());
+    public ResponseEntity<ApiResponse<List<PostDTO>>> getFeed() {
+        return ResponseEntity.ok(ApiResponse.success(socialService.getCommunityFeed()));
     }
 
     @GetMapping("/trending")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<List<TrendingTopicDTO>> getTrending() {
         return ResponseEntity.ok(socialService.getTrendingTopics());
     }
 
     @GetMapping("/suggestions")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<List<UserSummaryDTO>> getSuggestions() {
         return ResponseEntity.ok(socialService.getUserSuggestions());
     }
 
     @PostMapping("/like/{submissionId}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<LikeResponseDTO> toggleLike(
             @AuthenticationPrincipal User user, 
             @PathVariable Long submissionId) {
@@ -47,6 +50,7 @@ public class SocialController {
     }
 
     @PostMapping("/follow/{userId}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<Void> follow(@AuthenticationPrincipal User user, @PathVariable Long userId) {
         socialService.followUser(user, userId);
         return ResponseEntity.ok().build();
@@ -54,10 +58,11 @@ public class SocialController {
 
     // Commenter une soumission (pour le système social)
     @PostMapping("/comment/submission/{submissionId}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<CommentDTO> addCommentToSubmission(
             @AuthenticationPrincipal User user, 
             @PathVariable Long submissionId, 
-            @RequestBody CommentRequest request) {
+            @Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(socialService.addCommentToSubmission(user, submissionId, request.content()));
     }
 
@@ -68,10 +73,11 @@ public class SocialController {
 
     // Commenter un challenge (existant)
     @PostMapping("/comment/challenge/{challengeId}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<CommentDTO> addCommentToChallenge(
             @AuthenticationPrincipal User user, 
             @PathVariable Long challengeId, 
-            @RequestBody CommentRequest request) {
+            @Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(socialService.addCommentToChallenge(user, challengeId, request.content()));
     }
 }

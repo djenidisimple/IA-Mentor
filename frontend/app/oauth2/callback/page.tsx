@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
-import LoadingScreen from '@/components/ui/LoadingScreen'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { User } from '@/types/auth.types'
 
 function OAuth2CallbackHandler() {
@@ -49,12 +49,12 @@ function OAuth2CallbackHandler() {
     }
   }, [searchParams, router, setAuth])
 
-  return <LoadingScreen />
+  return <PageSkeleton />
 }
 
 export default function OAuth2CallbackPage() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<PageSkeleton />}>
       <OAuth2CallbackHandler />
     </Suspense>
   )
