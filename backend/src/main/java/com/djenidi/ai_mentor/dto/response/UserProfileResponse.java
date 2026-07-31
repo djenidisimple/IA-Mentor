@@ -16,31 +16,15 @@ public class UserProfileResponse {
     private String email;
     private String avatarUrl;
     private Integer points;
+    private Integer pointsEarned;
     private Boolean isPremium;
     private long challengesInProgress;
+    private long challengesSubmitted;
     private long challengesCompleted;
+    private long totalChallenges;
+    private Double averageScore;
+    private Double successRate;
+    private long totalTimeMinutes;
+    private long activeDays;
     private LocalDateTime createdAt;
-    
-    /**
-     * Convertit une entité User en UserProfileResponse
-     */
-    public static UserProfileResponse fromEntity(User user) {
-        if (user == null) return null;
-        
-        // Pour l'instant, on met 0 pour les challenges (à implémenter plus tard)
-        long inProgress = 0L;
-        long completed = 0L;
-        
-        return UserProfileResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .avatarUrl(user.getAvatarUrl())
-                .points(user.getPoints() != null ? user.getPoints() : 0)
-                .isPremium(user.getIsPremium() != null ? user.getIsPremium() : false)
-                .challengesInProgress(inProgress)
-                .challengesCompleted(completed)
-                .createdAt(user.getCreatedAt())
-                .build();
-    }
 }

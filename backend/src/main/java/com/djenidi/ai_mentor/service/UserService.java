@@ -1,6 +1,7 @@
 package com.djenidi.ai_mentor.service;
 
 import com.djenidi.ai_mentor.dto.response.UserProfileResponse;
+import com.djenidi.ai_mentor.entity.Submission;
 import com.djenidi.ai_mentor.entity.SubmissionStatus;
 import com.djenidi.ai_mentor.entity.User;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
@@ -10,6 +11,10 @@ import com.djenidi.ai_mentor.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,8 +54,40 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "id", userId));
 
-        long inProgress = submissionRepository.countByUserIdAndStatus(userId, SubmissionStatus.IN_PROGRESS);
-        long completed = submissionRepository.countByUserIdAndStatus(userId, SubmissionStatus.REVIEWED);
+        List<Submission> submissions = submissionRepository.findByUserId(userId);
+
+        long inProgress = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.IN_PROGRESS).count();
+        long submitted = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.SUBMITTED).count();
+        long completed = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.REVIEWED).count();
+        long total = submissions.size();
+
+        double averageScore = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.REVIEWED)
+                .filter(s -> s.getScore() != null)
+                .mapToInt(Submission::getScore)
+                .average()
+                .orElse(0.0);
+
+        int pointsEarned = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.REVIEWED)
+                .filter(s -> s.getScore() != null)
+                .mapToInt(Submission::getScore)
+                .sum();
+
+        double successRate = total == 0 ? 0.0 : completed * 100.0 / total;
+
+        long totalTimeMinutes = submissions.stream()
+                .filter(s -> s.getStatus() == SubmissionStatus.REVIEWED)
+                .filter(s -> s.getStartedAt() != null && s.getReviewedAt() != null)
+                .mapToLong(s -> ChronoUnit.MINUTES.between(s.getStartedAt(), s.getReviewedAt()))
+                .sum();
+
+        long activeDays = user.getCreatedAt() != null
+                ? Math.max(0, ChronoUnit.DAYS.between(user.getCreatedAt().toLocalDate(), LocalDate.now()))
+                : 0L;
 
         return UserProfileResponse.builder()
                 .id(user.getId())
@@ -58,9 +95,16 @@ public class UserService {
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .points(user.getPoints())
+                .pointsEarned(pointsEarned)
                 .isPremium(user.getIsPremium())
                 .challengesInProgress(inProgress)
+                .challengesSubmitted(submitted)
                 .challengesCompleted(completed)
+                .totalChallenges(total)
+                .averageScore(Math.round(averageScore * 10.0) / 10.0)
+                .successRate(Math.round(successRate * 10.0) / 10.0)
+                .totalTimeMinutes(totalTimeMinutes)
+                .activeDays(activeDays)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
