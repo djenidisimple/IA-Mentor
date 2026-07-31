@@ -64,4 +64,11 @@ public class ChallengeController {
         challengeService.deleteChallenge(slug);
         return ResponseEntity.ok(ApiResponse.success("Challenge supprimé", null));
     }
+
+    @PostMapping("/{slug}/review")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ChallengeResponse>> reviewChallenge(@PathVariable String slug) {
+        ChallengeResponse challenge = challengeService.reviewChallenge(slug);
+        return ResponseEntity.ok(ApiResponse.success("Challenge marqué comme revu", challenge));
+    }
 }

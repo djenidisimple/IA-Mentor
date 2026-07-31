@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { MoveRight, Trophy, Users } from "lucide-react";
+import { MoveRight, Trophy, Users, ShieldCheck } from "lucide-react";
 import { Challenge } from "@/types/challenge.types";
 import { DIFFICULTY_SPECS, DEFAULT_DIFFICULTY_SPEC, MODULE_CONFIG, DEFAULT_MODULE_CONFIG } from "@/lib/challenge-constants";
 
@@ -39,6 +39,13 @@ export default function ChallengeCard({ challenge, index }: ChallengeCardProps) 
             {challenge.level}
           </span>
         </div>
+        
+        {challenge.averageScore != null && (
+          <span className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+            <ShieldCheck size={12} />
+            Revu • {Math.round(challenge.averageScore)}/100
+          </span>
+        )}
 
         <h3 className="text-lg font-bold text-[var(--navy)] mb-2 leading-snug group-hover:text-[var(--blue)] transition-colors">
           {challenge.title}

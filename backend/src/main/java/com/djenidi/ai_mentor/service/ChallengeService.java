@@ -6,16 +6,20 @@ import com.djenidi.ai_mentor.entity.Category;
 import com.djenidi.ai_mentor.entity.Challenge;
 import com.djenidi.ai_mentor.entity.ChallengeLevel;
 import com.djenidi.ai_mentor.entity.ChallengeType;
+import com.djenidi.ai_mentor.entity.SubmissionStatus;
 import com.djenidi.ai_mentor.exception.DuplicateResourceException;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
 import com.djenidi.ai_mentor.repository.CategoryRepository;
 import com.djenidi.ai_mentor.repository.ChallengeRepository;
+import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,34 +28,39 @@ public class ChallengeService {
 
     private final ChallengeRepository challengeRepository;
     private final CategoryRepository categoryRepository;
+    private final SubmissionRepository submissionRepository;
 
     public List<ChallengeResponse> getAllChallenges() {
+        Map<Long, Double> averageScores = getAverageScoresByChallenge();
         return challengeRepository.findAllWithDetails().stream()
-                .map(this::toResponse)
+                .map(challenge -> toResponse(challenge, averageScores))
                 .toList();
     }
 
     public ChallengeResponse getChallengeBySlug(String slug) {
         Challenge challenge = challengeRepository.findBySlugWithDetails(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Challenge", "slug", slug));
-        return toResponse(challenge);
+        return toResponse(challenge, getAverageScoresByChallenge());
     }
 
     public List<ChallengeResponse> getChallengesByCategory(String categorySlug) {
+        Map<Long, Double> averageScores = getAverageScoresByChallenge();
         return challengeRepository.findByCategorySlugWithDetails(categorySlug).stream()
-                .map(this::toResponse)
+                .map(challenge -> toResponse(challenge, averageScores))
                 .toList();
     }
 
     public List<ChallengeResponse> getChallengesByLevel(ChallengeLevel level) {
+        Map<Long, Double> averageScores = getAverageScoresByChallenge();
         return challengeRepository.findByLevelWithDetails(level).stream()
-                .map(this::toResponse)
+                .map(challenge -> toResponse(challenge, averageScores))
                 .toList();
     }
 
     public List<ChallengeResponse> getChallengesByType(ChallengeType type) {
+        Map<Long, Double> averageScores = getAverageScoresByChallenge();
         return challengeRepository.findByTypeWithDetails(type).stream()
-                .map(this::toResponse)
+                .map(challenge -> toResponse(challenge, averageScores))
                 .toList();
     }
 
@@ -80,7 +89,7 @@ public class ChallengeService {
                 .build();
 
         Challenge saved = challengeRepository.save(challenge);
-        return toResponse(saved);
+        return toResponse(saved, getAverageScoresByChallenge());
     }
 
     @Transactional
@@ -90,9 +99,25 @@ public class ChallengeService {
         challengeRepository.delete(challenge);
     }
 
+    @Transactional
+    public ChallengeResponse reviewChallenge(String slug) {
+        Challenge challenge = challengeRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Challenge", "slug", slug));
+        challenge.setReviewed(true);
+        return toResponse(challengeRepository.save(challenge), getAverageScoresByChallenge());
+    }
+
     // === HELPERS ===
 
-    private ChallengeResponse toResponse(Challenge challenge) {
+    private Map<Long, Double> getAverageScoresByChallenge() {
+        return submissionRepository.findAverageScoreByStatus(SubmissionStatus.REVIEWED).stream()
+                .collect(Collectors.toMap(
+                        SubmissionRepository.ChallengeAverageScore::getChallengeId,
+                        SubmissionRepository.ChallengeAverageScore::getAvgScore
+                ));
+    }
+
+    private ChallengeResponse toResponse(Challenge challenge, Map<Long, Double> averageScores) {
         return ChallengeResponse.builder()
                 .id(challenge.getId())
                 .title(challenge.getTitle())
@@ -106,6 +131,8 @@ public class ChallengeService {
                 .criteresIA(challenge.getCriteresIA() != null ? challenge.getCriteresIA() : Set.of())
                 .points(challenge.getPoints())
                 .isPremium(challenge.getIsPremium())
+                .reviewed(challenge.getReviewed())
+                .averageScore(averageScores.get(challenge.getId()))
                 .createdAt(challenge.getCreatedAt())
                 .build();
     }

@@ -15,6 +15,11 @@ export const challengesApi = {
   getAllCategories: () =>
     apiFetch<Category[]>('/api/categories'),
 
+  review: (slug: string) =>
+    apiFetch<Challenge>(`/api/challenges/${slug}/review`, {
+      method: 'POST',
+    }),
+
   test: () =>
     apiFetch<string>('/api/groq/test-analysis/1'),
 }

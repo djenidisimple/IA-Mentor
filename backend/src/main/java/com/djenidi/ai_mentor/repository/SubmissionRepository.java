@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
@@ -30,4 +31,24 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     @Query("SELECT s FROM Submission s JOIN FETCH s.user JOIN FETCH s.challenge ORDER BY s.submittedAt DESC")
 
     List<Submission> findAllByOrderBySubmittedAtDesc();
+
+    @Query("SELECT s.challenge.id AS challengeId, AVG(s.score) AS avgScore FROM Submission s " +
+           "WHERE s.status = :status GROUP BY s.challenge.id")
+    List<ChallengeAverageScore> findAverageScoreByStatus(@Param("status") SubmissionStatus status);
+
+    interface ChallengeAverageScore {
+        Long getChallengeId();
+        Double getAvgScore();
+    }
+
+    @Query("SELECT s.user.id AS userId, COUNT(s) AS completed, AVG(s.score) AS avgScore, COALESCE(SUM(s.score), 0) AS totalScore " +
+           "FROM Submission s WHERE s.status = :status GROUP BY s.user.id")
+    List<SubmissionStats> findSubmissionStatsByStatus(@Param("status") SubmissionStatus status);
+
+    interface SubmissionStats {
+        Long getUserId();
+        Long getCompleted();
+        Double getAvgScore();
+        Long getTotalScore();
+    }
 }

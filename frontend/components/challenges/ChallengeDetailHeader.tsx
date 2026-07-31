@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, ShieldCheck } from "lucide-react";
 import { Challenge } from "@/types/challenge.types";
 import { MODULE_CONFIG, DEFAULT_MODULE_CONFIG, DIFFICULTY_SPECS, DEFAULT_DIFFICULTY_SPEC } from "@/lib/challenge-constants";
 import ChallengeBadge from "./ChallengeBadge";
@@ -30,6 +30,12 @@ export default function ChallengeDetailHeader({ challenge, onStart }: ChallengeD
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <ChallengeBadge type="TYPE" value={challenge.type} />
               <ChallengeBadge type="DIFFICULTY" value={challenge.level} />
+              {challenge.averageScore != null && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  <ShieldCheck size={12} />
+                  Revu • {Math.round(challenge.averageScore)}/100
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[var(--navy)] tracking-tight leading-tight">

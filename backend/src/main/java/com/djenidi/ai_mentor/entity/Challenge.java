@@ -80,6 +80,10 @@ public class Challenge {
     @Column(nullable = false)
     private Boolean isPremium = false;
 
+    @Builder.Default
+    @Column(columnDefinition = "boolean default false")
+    private Boolean reviewed = false;
+
     // === LIFECYCLE ===
 
     @Column(nullable = false, updatable = false)

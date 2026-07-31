@@ -26,5 +26,7 @@ public class ChallengeResponse {
     private Set<String> criteresIA;
     private Integer points;
     private Boolean isPremium;
+    private Boolean reviewed;
+    private Double averageScore;
     private LocalDateTime createdAt;
 }
