@@ -21,7 +21,7 @@ export const socialApi = {
     apiFetch<SuggestedUser[]>('/api/social/suggestions'),
 
   getCommentsForSubmission: (submissionId: number) =>
-    apiFetch<Comment>(`/api/social/comments/submission/${submissionId}`),
+    apiFetch<Comment[]>(`/api/social/comments/submission/${submissionId}`),
 
   /**
    * Like ou Unlike une soumission

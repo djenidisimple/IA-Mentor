@@ -1,7 +1,10 @@
 export interface UserSummary {
   id: number
   username: string
-  avatarUrl: string
+  avatar: string | null
+  isPremium?: boolean
+  role?: string
+  reason?: string | null
 }
 
 export interface Comment {
@@ -9,22 +12,18 @@ export interface Comment {
   content: string
   user: UserSummary
   createdAt: string
-  likeCount: number
+  likesCount: number
 }
+
 export interface CommunityPost {
   id: number
-  author: {
-    id: number
-    username: string
-    avatar?: string
-    isPremium?: boolean
-    role?: string
-  }
+  author: UserSummary
   content: string
-  code?: {
-    language: string
-    snippet: string
-  }
+  challengeTitle: string
+  challengeSlug: string
+  repoName: string
+  githubUrl: string
+  score: number | null
   tags: string[]
   likes: number      // Total calculé par le back
   comments: number   // Total calculé par le back
