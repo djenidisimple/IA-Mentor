@@ -2,10 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import { useAuthStore } from '@/lib/store/authStore'
 import { PageSkeleton } from '../ui/Skeleton'
-import { useRouter } from 'next/navigation'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
   const { token, isAuthenticated, isHydrated, refreshAccessToken, logout } = useAuthStore()
   const [isInitializing, setIsInitializing] = useState(true)
 
@@ -22,8 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           await logout()
         }
-      } else if (isAuthenticated && token) {
-        router.replace('/home')
       }
       setIsInitializing(false)
     }
