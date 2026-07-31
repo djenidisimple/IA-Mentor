@@ -155,9 +155,9 @@ export default function InfoCommunityPage({
                           rounded-full overflow-hidden
                         "
                       >
-                        {comment.user.avatarUrl ? (
+                        {comment.user.avatar ? (
                           <img
-                            src={comment.user.avatarUrl}
+                            src={comment.user.avatar}
                             alt=""
                             className="w-full h-full object-cover"
                           />
@@ -195,7 +195,7 @@ export default function InfoCommunityPage({
                   <div className="flex items-center gap-6">
                     <button className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-[var(--gray)] hover:text-[var(--navy)] transition-colors">
                       <Heart className="w-4 h-4" />
-                      {comment.likeCount ?? 0}
+                      {comment.likesCount ?? 0}
                     </button>
                     <button
                       onClick={() =>
@@ -266,7 +266,7 @@ export default function InfoCommunityPage({
                   {
                     label: "Total likes",
                     value: comments.reduce(
-                      (acc, c) => acc + (c.likeCount ?? 0),
+                      (acc, c) => acc + (c.likesCount ?? 0),
                       0
                     ),
                   },

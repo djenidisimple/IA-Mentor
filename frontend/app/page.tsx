@@ -385,7 +385,7 @@ export default function LandingPage() {
           {[
             { label: 'Défis',       href: '/defis' },
             { label: 'Classement',  href: '/classement' },
-            { label: 'Communauté',  href: '/communaute' },
+            { label: 'Communauté',  href: '/community' },
             { label: 'À propos',    href: '/a-propos' },
             { label: 'Contact',     href: '/contact' },
           ].map(item => (
