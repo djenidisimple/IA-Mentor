@@ -61,7 +61,9 @@ public class SocialService {
 
     @Transactional(readOnly = true)
     public List<PostDTO> getCommunityFeed() {
-        List<Submission> subs = submissionRepository.findAllByOrderBySubmittedAtDesc();
+        List<Submission> subs = submissionRepository.findAllByOrderBySubmittedAtDesc().stream()
+            .filter(sub -> sub.getSubmittedAt() != null)
+            .toList();
         User currentUser = getCurrentUser();
         Set<Long> userLikeIds = new HashSet<>();
         if (currentUser != null) {
@@ -79,21 +81,30 @@ public class SocialService {
         String githubUrl = sub.getGithubUrl();
         String repoName = "GitHub";
         if (githubUrl != null && !githubUrl.isBlank()) {
-            String[] parts = githubUrl.replace("https://github.com/", "").split("/");
+            String[] parts = githubUrl.replace("https://github.com/", "").replace(".git", "").split("/");
             if (parts.length >= 2) {
-                repoName = parts[0] + "/" + parts[1].replace(".git", "");
+                repoName = parts[0] + "/" + parts[1];
             }
         }
+
+        Challenge challenge = sub.getChallenge();
+        List<String> tags = challenge.getTechnologies() != null
+            ? challenge.getTechnologies().stream().toList()
+            : List.of();
 
         return PostDTO.builder()
             .id(sub.getId())
             .author(convertToSummary(sub.getUser()))
-            .content("A complété le challenge : " + sub.getChallenge().getTitle())
-            .code(new CodeSnippetDTO(repoName, sub.getGithubUrl()))
+            .content("A complété le challenge : " + challenge.getTitle())
+            .challengeTitle(challenge.getTitle())
+            .challengeSlug(challenge.getSlug())
+            .repoName(repoName)
+            .githubUrl(githubUrl)
+            .score(sub.getScore())
             .likes((long) sub.getLikeCount())
             .comments((long) sub.getCommentCount())
             .shares(0L)
-            .tags(new ArrayList<>())
+            .tags(tags)
             .createdAt(sub.getSubmittedAt() != null ? sub.getSubmittedAt() : sub.getStartedAt())
             .isLiked(isLiked)
             .build();
@@ -144,18 +155,27 @@ public class SocialService {
     }
 
     public List<UserSummaryDTO> getUserSuggestions() {
-        return userRepository.findTop5ByOrderByPointsDesc().stream()
+        Map<Long, Long> pointsByUser = submissionRepository
+            .findSubmissionStatsByStatus(SubmissionStatus.REVIEWED)
+            .stream()
+            .collect(Collectors.toMap(
+                SubmissionRepository.SubmissionStats::getUserId,
+                stats -> stats.getTotalScore() != null ? stats.getTotalScore() : 0L
+            ));
+
+        return userRepository.findAll().stream()
+            .sorted(Comparator.comparingLong((User u) -> pointsByUser.getOrDefault(u.getId(), 0L)).reversed())
+            .limit(5)
             .map(user -> new UserSummaryDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getAvatarUrl(),
                 user.getIsPremium() != null && user.getIsPremium(),
                 user.getRole() != null ? user.getRole().name() : "USER",
-                user.getPoints() + " points"
+                pointsByUser.getOrDefault(user.getId(), 0L) + " points"
             ))
             .toList();
     }
-
     private UserSummaryDTO convertToSummary(User user) {
         return new UserSummaryDTO(
             user.getId(), 
