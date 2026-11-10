@@ -2,14 +2,13 @@ package com.djenidi.ai_mentor.security;
 
 import com.djenidi.ai_mentor.entity.RefreshToken;
 import com.djenidi.ai_mentor.entity.User;
-import com.djenidi.ai_mentor.repository.UserRepository;
 import com.djenidi.ai_mentor.service.RefreshTokenService;
+import com.djenidi.ai_mentor.service.CustomOAuth2User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,7 +20,6 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
 
     private static final int COOKIE_MAX_AGE = 90 * 24 * 60 * 60;
@@ -29,16 +27,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oauth2User.getAttribute("email");
-        
-        if (email == null) {
-            String login = oauth2User.getAttribute("login");
-            email = login + "@github.com";
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof CustomOAuth2User customOAuth2User)) {
+            throw new IllegalStateException("Authenticated GitHub profile is missing");
         }
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé après OAuth2"));
+        User user = customOAuth2User.getUser();
 
         // 1. Générer le JWT
         String token = jwtService.generateToken(user);

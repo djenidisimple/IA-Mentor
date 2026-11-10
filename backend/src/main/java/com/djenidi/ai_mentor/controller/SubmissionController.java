@@ -79,7 +79,7 @@ public class SubmissionController {
             SubmissionResponse submission = submissionService.submitChallenge(
                     user.getId(), 
                     request.getChallengeId(), 
-                    request.getGithubUrl());
+                    request.getGithubUrl(), request.getComment());
             return ResponseEntity.ok(
                     ApiResponse.success("Challenge soumis ! L'IA va analyser votre code", submission));
         } catch (IllegalStateException e) {

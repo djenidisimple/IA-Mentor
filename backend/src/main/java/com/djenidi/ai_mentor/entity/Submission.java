@@ -51,6 +51,9 @@ public class Submission {
 
     private String githubUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String userComment;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

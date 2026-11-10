@@ -180,7 +180,7 @@ export default function Navbar() {
 
         {/* Mobile Menu Overlay */}
         {mobileOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[var(--cream)] z-[90] mobile-fade-in flex flex-col">
+          <div className="lg:hidden absolute top-full inset-x-0 bg-[var(--cream)] border-t border-[var(--border-pink)] shadow-xl z-[90] mobile-fade-in max-h-[calc(100vh-4.5rem)] overflow-y-auto">
             <div className="flex flex-col p-6 gap-2">
               {navItems.map((item) => (
                 <Link

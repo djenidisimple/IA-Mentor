@@ -9,10 +9,10 @@ export const submissionsApi = {
       body: JSON.stringify({ challengeId }),
     }),
 
-  submit: (challengeId: number, githubUrl: string) =>
+  submit: (challengeId: number, githubUrl: string, comment?: string) =>
     apiFetch<SubmissionResponse>('/api/submissions/submit', {
       method: 'POST',
-      body: JSON.stringify({ challengeId, githubUrl }),
+      body: JSON.stringify({ challengeId, githubUrl, comment }),
     }),
 
   getMyActivity: () =>

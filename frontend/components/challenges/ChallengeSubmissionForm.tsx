@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Send, MessageSquare, CheckCircle2, AlertCircle, Loader2, ExternalLink } from "lucide-react";
 import { submissionsApi } from "@/lib/submissions";
+import { usersApi } from "@/lib/users";
+import { getErrorMessage, isApiError } from "@/lib/api-errors";
 import { GithubIcon } from "../icon";
 
 interface ExistingSubmission {
@@ -22,44 +24,35 @@ interface SubmissionResponse {
   startedAt: string;
 }
 
-const validateGithubUrl = (url: string): { isValid: boolean; error: string } => {
-  if (!url || url.trim() === "") {
-    return { isValid: false, error: "L'URL GitHub est requise" };
+const validateGithubUrl = (url: string, linkedGithubUsername?: string | null): { isValid: boolean; error: string } => {
+  const value = url.trim();
+  if (!value) return { isValid: false, error: "L'URL GitHub est requise" };
+
+  try {
+    const parsed = new URL(value);
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const owner = parts[0];
+    const repository = parts[1]?.replace(/\.git$/i, "");
+    const validUrl = parsed.protocol === "https:" &&
+      parsed.hostname.toLowerCase() === "github.com" &&
+      !parsed.port && !parsed.username && !parsed.password &&
+      !parsed.search && !parsed.hash && parts.length === 2 &&
+      /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(owner || "") &&
+      /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/.test(repository || "");
+
+    if (!validUrl) {
+      return { isValid: false, error: "Saisissez l'URL HTTPS d'un depot, par exemple https://github.com/votre-login/mon-projet" };
+    }
+    if (!linkedGithubUsername) {
+      return { isValid: false, error: "Associez d'abord votre compte GitHub." };
+    }
+    if (owner.toLowerCase() !== linkedGithubUsername.toLowerCase()) {
+      return { isValid: false, error: "Le depot doit appartenir a votre compte GitHub : " + linkedGithubUsername + "." };
+    }
+    return { isValid: true, error: "" };
+  } catch {
+    return { isValid: false, error: "URL GitHub invalide. Utilisez https://github.com/votre-login/mon-projet" };
   }
-
-  const githubPatterns = [
-    /^https?:\/\/github\.com\/[a-zA-Z0-9\-_.]+\/[a-zA-Z0-9\-_.]+\/?$/,
-    /^https?:\/\/github\.com\/[a-zA-Z0-9\-_.]+\/[a-zA-Z0-9\-_.]+\.git$/,
-    /^https?:\/\/github\.com\/[a-zA-Z0-9\-_.]+\/[a-zA-Z0-9\-_.]+\/tree\/[a-zA-Z0-9\-_.\/]+$/,
-    /^https?:\/\/github\.com\/[a-zA-Z0-9\-_.]+\/[a-zA-Z0-9\-_.]+\/blob\/[a-zA-Z0-9\-_.\/]+$/,
-  ];
-
-  const isValid = githubPatterns.some((pattern) => pattern.test(url.trim()));
-
-  if (!isValid) {
-    return {
-      isValid: false,
-      error: "URL GitHub invalide. Format attendu : https://github.com/username/repository",
-    };
-  }
-
-  if (!url.includes("github.com")) {
-    return { isValid: false, error: "L'URL doit pointer vers github.com" };
-  }
-
-  const parts = url.split("/");
-  const username = parts[3];
-  const repo = parts[4]?.replace(".git", "");
-
-  if (!username || username.length < 1) {
-    return { isValid: false, error: "Nom d'utilisateur GitHub manquant" };
-  }
-
-  if (!repo || repo.length < 1) {
-    return { isValid: false, error: "Nom du repository manquant" };
-  }
-
-  return { isValid: true, error: "" };
 };
 
 export default function ChallengeSubmissionForm({
@@ -72,9 +65,18 @@ export default function ChallengeSubmissionForm({
   const [status, setStatus] = useState<"loading" | "idle" | "submitting" | "success" | "already-submitted">("loading");
   const [githubUrl, setGithubUrl] = useState<string>("");
   const [comment, setComment] = useState<string>("");
+  const [linkedGithubUsername, setLinkedGithubUsername] = useState<string | null>(null);
+  const [githubProfileLoading, setGithubProfileLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [existingSubmission, setExistingSubmission] = useState<ExistingSubmission | null>(null);
+
+  useEffect(() => {
+    usersApi.getMyProfile()
+      .then((profile) => setLinkedGithubUsername(profile.githubUsername || null))
+      .catch(() => setLinkedGithubUsername(null))
+      .finally(() => setGithubProfileLoading(false));
+  }, []);
 
   useEffect(() => {
     const checkExistingSubmission = async () => {
@@ -110,7 +112,7 @@ export default function ChallengeSubmissionForm({
       return;
     }
 
-    const validation = validateGithubUrl(value);
+    const validation = validateGithubUrl(value, linkedGithubUsername);
     setUrlError(validation.error || null);
   };
 
@@ -118,7 +120,7 @@ export default function ChallengeSubmissionForm({
     if (githubUrl.trim() === "") {
       setUrlError("L'URL GitHub est requise");
     } else {
-      const validation = validateGithubUrl(githubUrl);
+      const validation = validateGithubUrl(githubUrl, linkedGithubUsername)
       setUrlError(validation.error || null);
     }
   };
@@ -126,52 +128,37 @@ export default function ChallengeSubmissionForm({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
-
-    const validation = validateGithubUrl(githubUrl);
+    const validation = validateGithubUrl(githubUrl, linkedGithubUsername);
     if (!validation.isValid) {
       setUrlError(validation.error);
       setError(validation.error);
       return;
     }
-
     setStatus("submitting");
-
     try {
-      const response = await submissionsApi.submit(challengeId, githubUrl.trim());
-
+      const response = await submissionsApi.submit(challengeId, githubUrl.trim(), comment.trim());
       if (response) {
         setExistingSubmission(response);
         onSubmissionCreated?.(response.id);
       }
-
       setStatus("success");
     } catch (err: unknown) {
-      console.error("Submission failed:", err);
-
-      const error = err as { response?: { status?: number; data?: { message?: string; data?: ExistingSubmission } }; message?: string };
-
-      if (error.response?.status === 409) {
-        if (error.response.data?.data) {
-          setExistingSubmission(error.response.data.data);
+      if (isApiError(err) && err.status === 409) {
+        try {
+          const submissions: SubmissionResponse[] = await submissionsApi.getMyActivity();
+          const existing = submissions.find((item) => item.challengeId === challengeId && item.githubUrl);
+          if (existing) {
+            setExistingSubmission(existing);
+            setStatus("already-submitted");
+          } else {
+            setStatus("idle");
+          }
+        } catch {
+          setStatus("idle");
         }
-        setStatus("already-submitted");
         return;
       }
-
-      if (error.response?.status === 404) {
-        setError("Repository GitHub introuvable. Vérifiez que le repository existe et est public.");
-      } else if (error.response?.status === 403) {
-        setError("Accès refusé. Assurez-vous que le repository est public.");
-      } else if (error.response?.data?.message) {
-        if (error.response.data.message.toLowerCase().includes("deja")) {
-          setStatus("already-submitted");
-        } else {
-          setError(error.response.data.message);
-        }
-      } else {
-        setError(error.message || "Échec de la soumission. Veuillez vérifier l'URL de votre repository.");
-      }
-
+      setError(getErrorMessage(err));
       setStatus("idle");
     }
   };
@@ -280,6 +267,12 @@ export default function ChallengeSubmissionForm({
         </h3>
       </div>
 
+      {!githubProfileLoading && !linkedGithubUsername && (
+        <p className="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+          Associez votre compte GitHub avant de soumettre.{" "}
+          <a className="font-bold underline" href={(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080") + "/oauth2/authorization/github"}>Associer GitHub</a>
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-[10px] font-bold text-[var(--gray)] uppercase mb-1.5 ml-1">
@@ -294,11 +287,12 @@ export default function ChallengeSubmissionForm({
             />
             <input
               required
+              disabled={githubProfileLoading}
               type="url"
               value={githubUrl}
               onChange={(e) => handleUrlChange(e.target.value)}
               onBlur={handleUrlBlur}
-              placeholder="https://github.com/username/repository"
+              placeholder="https://github.com/votre-login/mon-projet"
               className={`w-full bg-[var(--cream)] border rounded-xl py-2.5 pl-9 pr-4 text-sm font-bold focus:outline-none focus:ring-2 transition-all ${
                 urlError
                   ? "border-red-200 focus:ring-red-500/10 focus:border-red-400"
@@ -333,6 +327,7 @@ export default function ChallengeSubmissionForm({
             <MessageSquare className="absolute left-3 top-3 text-[var(--gray)]" size={14} />
             <textarea
               rows={3}
+              maxLength={1000}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Détails techniques, difficultés rencontrées..."
@@ -350,7 +345,7 @@ export default function ChallengeSubmissionForm({
 
         <button
           type="submit"
-          disabled={status === "submitting" || !!urlError}
+          disabled={status === "submitting" || githubProfileLoading || !linkedGithubUsername || !!urlError}
           className="w-full bg-[var(--navy)] hover:bg-[#2A3050] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-full transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--navy)]/10 active:scale-95"
         >
           {status === "submitting" ? (

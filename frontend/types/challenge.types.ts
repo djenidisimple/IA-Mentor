@@ -43,6 +43,7 @@ export interface SubmissionResponse {
   userId: number
   challengeId: number
   githubUrl?: string
+  comment?: string
   status: SubmissionStatus
   score?: number
   aiFeedback?: string

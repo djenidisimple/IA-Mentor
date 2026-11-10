@@ -92,6 +92,7 @@ public class UserService {
         return UserProfileResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .githubUsername(user.getGithubUsername())
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .points(user.getPoints())

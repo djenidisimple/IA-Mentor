@@ -19,6 +19,7 @@ public class SubmissionResponse {
     private String challengeTitle;
     private String challengeSlug;
     private String githubUrl;
+    private String comment;
     private SubmissionStatus status;
     private String aiFeedback;
     private Integer score;

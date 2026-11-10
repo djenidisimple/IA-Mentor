@@ -1,538 +1,267 @@
-# 🚀 IA Mentor - AI Powered Learning Platform
+﻿# IA Mentor
 
-**IA Mentor** est une plateforme d'apprentissage destinée aux développeurs souhaitant se perfectionner sur des projets **Fullstack** et **Backend**. Elle utilise l'**Intelligence Artificielle (Ollama - Gemma2:2b)** pour valider automatiquement les soumissions des utilisateurs en analysant leur code source via GitHub.
+IA Mentor est une plateforme d’apprentissage pratique pour développeurs. Les membres parcourent des défis, démarrent un parcours, soumettent un dépôt GitHub et reçoivent une analyse automatisée de leur code. Le produit comprend aussi un profil, un classement et des fonctionnalités communautaires.
 
-## 📊 État du Projet (April 2026)
+> **État du dépôt :** l’interface utilise Next.js 16 et React 19 ; l’API utilise Java 21 et Spring Boot 3.4.1. Le fournisseur d’analyse IA actuellement branché est Groq. Les anciennes références à Ollama/Gemma et à Next.js 14 ne décrivent plus l’implémentation actuelle.
 
- **Production Ready** - Backend + Frontend compilés et testés
-- Backend: Java 21 + Spring Boot 3.4.1 ✓
-- Frontend: Next.js 14 + React 18 ✓
-- **Ollama (Gemma2:2b) AI Integration: Opérationnel ✓** (migré de Gemini)
-- Async Analysis Processing: Implémenté ✓
-- Database Sync: Actif ✓
+## Sommaire
 
----
+- [Fonctionnalités](#fonctionnalités)
+- [Architecture](#architecture)
+- [Technologies](#technologies)
+- [Installation locale](#installation-locale)
+- [Configuration](#configuration)
+- [Parcours d’une soumission](#parcours-dune-soumission)
+- [API](#api)
+- [Tests](#tests)
+- [Structure](#structure)
+- [Limitations et sécurité](#limitations-et-sécurité)
+- [Contribution](#contribution)
 
-## 📋 Table des Matières
+## Fonctionnalités
 
-* [Vision du Projet](#-vision-du-projet)
-* [Fonctionnalités Clés](#-fonctionnalités-clés)
-* [Architecture Technique](#-architecture-technique)
-* [Stack Technologique](#-stack-technologique)
-* [Quick Start](#-quick-start)
-* [Installation Détaillée](#-installation-détaillée)
-* [Dépannage](#-dépannage)
-* [Roadmap](#-roadmap)
+- Catalogue de défis consultable par catégorie, niveau et type, avec pages de détails.
+- Démarrage d’un défi, soumission d’une URL GitHub et historique personnel.
+- Analyse asynchrone du dépôt par Groq avec résumé, note, points forts, faiblesses, suggestions et métriques.
+- Profil, points et classement.
+- Communauté : posts, tendances, suggestions, abonnements, likes et commentaires.
+- Administration des défis, catégories et soumissions selon les autorisations du backend.
+- Authentification par inscription/connexion, JWT et refresh token ; OAuth2 GitHub est également configuré.
 
----
+Les statistiques ou exemples de la page d’accueil peuvent être illustratifs : ils ne garantissent pas le contenu de la base.
 
-## 🎯 Vision du Projet
+## Architecture
 
-Combler le fossé entre les tutoriels théoriques et la pratique réelle. IA Mentor se concentre sur :
+~~~text
+Navigateur
+   │
+   ▼
+Frontend Next.js ── REST/JSON ──► API Spring Boot
+                                      ├── Spring Security, JWT, OAuth2
+                                      ├── Services métier et Spring Data JPA
+                                      ├── PostgreSQL
+                                      ├── GitHub REST API (lecture des dépôts)
+                                      └── Traitement asynchrone ──► Groq API
+~~~
 
-* **Logique métier** : APIs RESTful, Architecture, Bonnes Pratiques
-* **Gestion des bases de données** : Modélisation, Optimisation
-* **Qualité du code** : Analyse sémantique, Recommandations personnalisées
-* **Feedback automatisé** : Génération de rapports via IA locale (Ollama)
+Le backend sépare contrôleurs, services, repositories, entités et DTO. Le frontend utilise l’App Router de Next.js, des composants et hooks réutilisables, des clients API dans frontend/lib et Zustand pour l’état d’authentification.
 
----
+## Technologies
 
-## ✨ Fonctionnalités Clés
+| Partie | Technologies déclarées |
+|---|---|
+| Backend | Java 21, Spring Boot 3.4.1, Spring Web, Spring Security, Spring Data JPA, PostgreSQL, Lombok, JJWT |
+| IA | API Groq compatible avec les complétions de chat |
+| Frontend | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Axios, Zustand, Framer Motion, Lucide |
+| Tests | Spring Boot Test/JUnit et H2 ; Jest, Testing Library et ts-jest |
+| Build/déploiement | Maven Wrapper, npm, Vercel frontend, Railpack backend |
 
-### 1. 📚 Catalogue de Projets
-- Énoncés détaillés classés par difficulté (Junior, Intermédiaire, Expert)
-- Spécifications techniques et contraintes
-- Critères d'évaluation clairs
+Ces versions proviennent de backend/pom.xml et frontend/package.json et peuvent évoluer.
 
-### 2. 🔗 Soumission par GitHub
-- L'utilisateur soumet le lien de son repository (public)
-- Clonage automatique du dépôt
-- Pas de fichiers à uploader
+## Prérequis
 
-### 3. 🤖 Analyse Intelligente (Ollama - Gemma2:2b-CPU)
-- **Async Processing** : Analyse en arrière-plan sans bloquer l'UI
-- **Code Analysis** : Analyse sémantique complète du code
-- **Real-time Polling** : Frontend met à jour le résultat toutes les 3 secondes
-- **Synchronized Storage** : Résultats sauvegardés en base de données
-- **Local Execution** : Pas de dépendance à une API cloud
+- JDK 21
+- Node.js et npm compatibles avec Next.js 16
+- PostgreSQL
+- Une clé API Groq pour les analyses
+- Credentials OAuth GitHub si cette méthode de connexion est utilisée
 
-### 4. 📊 Rapport Automatisé
-- **Score global** : Évaluation sur 100
-- **Strengths** : Points forts identifiés
-- **Weaknesses** : Domaines à améliorer
-- **Suggestions** : Recommandations concrètes
-- **Code Quality Metrics** : Métriques détaillées
+## Installation locale
 
----
+### Base PostgreSQL
 
-## 🏗 Architecture Technique
+Exemple avec Docker :
 
-### Backend (Java/Spring Boot)
+~~~bash
+docker run --name ia-mentor-postgres -e POSTGRES_DB=ai_mentor_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=change-me -p 5432:5432 -d postgres:16
+~~~
 
-```
-Controller (REST API)
-    ↓
-Service Layer (Business Logic)
-    ├─ SubmissionService (Gestion des soumissions)
-    ├─ AnalysisService (Orchestration de l'analyse)
-    ├─ OllamaService (Appels API Ollama avec retry logic)
-    └─ GitHubService (Clonage et lecture de dépôts)
-    ↓
-Repository (JPA/Hibernate)
-    ↓
-PostgreSQL Database
-```
-
-### Frontend (Next.js/React)
-
-```
-Layout Components
-    ├─ ChallengeStepLayout (Orchestrateur du flux)
-    ├─ ChallengeSubmissionForm (Soumission GitHub)
-    └─ ChallengeAIFeedback (Affichage du feedback)
-    ↓
-Custom Hooks & API Client
-    ├─ submissionsApi
-    ├─ analysisApi
-    └─ challengesApi
-    ↓
-State Management (Zustand + React Hooks)
-    ↓
-Tailwind CSS + Lucide Icons
-```
-
-### Flux de Données (End-to-End)
-
-```
-1. User submits GitHub URL
-   ↓
-2. ChallengeSubmissionForm → POST /api/submissions/submit
-   ↓
-3. Backend creates Submission (status: SUBMITTED)
-   ↓
-4. AnalysisService.analyzeSubmission() 
-   └─ @Async triggerAsyncAnalysis()
-   ↓
-5. GitHubService clones repository
-   ↓
-6. OllamaService analyzes code (with retry logic: 3 attempts)
-   ↓
-7. Results saved to Analysis + Submission entities (sync)
-   ↓
-8. Frontend polls /api/analysis/submission/{id} every 3s
-   ↓
-9. ChallengeAIFeedback displays results
-```
-
----
-
-## 🛠 Stack Technologique
+Adaptez les identifiants à votre environnement. Le dépôt ne fournit pas de Docker Compose.
 
 ### Backend
-- **Java 21 LTS** - Runtime
-- **Spring Boot 3.4.1** - Framework Web
-- **Spring Data JPA** - ORM
-- **Hibernate 6.6.4** - Entity Management
-- **Spring Security** - Authentication/Authorization
-- **JWT** - Token-based Auth
-- **PostgreSQL 18** - Base de données
-- **RestTemplate** - HTTP Client pour Ollama API
-- **Lombok** - Réduction du boilerplate
-- **SLF4J + LogBack** - Logging
+
+Créez backend/.env localement avec les propriétés adaptées :
+
+~~~dotenv
+spring.datasource.url=jdbc:postgresql://localhost:5432/ai_mentor_db
+spring.datasource.username=postgres
+spring.datasource.password=change-me
+spring.jpa.hibernate.ddl-auto=update
+
+application.security.jwt.secret-key=replace-with-a-long-random-secret
+application.security.jwt.expiration=900000
+application.security.jwt.refresh-expiration=7776000000
+
+spring.security.oauth2.client.registration.github.client-id=your-github-client-id
+spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
+spring.security.oauth2.client.registration.github.scope=read:user,user:email
+
+groq.api.url=https://api.groq.com/openai/v1/chat/completions
+groq.api.key=your-groq-api-key
+groq.model=your-enabled-groq-model
+github.api.token=
+~~~
+
+L’application charge ce fichier avec dotenv-java (et continue à démarrer s’il est absent). Les valeurs ci-dessus sont des exemples ; ne commitez jamais de clés ou secrets réels. L’URL et le modèle Groq doivent être compatibles avec votre compte.
+
+Démarrez depuis backend :
+
+~~~bash
+./mvnw spring-boot:run
+~~~
+
+Sous Windows :
+
+~~~powershell
+.\mvnw.cmd spring-boot:run
+~~~
+
+Le serveur écoute par défaut sur http://localhost:8080.
 
 ### Frontend
-- **Next.js 14** - React Framework
-- **React 18** - UI Library
-- **TypeScript** - Type Safety
-- **Tailwind CSS** - Styling
-- **Zustand** - State Management
-- **Lucide Icons** - Icon Library
-- **Axios** - HTTP Client (wrappé par apiFetch)
 
-### AI/External Services
-- **Ollama (Gemma2:2b-CPU)** - Code Analysis (Local)
-- **GitHub API** - Repository Access
+Créez frontend/.env.local :
 
-### DevOps
-- **Docker** - Containerization (optionnel)
-- **PostgreSQL Docker** - Development Database
-- **Maven** - Build Tool (Java)
-- **npm** - Package Manager (Node.js)
+~~~dotenv
+NEXT_PUBLIC_API_URL=http://localhost:8080
+~~~
 
----
+Depuis frontend :
 
-## 🚀 Quick Start
-
-### Prérequis
-- JDK 21+
-- Node.js 18+
-- PostgreSQL 15+
-- Ollama + Gemma2:2b (gratuit)
-
-### 0️⃣ Setup Ollama
-```bash
-# Installer Ollama depuis https://ollama.ai
-ollama serve
-
-# Dans un autre terminal, télécharger le modèle
-ollama pull gemma2:2b
-
-# Vérifier que le modèle est prêt
-curl http://localhost:11434/api/tags
-```
-
-### 1️⃣ Setup Backend
-```bash
-cd backend
-
-# Configure .env
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_mentor_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=your_password
-OLLAMA_API_URL=http://localhost:11434
-OLLAMA_MODEL=gemma2:2b
-
-# Build & Run
-mvn clean install
-mvn spring-boot:run
-# Backend ready on http://localhost:8080
-```
-
-### 2️⃣ Setup Frontend
-```bash
-cd frontend
-
-# Install dependencies
+~~~bash
 npm install
-
-# Configure .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8080
-
-# Run development server
 npm run dev
-# Frontend ready on http://localhost:3000
-```
+~~~
 
-### 3️⃣ Enjoy!
-- Open http://localhost:3000
-- Create a test account
-- Submit a GitHub repository
-- Get instant AI feedback 🎉
+Ouvrez http://localhost:3000. Le backend et le frontend doivent tourner dans des terminaux distincts.
 
----
+## Configuration
 
-## ⚙️ Installation Détaillée
+La configuration Spring se trouve dans backend/src/main/resources/application.properties. Principaux paramètres :
 
-### Étape 1 : Configuration Base de Données
+- spring.datasource.* : connexion PostgreSQL.
+- spring.jpa.hibernate.ddl-auto : stratégie de schéma.
+- application.security.jwt.* : clé et durées JWT.
+- spring.security.oauth2.client.registration.github.* : OAuth GitHub.
+- groq.api.url, groq.api.key, groq.model : service IA.
+- github.api.token : jeton optionnel pour les appels GitHub.
 
-```bash
-# Avec Docker (recommandé)
-docker run --name postgres-ai-mentor \
-  -e POSTGRES_DB=ai_mentor_db \
-  -e POSTGRES_PASSWORD=yourpassword \
-  -p 5432:5432 \
-  -d postgres:15
+Le client frontend lit NEXT_PUBLIC_API_URL et retombe sur http://localhost:8080. Les variables NEXT_PUBLIC_* sont publiques une fois intégrées au navigateur : aucun secret ne doit y être placé.
 
-# Ou installez PostgreSQL localement
-# psql -U postgres
-# CREATE DATABASE ai_mentor_db;
-```
+Dans le code inspecté, CORS n’autorise que http://localhost:3000 et le callback OAuth redirige vers http://localhost:3000/oauth2/callback. Adaptez ces réglages avant tout déploiement hors local.
 
-### Étape 2 : Configuration Ollama
+## Parcours d’une soumission
 
-1. Installez Ollama depuis https://ollama.ai
-2. Lancez le serveur:
-   ```bash
-   ollama serve
-   ```
-3. Téléchargez le modèle Gemma2:
-   ```bash
-   ollama pull gemma2:2b
-   ```
-4. Vérifiez que le serveur est en cours d'exécution:
-   ```bash
-   curl http://localhost:11434/api/tags
-   ```
+1. Le membre consulte les défis puis démarre un défi avec son identifiant.
+2. Il envoie l’identifiant du défi et l’URL du dépôt GitHub.
+3. Le backend enregistre la soumission et lance l’analyse en arrière-plan.
+4. GitHubService utilise l’API GitHub pour explorer le dépôt et lire les fichiers.
+5. Le service filtre les extensions prises en charge, ignore certains répertoires générés, limite la profondeur à 6 niveaux et ignore les fichiers de plus de 500 Ko.
+6. GroqService envoie le code sélectionné et le contexte du défi à Groq, avec une logique de tentatives.
+7. Le rapport est sauvegardé dans l’analyse et la soumission. En cas de succès, la soumission devient REVIEWED et les points du défi sont crédités lorsque les conditions métier sont satisfaites.
+8. Le frontend consulte le résultat et affiche le feedback.
 
-### Étape 3 : Variables d'environnement
+Les états d’analyse incluent PENDING, FETCHING, ANALYZING, COMPLETED et FAILED. Le contenu du dépôt est transmis au fournisseur Groq configuré ; l’analyse n’est pas locale. Vérifiez que vous avez le droit de transmettre le code concerné à ce service.
 
-**Backend (`backend/.env`)**
-```
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_mentor_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=postgres
-SPRING_JPA_HIBERNATE_DDL_AUTO=update
-OLLAMA_API_URL=http://localhost:11434
-OLLAMA_MODEL=gemma2:2b
-GITHUB_TOKEN=your_github_token_optional
-```
+## API
 
-**Frontend (`frontend/.env.local`)**
-```
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_APP_NAME=IA Mentor
-```
+Préfixe général : /api. Les contrôleurs définissent les chemins et permissions exacts. Les principales familles observées sont :
 
-### Étape 4 : Lancer l'Application
+| Domaine | Routes représentatives | Accès |
+|---|---|---|
+| Authentification | /api/auth/register, /login, /refresh, /logout | Routes de session |
+| Profil | /api/users/profile | Authentifié |
+| Défis | /api/challenges, /api/challenges/{slug} | Lecture publique, mutations admin |
+| Catégories | /api/categories, /api/categories/{slug} | Lecture publique, mutations admin |
+| Soumissions | /api/submissions/start, /submit, /user/me, /user/me/in-progress, /user/me/completed | Utilisateur authentifié |
+| Analyse | /api/analysis/submission, /api/analysis/submission/{id}, /repository | Utilisateur authentifié |
+| Administration | /api/admin/submissions et /{id}/analyze | Administrateur |
+| Classement | /api/leaderboard et /me | Utilisateur authentifié |
+| Communauté | /api/social/... | Flux public, autres opérations protégées selon la route |
+| Diagnostic IA | /api/groq/test, /api/groq/diagnose | Authentifié ; diagnostic complet admin |
 
-**Terminal 1 - Ollama**
-```bash
-ollama serve
-# Ollama listening on 127.0.0.1:11434
-```
+Démarrer un défi :
 
-**Terminal 2 - Backend**
-```bash
+~~~http
+POST /api/submissions/start
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{"challengeId": 1}
+~~~
+
+Soumettre un dépôt :
+
+~~~http
+POST /api/submissions/submit
+Content-Type: application/json
+Authorization: Bearer <access-token>
+
+{"challengeId": 1, "githubUrl": "https://github.com/owner/repository"}
+~~~
+
+Les réponses de nombreuses routes sont enveloppées dans un objet contenant success, data et parfois message.
+
+## Tests
+
+Les tests backend sont sous backend/src/test/java et utilisent H2 en mémoire :
+
+~~~bash
 cd backend
-mvn spring-boot:run
-# Logs avec emojis 🔍📁📝 pour tracking Ollama
-```
+./mvnw test
+~~~
 
-**Terminal 3 - Frontend**
-```bash
+Sous Windows, utilisez .\mvnw.cmd test.
+
+Le frontend comprend un test Jest sous frontend/__tests__ :
+
+~~~bash
 cd frontend
-npm run dev
-# Hot reload activé
-```
+npm test
+npm run lint
+npm run build
+~~~
 
-**Terminal 4 - Optionnel (Database)**
-```bash
-docker exec -it postgres-ai-mentor psql -U postgres -d ai_mentor_db
-# Pour inspecter la base de données
-```
+Les tests locaux ne remplacent pas la vérification des intégrations Groq, GitHub OAuth ou PostgreSQL réel.
 
----
+## Structure
 
-## 🧪 Tester la Configuration
+~~~text
+.
+├── AGENTS.md
+├── README.md
+├── backend/
+│   ├── pom.xml
+│   ├── railpack.toml
+│   └── src/
+│       ├── main/java/com/djenidi/ai_mentor/
+│       │   ├── controller/ config/ dto/ entity/
+│       │   ├── exception/ prompt/ repository/
+│       │   ├── security/ service/
+│       └── test/
+└── frontend/
+    ├── app/ components/ docs/ hooks/ lib/ public/ types/
+    ├── __tests__/
+    ├── package.json
+    └── vercel.json
+~~~
 
-```bash
-# Test public (pas d'auth requise)
-curl http://localhost:8080/api/ollama/test
+## Limitations et sécurité
 
-# Test admin
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-     http://localhost:8080/api/ollama/diagnose
-```
+- L’ancien README citait Ollama/Gemma, une analyse locale, le clonage Git, Next.js 14 et React 18 : ces informations sont obsolètes au regard du code et fichiers de build observés.
+- GitHubService lit les dépôts par l’API GitHub. L’accès aux dépôts privés dépend du jeton et de ses permissions.
+- La configuration locale CORS/OAuth doit être adaptée avant mise en production.
+- Ne publiez pas application.properties ou .env avec des valeurs sensibles. Si un vrai secret a déjà été commité, révoquez-le et remplacez-le.
+- Le dépôt ne déclare pas de dépendance OpenAPI/Swagger dans le pom.xml actuellement observé ; ne supposez pas qu’une interface Swagger est disponible.
 
-**Réponse attendue:**
-```json
-{
-  "serviceAvailable": true,
-  "connectionSuccessful": true,
-  "modelAvailable": true,
-  "testMessage": " Simple test successful - Ollama (Gemma2) is working |  JSON parsing OK"
-}
-```
+## Contribution
 
----
+Consultez AGENTS.md et les instructions locales avant de modifier le code. Pour le frontend, frontend/AGENTS.md demande de lire la documentation Next.js installée sous node_modules/next/dist/docs/ avant tout changement frontend.
 
-## 🐛 Dépannage
-
-### Backend ne démarre pas
-```bash
-# Port 8080 déjà utilisé ?
-netstat -ano | findstr :8080
-# Puis tuer le processus
-Stop-Process -Id <PID> -Force
-
-# Ou changer le port dans application.properties
-server.port=8081
-```
-
-### Erreur Ollama "Analysis failed"
-- Vérifiez que le serveur Ollama est lancé: `ollama serve`
-- Vérifiez que le modèle est téléchargé: `ollama pull gemma2:2b`
-- Vérifiez la connexion: `curl http://localhost:11434/api/tags`
-- Vérifiez les logs backend avec les emojis 🌐📤❌:
-  - 🔍 Démarrage analyse Ollama
-  - 🌐 Appel de l'API Ollama
-  - 📤 Envoi de la requête
-  -  Réponse reçue (ou ❌ Erreur)
-
-### Frontend ne se connecte pas au backend
-```bash
-# Vérifier CORS dans application.properties
-cors.allowed-origins=http://localhost:3000
-
-# Vérifier NEXT_PUBLIC_API_URL
-echo $NEXT_PUBLIC_API_URL  # Doit être http://localhost:8080
-```
-
-### Database connection refused
-```bash
-# Vérifier PostgreSQL
-psql -U postgres -d ai_mentor_db
-
-# Ou relancer Docker
-docker start postgres-ai-mentor
-```
-
-
+1. Créez une branche dédiée.
+2. Faites un changement ciblé et adaptez les tests pertinents.
+3. Lancez les vérifications adaptées au module.
+4. Dans la pull request, décrivez le problème, la solution et les vérifications effectuées.
 
 ---
-
-## 🗺 Roadmap
-
-### Phase 1: MVP  COMPLETED
-- [x] Backend: Java 21 + Spring Boot
-- [x] Frontend: Next.js + React + TypeScript
-- [x] Database: PostgreSQL avec JPA
-- [x] Authentication: JWT-based
-- [x] Ollama (Gemma2:2b) AI Integration
-- [x] Async Analysis Processing
-- [x] Real-time Polling (Frontend)
-- [x] Submission + Analysis Sync
-
-### Phase 2: Enhanced Features (In Progress)
-- [ ] Advanced Code Metrics (Cyclomatic Complexity, etc.)
-- [ ] Performance Benchmarking
-- [ ] Leaderboard System
-- [ ] Challenge Categories & Difficulty
-- [ ] Admin Dashboard
-- [ ] User Progress Tracking
-
-### Phase 3: Production Ready
-- [ ] Docker Compose Setup
-- [ ] CI/CD Pipeline (GitHub Actions)
-- [ ] Security Audit
-- [ ] Load Testing
-- [ ] Monitoring & Alerting (New Relic/DataDog)
-- [ ] API Rate Limiting
-- [ ] WebSocket for Real-time Updates
-
-### Phase 4: Community Features
-- [ ] Community Challenges
-- [ ] Solution Sharing
-- [ ] Code Reviews
-- [ ] Discussion Forums
-- [ ] Badges & Achievements
-
----
-
-## 📁 Project Structure
-
-```
-d:\IA-Mentor
-├── backend/                          # Java Spring Boot
-│   ├── src/main/java/
-│   │   └── com/djenidi/ai_mentor/
-│   │       ├── controller/           # REST Endpoints
-│   │       ├── service/              # Business Logic
-│   │       │   ├── SubmissionService
-│   │       │   ├── AnalysisService
-│   │       │   ├── OllamaService     # Ollama (Gemma2) API
-│   │       │   └── GitHubService
-│   │       ├── repository/           # JPA Repositories
-│   │       ├── entity/               # Database Models
-│   │       └── config/               # Spring Config
-│   ├── pom.xml                       # Maven Config
-│   └── .env                          # Environment Variables
-│
-├── frontend/                         # Next.js React
-│   ├── app/
-│   │   ├── (auth)/                   # Authentication pages
-│   │   ├── (dashboard)/              # Main app pages
-│   │   └── globals.css               # Global styles
-│   ├── components/
-│   │   ├── challenges/               # Challenge UI
-│   │   ├── layout/                   # Layout components
-│   │   └── ui/                       # Reusable components
-│   ├── lib/
-│   │   ├── api.ts                    # API client
-│   │   ├── submissions.ts
-│   │   ├── analysis.ts
-│   │   └── store/                    # Zustand stores
-│   ├── types/
-│   │   ├── auth.types.ts
-│   │   ├── challenge.types.ts
-│   │   └── submission.types.ts
-│   ├── next.config.ts
-│   ├── tailwind.config.ts
-│   └── package.json
-│
-└── README.md                         # This file
-```
-
----
-
-## 🔑 Key Features Implemented
-
-###  Authentication & Authorization
-- JWT-based token authentication
-- Role-based access control (USER, ADMIN)
-- Secure password hashing
-- Session persistence
-
-###  Submission Management
-- GitHub repository URL submission
-- Automatic status tracking (IN_PROGRESS → SUBMITTED → REVIEWED)
-- Real-time submission history
-- User-specific submission isolation
-
-###  AI Analysis Engine
-- **Async Processing**: @Async annotations pour non-blocking analysis
-- **Retry Logic**: 3 attempts with exponential backoff
-- **Error Handling**: Graceful fallback et error messages
-- **Real-time Feedback**: Polling-based frontend updates
-- **Data Sync**: Analysis results synced to Submission entity
-
-###  GitHub Integration
-- Automatic repository cloning
-- Support for public and private repos
-- Source code extraction
-- File type filtering
-
-###  Frontend Polish
-- Responsive Tailwind CSS design
-- Real-time loading states
-- Error boundaries
-- Type-safe TypeScript
-
----
-
-## 🤝 Contributing
-
-Les contributions sont bienvenues! Pour contribuer:
-
-1. **Fork** le projet
-2. **Créez une branche** (`git checkout -b feature/AmazingFeature`)
-3. **Committez** vos changements (`git commit -m 'Add amazing feature'`)
-4. **Pushez** vers la branche (`git push origin feature/AmazingFeature`)
-5. **Ouvrez une Pull Request**
-
-### Code Standards
-- Formatage: Prettier + ESLint (Frontend)
-- Tests: JUnit 5 + MockMvc (Backend)
-- Commits: Conventional Commits
-- Documentation: JSDoc + JavaDoc
-
----
-
-## 📄 License
-
-Ce projet est sous licence **MIT**. Voir [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 📧 Support
-
-Pour toute question ou problème:
-- 📧 Email: support@iamentor.dev
-- 🐛 Issues: [GitHub Issues](https://github.com/djenidi/ia-mentor/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/djenidi/ia-mentor/discussions)
-
----
-
-**Last Updated**: April 20, 2026
-**Status**: 🟢 Production Ready
-Ce projet est **Open Source** ! Les contributions de toutes sortes sont les bienvenues :
-* 🐛 **Signaler des bugs :** Ouvrez une "Issue" pour expliquer le problème.
-* ✨ **Proposer des fonctionnalités :** Vous avez une idée pour l'analyse IA ? Partagez-la !
-* 📝 **Documentation :** Améliorer ce README ou les commentaires du code.
-
-### Comment contribuer ?
-1. Forkez le projet.
-2. Créez votre branche de fonctionnalité (`git checkout -b feature/AmazingFeature`).
-3. Commitez vos changements (`git commit -m 'Add some AmazingFeature'`).
-4. Pushez sur la branche (`git push origin feature/AmazingFeature`).
-5. Ouvrez une **Pull Request**.
+Dernière mise à jour : 28 octobre 2026.

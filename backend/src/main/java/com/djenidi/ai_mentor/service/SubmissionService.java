@@ -3,16 +3,19 @@ package com.djenidi.ai_mentor.service;
 import com.djenidi.ai_mentor.dto.response.SubmissionResponse;
 import com.djenidi.ai_mentor.entity.*;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
+import com.djenidi.ai_mentor.exception.DuplicateResourceException;
 import com.djenidi.ai_mentor.repository.ChallengeRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
 import com.djenidi.ai_mentor.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import com.djenidi.ai_mentor.entity.SubmissionStatus;
 
 import java.time.LocalDateTime;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,7 +41,7 @@ public class SubmissionService {
 
         Optional<Submission> existing = submissionRepository.findByUserIdAndChallengeId(userId, challengeId);
         if (existing.isPresent()) {
-            throw new IllegalStateException("Vous avez déjà commencé ce challenge");
+            throw new DuplicateResourceException("Soumission", "challenge", challengeId);
         }
 
         Submission submission = Submission.builder()
@@ -51,16 +54,27 @@ public class SubmissionService {
     }
 
     @Transactional
-    public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl) {
+    public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl, String comment) {
         Submission submission = submissionRepository.findByUserIdAndChallengeId(userId, challengeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Soumission", "challengeId", challengeId));
 
+        String linkedGithubUsername = submission.getUser().getGithubUsername();
+        if (linkedGithubUsername == null || linkedGithubUsername.isBlank()) {
+            throw new AccessDeniedException("Associez votre compte GitHub avant de soumettre un depot.");
+        }
+        String repositoryOwner = extractGithubOwner(githubUrl);
+        if (!linkedGithubUsername.equalsIgnoreCase(repositoryOwner)) {
+            throw new AccessDeniedException("Le depot doit appartenir au compte GitHub associe (" +
+                    linkedGithubUsername + ").");
+        }
+
         if (submission.getStatus() == SubmissionStatus.SUBMITTED
                 || submission.getStatus() == SubmissionStatus.REVIEWED) {
-            throw new IllegalStateException("Ce challenge a déjà été soumis");
+            throw new DuplicateResourceException("Soumission", "challenge", challengeId);
         }
 
         submission.setGithubUrl(githubUrl);
+        submission.setUserComment(comment == null || comment.isBlank() ? null : comment.trim());
         submission.setStatus(SubmissionStatus.SUBMITTED);
         submission.setSubmittedAt(LocalDateTime.now());
 
@@ -74,6 +88,43 @@ public class SubmissionService {
         }
 
         return toResponse(saved);
+    }
+
+
+    private String extractGithubOwner(String githubUrl) {
+        try {
+            URI uri = URI.create(githubUrl);
+            String[] path = uri.getPath() == null ? new String[0] : uri.getPath().split("/");
+            if (!"https".equalsIgnoreCase(uri.getScheme())
+                    || !"github.com".equalsIgnoreCase(uri.getHost())
+                    || uri.getUserInfo() != null
+                    || uri.getPort() != -1
+                    || uri.getQuery() != null
+                    || uri.getFragment() != null
+                    || path.length < 3
+                    || path.length > 4
+                    || !path[0].isEmpty()
+                    || path[1].isBlank()
+                    || path[2].isBlank()
+                    || (path.length == 4 && !path[3].isEmpty())) {
+                throw new IllegalArgumentException("URL GitHub invalide. Utilisez https://github.com/login-du-compte/depot.");
+            }
+            String owner = path[1];
+            String repository = path[2];
+            if (repository.endsWith(".git")) {
+                repository = repository.substring(0, repository.length() - 4);
+            }
+            if (!owner.matches("[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
+                    || !repository.matches("[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?")) {
+                throw new IllegalArgumentException("URL GitHub invalide. Utilisez https://github.com/login-du-compte/depot.");
+            }
+            return owner;
+        } catch (IllegalArgumentException ex) {
+            if (ex.getMessage() != null && ex.getMessage().startsWith("URL GitHub invalide")) {
+                throw ex;
+            }
+            throw new IllegalArgumentException("URL GitHub invalide. Utilisez https://github.com/login-du-compte/depot.");
+        }
     }
 
     public List<SubmissionResponse> getUserActivity(Long userId) {
@@ -127,6 +178,7 @@ public class SubmissionService {
                 .challengeTitle(submission.getChallenge().getTitle())
                 .challengeSlug(submission.getChallenge().getSlug())
                 .githubUrl(submission.getGithubUrl())
+                .comment(submission.getUserComment())
                 .status(submission.getStatus())
                 .aiFeedback(submission.getAiFeedback())
                 .score(submission.getScore())

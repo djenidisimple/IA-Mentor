@@ -2,6 +2,10 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import api from '@/lib/axiosInstance'
 
+// Un seul rafraîchissement à la fois : le backend fait tourner le refresh token,
+// deux appels concurrents avec le même cookie feraient échouer le second (401).
+let refreshInFlight: Promise<string | null> | null = null
+
 interface User {
   id: number
   email: string
@@ -61,45 +65,55 @@ export const useAuthStore = create<AuthState>()(
 
       // 3. Rafraîchissement silencieux (appelé par l'intercepteur ou au reload)
       refreshAccessToken: async () => {
+        if (refreshInFlight) return refreshInFlight
+
+        refreshInFlight = (async () => {
+          try {
+            const res = await api.post(
+              '/api/auth/refresh',
+              {},
+              {
+                // Flags personnalisés pour l'intercepteur axiosInstance
+                _isRefreshCall: true,
+                withCredentials: true, // Crucial pour envoyer le cookie httpOnly
+                headers: {
+                  // On s'assure de ne pas envoyer un ancien Bearer token expiré
+                  'Authorization': ''
+                }
+              } as any
+            )
+
+            // Le backend doit renvoyer { token, email, username, role, ... }
+            const { token, ...userData } = res.data
+
+            // Si on a déjà un user partiel en cache, on merge les données
+            const currentUser = get().user
+            const updatedUser = {
+              ...(currentUser || {}),
+              ...userData
+            } as User
+
+            set({
+              token: token,
+              user: updatedUser,
+              isAuthenticated: true
+            })
+
+            console.log('[AuthStore] Refresh success')
+            return token
+
+          } catch (error) {
+            console.error('[AuthStore] Refresh failed - Session expired', error)
+            // Si le refresh échoue, on considère la session comme morte
+            set({ token: null, user: null, isAuthenticated: false })
+            return null
+          }
+        })()
+
         try {
-          const res = await api.post(
-            '/api/auth/refresh',
-            {},
-            {
-              // Flags personnalisés pour l'intercepteur axiosInstance
-              _isRefreshCall: true, 
-              withCredentials: true, // Crucial pour envoyer le cookie httpOnly
-              headers: { 
-                // On s'assure de ne pas envoyer un ancien Bearer token expiré
-                'Authorization': '' 
-              }
-            } as any
-          )
-
-          // Le backend doit renvoyer { token, email, username, role, ... }
-          const { token, ...userData } = res.data
-
-          // Si on a déjà un user partiel en cache, on merge les données
-          const currentUser = get().user
-          const updatedUser = {
-            ...(currentUser || {}),
-            ...userData
-          } as User
-
-          set({ 
-            token: token, 
-            user: updatedUser, 
-            isAuthenticated: true 
-          })
-
-          console.log('[AuthStore] Refresh success')
-          return token
-
-        } catch (error) {
-          console.error('[AuthStore] Refresh failed - Session expired', error)
-          // Si le refresh échoue, on considère la session comme morte
-          set({ token: null, user: null, isAuthenticated: false })
-          return null
+          return await refreshInFlight
+        } finally {
+          refreshInFlight = null
         }
       },
 

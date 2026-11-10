@@ -3,6 +3,7 @@ import { apiFetch } from './api'
 export interface UserProfile {
   id: number
   username: string
+  githubUsername?: string | null
   email: string
   avatarUrl?: string
   points: number

@@ -3,9 +3,9 @@ package com.djenidi.ai_mentor.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.URL;
 
 @Getter
 @Setter
@@ -15,8 +15,11 @@ public class SubmitChallengeRequest {
     private Long challengeId;
 
     @NotBlank(message = "L'URL GitHub est obligatoire")
-    @URL(message = "L'URL doit être une URL valide (https://github.com/...)")
-    @Pattern(regexp = "^https?://github\\.com/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+.*$",
-             message = "L'URL doit être un lien GitHub valide (https://github.com/username/repository)")
+    @Pattern(
+            regexp = "^https://github[.]com/[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?/[A-Za-z0-9._-]+([.]git)?/?$",
+            message = "Use HTTPS repository URL, format https://github.com/votre-login/depot")
     private String githubUrl;
+
+    @Size(max = 1000, message = "Le commentaire ne peut pas depasser 1000 caracteres")
+    private String comment;
 }

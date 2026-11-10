@@ -97,6 +97,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         
         // Met à jour le nom (utilise le login si le name est null)
         user.setName(name != null ? name : login);
+        user.setGithubUsername(login);
         
         // Met à jour l'avatar
         user.setAvatarUrl(avatarUrl);

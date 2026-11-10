@@ -37,6 +37,9 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String githubId;
 
+    /** GitHub login verified during OAuth; distinct from the local platform username. */
+    private String githubUsername;
+
     private String name;
 
     private String avatarUrl;
@@ -125,6 +128,7 @@ public class User implements UserDetails {
 
         return User.builder()
                 .githubId(githubId)
+                .githubUsername(login)
                 .username(login)
                 .email(email)
                 .avatarUrl(avatarUrl)

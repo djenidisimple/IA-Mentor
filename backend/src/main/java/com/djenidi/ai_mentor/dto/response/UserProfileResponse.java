@@ -13,6 +13,7 @@ public class UserProfileResponse {
 
     private Long id;
     private String username;
+    private String githubUsername;
     private String email;
     private String avatarUrl;
     private Integer points;
