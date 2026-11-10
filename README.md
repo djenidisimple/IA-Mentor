@@ -96,13 +96,13 @@ spring.security.oauth2.client.registration.github.client-id=your-github-client-i
 spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
 spring.security.oauth2.client.registration.github.scope=read:user,user:email
 
-groq.api.url=https://api.groq.com/openai/v1/chat/completions
-groq.api.key=your-groq-api-key
-groq.model=your-enabled-groq-model
+ai.api.url=https://openrouter.ai/api/v1/chat/completions
+ai.api.key=your-openrouter-api-key
+ai.models=cohere/north-mini-code:free,google/gemma-4-31b-it:free
 github.api.token=
 ~~~
 
-L’application charge ce fichier avec dotenv-java (et continue à démarrer s’il est absent). Les valeurs ci-dessus sont des exemples ; ne commitez jamais de clés ou secrets réels. L’URL et le modèle Groq doivent être compatibles avec votre compte.
+L’application charge ce fichier avec dotenv-java (et continue à démarrer s’il est absent). Les valeurs ci-dessus sont des exemples ; ne commitez jamais de clés ou secrets réels. La clé OpenRouter se place dans OPENROUTER_API_KEY ; les identifiants de modèles gratuits se terminent par ":free" et peuvent changer avec le temps.
 
 Démarrez depuis backend :
 
@@ -143,7 +143,7 @@ La configuration Spring se trouve dans backend/src/main/resources/application.pr
 - spring.jpa.hibernate.ddl-auto : stratégie de schéma.
 - application.security.jwt.* : clé et durées JWT.
 - spring.security.oauth2.client.registration.github.* : OAuth GitHub.
-- groq.api.url, groq.api.key, groq.model : service IA.
+- ai.api.url, ai.api.key, ai.models, ai.max.tokens : service IA (OpenRouter, modèles gratuits).
 - github.api.token : jeton optionnel pour les appels GitHub.
 
 Le client frontend lit NEXT_PUBLIC_API_URL et retombe sur http://localhost:8080. Les variables NEXT_PUBLIC_* sont publiques une fois intégrées au navigateur : aucun secret ne doit y être placé.

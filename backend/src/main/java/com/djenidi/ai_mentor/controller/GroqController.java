@@ -1,7 +1,7 @@
 package com.djenidi.ai_mentor.controller;
 
 import com.djenidi.ai_mentor.dto.response.OllamaDiagnosticResponse;
-import com.djenidi.ai_mentor.service.GroqService;
+import com.djenidi.ai_mentor.service.OpenRouterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import com.djenidi.ai_mentor.service.AnalysisService;
 @Slf4j
 public class GroqController {
 
-    private final GroqService groqService;
+    private final OpenRouterService openRouterService;
     private final AnalysisService analysisService; 
 
     @GetMapping("/test-analysis/{submissionId}")
@@ -39,11 +39,10 @@ public class GroqController {
      */
     @GetMapping("/diagnose")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<OllamaDiagnosticResponse> diagnoseGroqAdmin() {
-        log.info("🔍 Running Groq diagnostics (admin)");
+    public ResponseEntity<OllamaDiagnosticResponse> diagnoseAiAdmin() {
+        log.info("🔍 Running OpenRouter diagnostics (admin)");
 
-        //  FIX 1 + 3 : délègue à runDiagnostics() qui mesure le vrai temps de réponse
-        OllamaDiagnosticResponse response = groqService.runDiagnostics();
+        OllamaDiagnosticResponse response = openRouterService.runDiagnostics();
 
         return ResponseEntity.ok(response);
     }
@@ -55,19 +54,19 @@ public class GroqController {
      */
     @GetMapping("/test")
     public ResponseEntity<OllamaDiagnosticResponse> testGroq() {
-        log.info("🧪 Running Groq connection test");
+        log.info("🧪 Running OpenRouter connection test");
 
-        long start = System.currentTimeMillis(); //  FIX 1 : mesure la durée réelle
+        long start = System.currentTimeMillis();
 
-        boolean isConnected = groqService.testConnection();
+        boolean isConnected = openRouterService.testConnection();
 
         OllamaDiagnosticResponse response = OllamaDiagnosticResponse.builder()
                 .serviceAvailable(isConnected)
                 .connectionSuccessful(isConnected)
                 .modelAvailable(isConnected)
                 .testMessage(isConnected
-                        ? " Groq API is accessible"
-                        : "❌ Failed to connect - Verify GROQ_API_KEY")
+                        ? "✅ OpenRouter API is accessible"
+                        : "❌ Failed to connect - Verify OPENROUTER_API_KEY")
                 .ollamaErrorMessage(isConnected ? null : "Connection failed - Check your API key")
                 .responseTimeMs(System.currentTimeMillis() - start) //  durée réelle en ms
                 .build();

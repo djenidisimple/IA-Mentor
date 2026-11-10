@@ -45,7 +45,7 @@ public class AnalysisService {
             AnalysisRepository analysisRepository,
             SubmissionRepository submissionRepository,
             GitHubService gitHubService,
-            @Qualifier("groqService") AIService aiService,
+            @Qualifier("openRouterService") AIService aiService,
             ApplicationContext applicationContext,
             ObjectMapper objectMapper,
             ChallengeRepository challengeRepository,

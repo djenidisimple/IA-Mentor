@@ -50,7 +50,7 @@ AnalysisService crée ou réutilise Analysis, puis démarre triggerAsyncAnalysis
 
 États d’analyse observés : PENDING, FETCHING, ANALYZING, puis COMPLETED ou FAILED. En succès, les résultats sont enregistrés, la Submission passe à REVIEWED, et les points du défi sont crédités. Lire AnalysisService avant de modifier les transitions ou la gestion d’erreur.
 
-Le fournisseur injecté est GroqService via @Qualifier("groqService"). GroqService utilise l’API Groq de chat completions, avec URL, modèle et clé configurables et logique de tentatives. AIService définit le résultat commun. Le README décrivant Ollama/Gemma est obsolète pour le code inspecté. Ne jamais exposer de secrets dans le dépôt, les logs, les réponses ou la documentation.
+Le fournisseur injecté est OpenRouterService via @Qualifier("openRouterService"). OpenRouterService utilise l’API OpenRouter (chat completions compatible OpenAI), avec URL, liste ordonnée de modèles et clé configurables (ai.api.url, ai.models, ai.api.key issue de OPENROUTER_API_KEY). Les modèles gratuits portent le suffixe ":free" ; le premier modèle configuré est utilisé et les suivants servent de repli. AIService définit le résultat commun. Les contrôleurs et routes historiques /api/groq sont conservés. Le README décrivant Ollama/Gemma est obsolète pour le code inspecté. Ne jamais exposer de secrets dans le dépôt, les logs, les réponses ou la documentation.
 
 ### Données et build backend
 
