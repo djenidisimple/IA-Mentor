@@ -1,52 +1,64 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
+import { useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import api from '@/lib/axiosInstance'
 import { useAuthStore } from '@/lib/store/authStore'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { User } from '@/types/auth.types'
+
+interface OAuth2ExchangeResponse {
+  id: number
+  token: string
+  email: string
+  username: string
+  role: string
+}
 
 function OAuth2CallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setAuth } = useAuthStore()
+  // React StrictMode exécute les effets deux fois en dev : le code est à usage
+  // unique, il faut donc empêcher un second échange.
+  const hasExchangedRef = useRef(false)
 
   useEffect(() => {
-    const token = searchParams.get('token')
+    if (hasExchangedRef.current) return
+    hasExchangedRef.current = true
 
-    if (token) {
-      // Decode the JWT to get user info, or create a placeholder User object.
-      // Ideally, the backend should return user details, but we can construct a basic one based on the decoded token payload.
-      
-      const payloadBase64 = token.split('.')[1]
-      let decodedPayload: any = {}
-      try {
-         decodedPayload = JSON.parse(atob(payloadBase64))
-      } catch (e) {
-         console.error("Failed to parse token payload", e)
-      }
+    const code = searchParams.get('code')
 
-      // We extract what we can from the token, the rest defaults
-      const user: User = {
-        id: Date.now(), // Fallback ID if not in token
-        username: decodedPayload.username || decodedPayload.name || decodedPayload.sub || 'github_user',
-        email: decodedPayload.email || decodedPayload.sub || '',
-        avatarUrl: decodedPayload.avatarUrl || decodedPayload.picture || '',
-        points: 0,
-        isPremium: false,
-        role: decodedPayload.role || 'USER',
-        createdAt: new Date().toISOString(),
-      }
-
-      setAuth(token, user)
-
-      // Redirect to home
-      // Use replace so they can't hit 'Back' to return to the callback url
-      router.replace('/home')
-    } else {
-      // If no token, maybe an error occurred, redirect to login
+    if (!code) {
       router.replace('/login?error=OAuth2_Failed')
+      return
     }
+
+    const exchangeCode = async () => {
+      try {
+        // Le backend échange le code à usage unique contre un JWT et pose le
+        // cookie de refresh. Le token ne transite plus dans l'URL.
+        const { data } = await api.post<OAuth2ExchangeResponse>('/api/auth/oauth2/exchange', { code })
+
+        const user: User = {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role: data.role,
+          points: 0,
+          isPremium: false,
+          createdAt: new Date().toISOString(),
+        }
+
+        setAuth(data.token, user)
+        router.replace('/home')
+      } catch (error) {
+        console.error('[OAuth2] Code exchange failed', error)
+        router.replace('/login?error=OAuth2_Failed')
+      }
+    }
+
+    exchangeCode()
   }, [searchParams, router, setAuth])
 
   return <PageSkeleton />

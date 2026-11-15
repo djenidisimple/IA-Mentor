@@ -43,6 +43,13 @@ export default function TokenExpirationAlert({
     }
   }, [isExpiringSoon, minutesLeft])
 
+  // Après un renouvellement réussi, le token n'expire plus : on referme l'alerte.
+  useEffect(() => {
+    if (!isExpiringSoon && !hasError) {
+      setIsVisible(false)
+    }
+  }, [isExpiringSoon, hasError])
+
   const handleClose = () => {
     setIsAnimatingOut(true)
     setTimeout(() => setIsVisible(false), 300)
@@ -120,7 +127,7 @@ export default function TokenExpirationAlert({
               <p className="mt-1 text-sm text-amber-800">
                 Votre session expire dans{" "}
                 <span className="font-bold text-amber-900">{minutesLeft} minute(s)</span>
-                . Cliquez sur "Renouveler" pour rester connecté.
+                . Cliquez sur &quot;Renouveler&quot; pour rester connecté.
                 {isRefreshing && <span className="ml-2 text-amber-700">(Renouvellement automatique...)</span>}
               </p>
             </div>

@@ -8,6 +8,11 @@ declare module 'axios' {
     _retry?: boolean
     _isRefreshCall?: boolean
   }
+
+  interface AxiosRequestConfig {
+    _retry?: boolean
+    _isRefreshCall?: boolean
+  }
 }
 
 // ── Instance principale ───────────────────────────────────────────────────────
@@ -47,6 +52,20 @@ let pendingQueue: Array<{
   reject: (error: unknown) => void
 }> = []
 
+// Endpoints d'authentification : un 401 y est une réponse métier légitime
+// (mauvais identifiants, code OAuth2 invalide, refresh expiré). Tenter un
+// refresh silencieux dans ces cas masque le message d'erreur et peut boucler.
+const NO_REFRESH_ENDPOINTS = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/auth/logout',
+  '/api/auth/oauth2/exchange',
+]
+
+const isAuthEndpoint = (url?: string): boolean =>
+  !!url && NO_REFRESH_ENDPOINTS.some((endpoint) => url.includes(endpoint))
+
 const processQueue = (error: unknown, token: string | null) => {
   pendingQueue.forEach(({ resolve, reject }) => {
     if (error) reject(error)
@@ -67,7 +86,7 @@ api.interceptors.response.use(
     const alreadyRetried = originalRequest._retry === true
     const isRefreshCall  = originalRequest._isRefreshCall === true
 
-    if (!is401 || alreadyRetried || isRefreshCall) {
+    if (!is401 || alreadyRetried || isRefreshCall || isAuthEndpoint(originalRequest.url)) {
       return Promise.reject(error)
     }
 

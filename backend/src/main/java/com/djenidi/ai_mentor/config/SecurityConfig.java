@@ -1,5 +1,6 @@
 package com.djenidi.ai_mentor.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -27,8 +29,13 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthRateLimitFilter authRateLimitFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+
+    /** Origines autorisées, séparées par des virgules (configurable par environnement). */
+    @Value("${app.cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/oauth2/exchange").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/challenges/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
@@ -52,7 +60,8 @@ public class SecurityConfig {
                 .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(authRateLimitFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -73,9 +82,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000"
-        ));
+        config.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

@@ -26,6 +26,10 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+    /** Tolérance d'horloge entre serveurs, pour éviter les 401 sur quelques secondes de dérive. */
+    @Value("${application.security.jwt.clock-skew-seconds:30}")
+    private long clockSkewSeconds;
+
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -71,6 +75,7 @@ public class JwtService {
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
+                .setAllowedClockSkewSeconds(clockSkewSeconds)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

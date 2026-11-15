@@ -1,188 +1,152 @@
-# 🔐 Système d'Alerte d'Expiration de Token
+# 🔐 Session, expiration et renouvellement du token
 
 ## Vue d'ensemble
 
-Ce système alerte les utilisateurs quand leur token JWT est sur le point d'expirer, et leur permet de le renouveler sans se reconnecter.
+L'application utilise deux jetons :
 
-## 📋 Composants créés
+| | Access token | Refresh token |
+|---|---|---|
+| Format | JWT HS256 | UUID opaque, stocké **haché** (SHA-256) en base |
+| Durée | 15 min (`application.security.jwt.expiration`) | 90 jours (`application.security.jwt.refresh-expiration`) |
+| Transport | Header `Authorization: Bearer` | Cookie `HttpOnly` `refresh_token` |
+| Stockage client | Mémoire (store Zustand) — **jamais** dans le localStorage | Cookie, invisible pour JavaScript |
+| Stockage serveur | Aucun (stateless) | Table `auth_sessions` (une ligne par appareil) |
 
-### 1. **Frontend** (`lib/tokenExpiration.ts`)
-Utilitaires pour décoder et analyser les tokens JWT:
-- `decodeToken()` - Décoder le payload du token
-- `getStoredToken()` - Récupérer le token du localStorage
-- `getTimeUntilExpiration()` - Obtenir le temps restant en minutes
-- `isTokenExpiringSoon()` - Vérifier si le token expire bientôt (< 5 min)
-- `isTokenExpired()` - Vérifier si le token a expiré
+## 📋 Composants
 
-### 2. **Hook React** (`hooks/useTokenExpiration.ts`)
-Hook personnalisé qui:
-- Surveille l'expiration du token en temps réel
-- Vérifie tous les 60 secondes par défaut
-- Retourne: `isExpiringSoon`, `minutesLeft`, `isExpired`
-- Écoute les événements de logout
+### 1. Frontend — `lib/tokenExpiration.ts`
+- `decodeToken()` — décode le payload, y compris les JWT en base64url
+- `getStoredToken()` — lit le token depuis le store Zustand
+- `getSecondsUntilExpiration()` / `getTimeUntilExpiration()`
+- `isTokenExpiringSoon()` / `isTokenExpired()`
 
-### 3. **Composant d'Alerte** (`components/TokenExpirationAlert.tsx`)
-Affiche une notification sticky quand le token expire dans < 5 minutes:
--  Bouton "Renouveler" pour prolonger la session
--  Bouton "✕" pour fermer l'alerte
--  Animations fluides (slide-in/out)
--  Responsive et accessible
+> Le token n'étant pas persisté, toute lecture doit passer par le store. Une
+> ancienne version lisait `localStorage['auth-storage']` et renvoyait donc
+> toujours `null`.
 
-### 4. **Endpoint Backend** (`POST /api/auth/refresh`)
-Contrôleur: `AuthController.java`
-Service: `AuthService.java`
+### 2. Hook — `hooks/useTokenExpiration.ts`
+- vérifie l'expiration toutes les 60 s (configurable)
+- déclenche un refresh automatique sous le seuil (5 min par défaut)
+- réinitialise son verrou après chaque refresh réussi ou sur `auth:token-refreshed`
+- écoute `auth:logout`
 
-**Requête:**
-```bash
+### 3. Composant — `components/TokenExpirationAlert.tsx`
+Alerte sticky proposant « Renouveler », montée dans `app/layout.tsx`.
+
+### 4. Backend
+- `AuthController` : `/api/auth/{register,login,refresh,logout,oauth2/exchange}`
+- `RefreshTokenService` : création de session, rotation, révocation, détection de rejeu
+- `RefreshTokenCookieService` : attributs du cookie pilotés par propriétés
+- `AuthRateLimitFilter` : limite de débit sur les routes d'authentification
+
+**Requête de refresh** (le cookie suffit) :
+```http
 POST /api/auth/refresh
-Authorization: Bearer {token_actuel}
+Cookie: refresh_token=<opaque>
 ```
-
-**Réponse:**
+**Réponse** :
 ```json
-{
-  "token": "eyJhbGc...",
-  "email": "user@example.com",
-  "username": "john_doe",
-  "role": "USER"
-}
+{ "id": 1, "token": "eyJhbGc...", "email": "user@example.com", "username": "john", "role": "USER" }
 ```
 
-## 🚀 Comment ça marche
-
-### Flux utilisateur
+## 🚀 Flux
 
 ```
-Utilisateur connecté
+Connexion / Register / OAuth2
     ↓
-[useTokenExpiration] vérifie chaque 60s
+JWT 15 min (mémoire) + session en base + cookie HttpOnly 90 j
     ↓
-Token expire dans < 5 minutes?
-    ↓ OUI
-[TokenExpirationAlert] s'affiche
+Toutes les requêtes : Authorization: Bearer <JWT>
+    ↓ 401
+Intercepteur Axios → POST /api/auth/refresh (une seule fois, file d'attente)
     ↓
-Utilisateur clique "Renouveler"?
-    ↓ OUI
-POST /api/auth/refresh
-    ↓
-Backend génère nouveau token
-    ↓
-Frontend met à jour localStorage
-    ↓
-Alerte se ferme ✓
+Rotation du refresh token + nouveau JWT → la requête initiale est rejouée
 ```
 
-### Timeline par défaut
+Refresh automatique proactif : l'alerte apparaît quand il reste < 5 min ; avec un
+token de 15 min, cela correspond à 10 min d'utilisation.
 
-| Événement | Quand |
-|-----------|-------|
-| Token généré | À la connexion |
-| Durée du token | 1 heure (3600000 ms) |
-| Alerte affichée | 55 minutes (5 min avant expiration) |
-| Token expiré | 60 minutes |
-| Auto-logout | Automatique si token expiré |
+## 🔒 Sécurité
+
+- Refresh token **haché** en base (aucun token en clair en cas de fuite de dump).
+- **Rotation** à chaque refresh + fenêtre de grâce de 30 s (course entre onglets).
+- **Détection de rejeu** hors fenêtre : toutes les sessions de l'utilisateur sont révoquées.
+- **Multi-appareils** : chaque connexion crée une session ; limite `max-sessions` (10).
+- Cookie `HttpOnly`, `SameSite=Strict`, `Path=/api/auth`, `Secure` activable.
+- OAuth2 : le JWT ne transite plus dans l'URL, seul un code à usage unique (60 s) est échangé.
+- Limitation de débit : 20 requêtes / 60 s / IP sur login, register, refresh, exchange.
+- Access token non révocable côté serveur : sa durée courte (15 min) est la contrepartie assumée.
 
 ## 🔧 Configuration
 
-### Modifier le délai d'alerte
-
-```tsx
-// Dans app/layout.tsx
-<TokenExpirationAlert 
-  thresholdMinutes={3}  // Alerte 3 min avant expiration
-  position="top"        // ou "bottom"
-/>
-```
-
-### Modifier la durée du token
-
 ```properties
 # backend/src/main/resources/application.properties
-application.security.jwt.expiration=3600000  # en millisecondes (1h)
+application.security.jwt.expiration=${JWT_EXPIRATION_MS:900000}          # 15 min
+application.security.jwt.refresh-expiration=${JWT_REFRESH_EXPIRATION_DAYS:90}
+application.security.jwt.refresh-grace-seconds=${JWT_REFRESH_GRACE_SECONDS:30}
+application.security.jwt.max-sessions=${JWT_MAX_SESSIONS:10}
+app.cookie.refresh-token.secure=${COOKIE_SECURE:false}                    # true en prod (HTTPS)
+app.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+app.oauth2.redirect-uri=${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/callback}
+app.rate-limit.auth.max-requests=${AUTH_RATE_LIMIT_MAX_REQUESTS:20}
+app.rate-limit.auth.window-seconds=${AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
 ```
 
-### Personnaliser l'intervalle de vérification
-
 ```tsx
-const { isExpiringSoon, minutesLeft } = useTokenExpiration(
-  5,        // thresholdMinutes
-  30000     // pollInterval (30s au lieu de 60s)
-)
+// app/layout.tsx
+<TokenExpirationAlert thresholdMinutes={5} position="top" />
+```
+
+## 🔁 Migration depuis l'ancienne table
+
+L'ancienne table `refresh_tokens` (une session par utilisateur) n'est plus utilisée :
+les sessions vivent désormais dans `auth_sessions`, créée automatiquement par
+Hibernate (`ddl-auto=update`). Deux conséquences :
+
+- les cookies de refresh émis avant le changement ne sont plus valides :
+  **une reconnexion est nécessaire** ;
+- l'ancienne table peut être supprimée :
+
+```sql
+DROP TABLE IF EXISTS refresh_tokens;
 ```
 
 ## 📱 Événements personnalisés
 
-Le système dispatch des événements que vous pouvez écouter:
-
 ```typescript
-// Quand le token est renouvelé
-window.addEventListener('auth:token-refreshed', () => {
-  console.log('Token renouvelé!')
-})
-
-// Quand l'utilisateur se déconnecte
-window.addEventListener('auth:logout', () => {
-  console.log('Déconnexion')
-})
+window.addEventListener('auth:token-refreshed', () => console.log('Token renouvelé'))
+window.addEventListener('auth:logout', () => console.log('Déconnexion'))
 ```
-
-## 🔒 Sécurité
-
- **Tokens HTTP-Only (recommandé)**: Ajouter un cookie HttpOnly côté serveur
- **Refresh automatique**: Aucune interaction requise après l'alerte
- **Validation backend**: Chaque refresh vérifie l'authentification
- **Logout automatique**: Après 401 ou expiration
 
 ## 🐛 Dépannage
 
-### L'alerte ne s'affiche pas
-- Vérifier que `TokenExpirationAlert` est dans le layout
-- Vérifier la valeur de `JWT_EXPIRATION` (doit être > 1000)
-- Ouvrir la console: `useTokenExpiration()` affiche les logs
+| Symptôme | Cause probable |
+|---|---|
+| Alerte jamais visible | Token absent du store (non connecté) ou seuil > durée restante |
+| Boucle de redirection `/login` | Cookie de refresh absent/expiré, ou `CORS_ALLOWED_ORIGINS` incorrect |
+| `401` juste après connexion | Cookie non envoyé : vérifier `withCredentials` et l'origine CORS |
+| Refresh refusé en production | `COOKIE_SECURE=true` sans HTTPS, ou `SameSite`/domaine inadaptés |
+| « Trop de tentatives » (429) | Limite de débit atteinte, attendre la fenêtre configurée |
 
-### Le bouton "Renouveler" ne fonctionne pas
-- Vérifier que l'endpoint `/api/auth/refresh` existe
-- Vérifier l'authentification du request
-- Vérifier que `authStore` se met à jour avec le nouveau token
+## 📝 Fichiers
 
-### Le token expire trop vite
-- Vérifier `JWT_EXPIRATION` en millisecondes
-- Exemple: 3600000 = 1 heure, 1800000 = 30 min
-
-## 📝 Fichiers modifiés
-
-**Frontend:**
 ```
 frontend/
-├── lib/
-│   └── tokenExpiration.ts          ✨ NOUVEAU
-├── hooks/
-│   └── useTokenExpiration.ts       ✨ NOUVEAU
-├── components/
-│   └── TokenExpirationAlert.tsx    ✨ NOUVEAU
-└── app/
-    └── layout.tsx                  🔄 MODIFIÉ
-```
+├── lib/tokenExpiration.ts            # décodage + lecture du store
+├── lib/axiosInstance.ts              # refresh silencieux (file d'attente)
+├── lib/store/authStore.ts            # token en mémoire + refreshAccessToken
+├── hooks/useTokenExpiration.ts       # surveillance périodique
+├── components/TokenExpirationAlert.tsx
+└── app/oauth2/callback/page.tsx      # échange du code OAuth2
 
-**Backend:**
+backend/src/main/java/com/djenidi/ai_mentor/
+├── controller/AuthController.java
+├── service/RefreshTokenService.java
+├── entity/AuthSession.java
+├── repository/AuthSessionRepository.java
+└── security/{RefreshTokenCookieService,OAuth2CodeStore,AuthRateLimitFilter}.java
 ```
-backend/
-└── src/main/java/com/djenidi/ai_mentor/
-    ├── controller/
-    │   └── AuthController.java    🔄 MODIFIÉ (+ endpoint /refresh)
-    └── service/
-        └── AuthService.java       🔄 MODIFIÉ (+ refreshToken)
-```
-
-## ✨ Prochaines étapes (optionnelles)
-
-- [ ] Ajouter un son/notification système
-- [ ] Ajouter un countdown visuel
-- [ ] Implémenter refresh automatique sans interaction
-- [ ] Ajouter des métriques d'expiration
-- [ ] Tester avec plusieurs onglets
 
 ---
 
-**Statut**:  En production
-**Dernière mise à jour**: 2026-04-20
+**Dernière mise à jour** : 2026-11-15

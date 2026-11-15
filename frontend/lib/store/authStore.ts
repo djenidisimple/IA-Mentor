@@ -80,7 +80,7 @@ export const useAuthStore = create<AuthState>()(
                   // On s'assure de ne pas envoyer un ancien Bearer token expiré
                   'Authorization': ''
                 }
-              } as any
+              }
             )
 
             // Le backend doit renvoyer { token, email, username, role, ... }
@@ -98,6 +98,11 @@ export const useAuthStore = create<AuthState>()(
               user: updatedUser,
               isAuthenticated: true
             })
+
+            // Prévient les observateurs (alerte d'expiration) qu'un nouveau token est en place.
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:token-refreshed'))
+            }
 
             console.log('[AuthStore] Refresh success')
             return token

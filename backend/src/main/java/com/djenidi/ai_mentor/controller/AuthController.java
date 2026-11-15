@@ -1,13 +1,16 @@
 package com.djenidi.ai_mentor.controller;
 
 import com.djenidi.ai_mentor.dto.request.LoginRequest;
+import com.djenidi.ai_mentor.dto.request.OAuth2ExchangeRequest;
 import com.djenidi.ai_mentor.dto.request.RegisterRequest;
 import com.djenidi.ai_mentor.dto.response.AuthResponse;
-import com.djenidi.ai_mentor.entity.RefreshToken;
 import com.djenidi.ai_mentor.entity.User;
+import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
 import com.djenidi.ai_mentor.exception.TokenException;
 import com.djenidi.ai_mentor.repository.UserRepository;
 import com.djenidi.ai_mentor.security.JwtService;
+import com.djenidi.ai_mentor.security.OAuth2CodeStore;
+import com.djenidi.ai_mentor.security.RefreshTokenCookieService;
 import com.djenidi.ai_mentor.service.AuthService;
 import com.djenidi.ai_mentor.service.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,30 +27,26 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService         authService;
-    private final RefreshTokenService refreshTokenService;
-    private final UserRepository      userRepository;
-    private final JwtService          jwtService;
-
-    private static final int    COOKIE_MAX_AGE = 90 * 24 * 60 * 60;
-    private static final String COOKIE_NAME    = "refresh_token";
+    private final AuthService                 authService;
+    private final RefreshTokenService         refreshTokenService;
+    private final RefreshTokenCookieService   cookieService;
+    private final OAuth2CodeStore             oAuth2CodeStore;
+    private final UserRepository              userRepository;
+    private final JwtService                  jwtService;
 
     // ── POST /api/auth/register ───────────────────────────────────────────────
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
             @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        // 1. Logique existante inchangée → crée user + retourne AuthResponse avec JWT
         AuthResponse authResponse = authService.register(request);
 
-        // 2. Récupérer le user pour créer le refresh token
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new com.djenidi.ai_mentor.exception.ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
 
-        // 3. Refresh token en cookie HttpOnly
-        RefreshToken refreshToken = refreshTokenService.createOrRenew(user);
-        setRefreshTokenCookie(response, refreshToken.getToken());
+        issueSession(user, httpRequest, response);
 
         return ResponseEntity.ok(authResponse);
     }
@@ -56,18 +55,15 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        // 1. Logique existante inchangée
         AuthResponse authResponse = authService.login(request);
 
-        // 2. Récupérer le user
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new com.djenidi.ai_mentor.exception.ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "email", request.getEmail()));
 
-        // 3. Refresh token en cookie HttpOnly
-        RefreshToken refreshToken = refreshTokenService.createOrRenew(user);
-        setRefreshTokenCookie(response, refreshToken.getToken());
+        issueSession(user, httpRequest, response);
 
         return ResponseEntity.ok(authResponse);
     }
@@ -79,28 +75,37 @@ public class AuthController {
             HttpServletResponse response
     ) {
         String rawToken = extractRefreshTokenFromCookie(request);
-
         if (rawToken == null) {
             throw new TokenException("Refresh token manquant");
         }
 
-        // Valide + rotation sliding window
-        RefreshToken refreshToken = refreshTokenService.validateAndRotate(rawToken);
-        User user = refreshToken.getUser();
+        RefreshTokenService.IssuedSession issued = refreshTokenService.validateAndRotate(rawToken);
+        User user = issued.session().getUser();
 
-        // Nouveau JWT (15 min)
-        String newJwt = jwtService.generateToken(user);
+        cookieService.write(response, issued.rawToken());
 
-        // Nouveau cookie avec token rotatif
-        setRefreshTokenCookie(response, refreshToken.getToken());
+        return ResponseEntity.ok(buildAuthResponse(user, jwtService.generateToken(user)));
+    }
 
-        return ResponseEntity.ok(AuthResponse.builder()
-                .id(user.getId())
-                .token(newJwt)
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .role(user.getRole().name())
-                .build());
+    // ── POST /api/auth/oauth2/exchange ────────────────────────────────────────
+    /**
+     * Échange le code à usage unique reçu en fin de flux OAuth2 contre un JWT.
+     * Remplace l'ancien passage du JWT directement dans l'URL de redirection.
+     */
+    @PostMapping("/oauth2/exchange")
+    public ResponseEntity<AuthResponse> exchangeOAuth2Code(
+            @Valid @RequestBody OAuth2ExchangeRequest body,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response
+    ) {
+        Long userId = oAuth2CodeStore.consume(body.getCode());
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new TokenException("Utilisateur du code OAuth2 introuvable"));
+
+        issueSession(user, httpRequest, response);
+
+        return ResponseEntity.ok(buildAuthResponse(user, jwtService.generateToken(user)));
     }
 
     // ── POST /api/auth/logout ─────────────────────────────────────────────────
@@ -110,41 +115,36 @@ public class AuthController {
             HttpServletResponse response
     ) {
         String rawToken = extractRefreshTokenFromCookie(request);
-        if (rawToken != null) {
-            refreshTokenService.revokeByToken(rawToken);
-        }
-        clearRefreshTokenCookie(response);
+        refreshTokenService.revoke(rawToken);
+        cookieService.clear(response);
         return ResponseEntity.noContent().build();
     }
 
-    // ── Helpers cookie ────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void setRefreshTokenCookie(HttpServletResponse response, String tokenValue) {
-        response.addHeader("Set-Cookie",
-            COOKIE_NAME + "=" + tokenValue
-            + "; Max-Age=" + COOKIE_MAX_AGE
-            + "; Path=/api/auth"
-            + "; HttpOnly"
-            // + "; Secure" // Désactivé pour le développement local en HTTP
-            + "; SameSite=Strict"
-        );
+    private void issueSession(User user, HttpServletRequest request, HttpServletResponse response) {
+        RefreshTokenService.IssuedSession issued =
+                refreshTokenService.createSession(user, request.getHeader("User-Agent"));
+        cookieService.write(response, issued.rawToken());
     }
 
-    private void clearRefreshTokenCookie(HttpServletResponse response) {
-        response.addHeader("Set-Cookie",
-            COOKIE_NAME + "="
-            + "; Max-Age=0"
-            + "; Path=/api/auth"
-            + "; HttpOnly"
-            // + "; Secure" // Désactivé pour le développement local en HTTP
-            + "; SameSite=Strict"
-        );
+    private AuthResponse buildAuthResponse(User user, String jwt) {
+        return AuthResponse.builder()
+                .id(user.getId())
+                .token(jwt)
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .role(user.getRole().name())
+                .build();
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
+        if (request.getCookies() == null) {
+            return null;
+        }
+        String cookieName = cookieService.getName();
         return Arrays.stream(request.getCookies())
-                .filter(c -> COOKIE_NAME.equals(c.getName()))
+                .filter(c -> cookieName.equals(c.getName()))
                 .map(jakarta.servlet.http.Cookie::getValue)
                 .findFirst()
                 .orElse(null);
