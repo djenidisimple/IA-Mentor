@@ -4,6 +4,7 @@ import com.djenidi.ai_mentor.entity.Challenge;
 import com.djenidi.ai_mentor.entity.Submission;
 import com.djenidi.ai_mentor.entity.SubmissionStatus;
 import com.djenidi.ai_mentor.entity.User;
+import com.djenidi.ai_mentor.dto.response.SubmissionResponse;
 import com.djenidi.ai_mentor.exception.ResourceNotFoundException;
 import com.djenidi.ai_mentor.repository.ChallengeRepository;
 import com.djenidi.ai_mentor.repository.SubmissionRepository;
@@ -75,6 +76,38 @@ class SubmissionOwnershipTest {
                 submissionService.submitChallenge(1L, 2L, "https://github.com/alice/project/tree/main", null));
 
         verify(submissionRepository, never()).save(any());
+    }
+
+    @Test
+    void createsSubmissionAutomaticallyWhenNoneExists() {
+        User user = User.builder()
+                .id(1L)
+                .username("platform-user")
+                .email("user@example.com")
+                .githubUsername("alice")
+                .build();
+        Challenge challenge = Challenge.builder()
+                .id(2L)
+                .title("Test challenge")
+                .slug("test-challenge")
+                .build();
+
+        when(submissionRepository.findByUserIdAndChallengeId(1L, 2L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(challengeRepository.findById(2L)).thenReturn(Optional.of(challenge));
+        when(submissionRepository.save(any(Submission.class))).thenAnswer(invocation -> {
+            Submission saved = invocation.getArgument(0);
+            saved.setId(3L);
+            return saved;
+        });
+
+        SubmissionResponse response = submissionService.submitChallenge(
+                1L, 2L, "https://github.com/alice/project", null);
+
+        assertEquals(3L, response.getId());
+        assertEquals(SubmissionStatus.SUBMITTED, response.getStatus());
+        assertEquals("https://github.com/alice/project", response.getGithubUrl());
+        verify(analysisService).analyzeSubmission(3L);
     }
 
     private Submission submission(String githubUsername) {

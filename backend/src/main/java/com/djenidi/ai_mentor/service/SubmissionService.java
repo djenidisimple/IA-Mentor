@@ -56,7 +56,7 @@ public class SubmissionService {
     @Transactional
     public SubmissionResponse submitChallenge(Long userId, Long challengeId, String githubUrl, String comment) {
         Submission submission = submissionRepository.findByUserIdAndChallengeId(userId, challengeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Soumission", "challengeId", challengeId));
+                .orElseGet(() -> createPendingSubmission(userId, challengeId));
 
         String linkedGithubUsername = submission.getUser().getGithubUsername();
         if (linkedGithubUsername == null || linkedGithubUsername.isBlank()) {
@@ -90,6 +90,23 @@ public class SubmissionService {
         return toResponse(saved);
     }
 
+
+    private Submission createPendingSubmission(Long userId, Long challengeId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "id", userId));
+
+        Challenge challenge = challengeRepository.findById(challengeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Challenge", "id", challengeId));
+
+        log.info("Aucune soumission existante pour l'utilisateur {} et le défi {} : création automatique avant envoi",
+                userId, challengeId);
+
+        return Submission.builder()
+                .user(user)
+                .challenge(challenge)
+                .status(SubmissionStatus.IN_PROGRESS)
+                .build();
+    }
 
     private String extractGithubOwner(String githubUrl) {
         try {

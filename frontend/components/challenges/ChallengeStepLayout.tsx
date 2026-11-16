@@ -11,6 +11,7 @@ import ChallengeDetailHeader from "./ChallengeDetailHeader";
 import ChallengeDetailSidebar from "./ChallengeDetailSidebar";
 import { Terminal, ChevronRight, Loader2, AlertCircle } from "lucide-react";
 import { submissionsApi } from "@/lib/submissions";
+import { getErrorMessage, isApiError } from "@/lib/api-errors";
 
 interface ChallengeStepLayoutProps {
   challenge: Challenge;
@@ -28,9 +29,15 @@ export default function ChallengeStepLayout({ challenge }: ChallengeStepLayoutPr
     try {
       await submissionsApi.start(challenge.id);
       setCurrentStep(2);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      // 409 : la soumission existe déjà pour ce défi (défi déjà démarré).
+      // On reprend le parcours à l'étape de soumission au lieu de bloquer.
+      if (isApiError(err) && err.status === 409) {
+        setCurrentStep(2);
+        return;
+      }
       console.error("Failed to start challenge:", err);
-      setError(err.message || "Erreur d'initialisation. Système hors ligne.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
