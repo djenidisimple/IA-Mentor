@@ -2,8 +2,10 @@ package com.djenidi.ai_mentor.service;
 
 import com.djenidi.ai_mentor.dto.response.RepositoryContentResponse;
 import com.djenidi.ai_mentor.prompt.AnalysisPromptTemplates;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.djenidi.ai_mentor.dto.response.OllamaDiagnosticResponse;
@@ -32,11 +34,26 @@ import java.util.stream.Collectors;
 public class OpenRouterService implements AIService {
 
     private static final String DEFAULT_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-    private static final String DEFAULT_MODELS = "cohere/north-mini-code:free,google/gemma-4-31b-it:free";
+    private static final String DEFAULT_MODELS =
+            "nvidia/nemotron-3.5-lightning:free,baidu/ernie-5.5-flash-preview:free,cohere/north-mini-code:free";
     private static final int MAX_ATTEMPTS_PER_MODEL = 2;
     private static final long RETRY_DELAY_MS = 1500;
     private static final String SYSTEM_PROMPT =
-            "Tu es un expert en analyse de code. Réponds TOUJOURS en JSON valide avec la structure exacte demandée.";
+            "Tu es un expert en analyse de code. Réponds TOUJOURS en JSON valide avec la structure exacte demandée. "
+                    + "Aucun texte avant ou après le JSON, aucun bloc markdown, aucun raisonnement, "
+                    + "aucun commentaire à l'intérieur de l'objet JSON.";
+
+    /**
+     * Mapper tolérant utilisé uniquement pour relire la sortie du modèle :
+     * certains modèles gratuits produisent des retours à la ligne non échappés,
+     * des virgules finales ou des quotes simples.
+     */
+    private static final ObjectMapper MODEL_OUTPUT_MAPPER = JsonMapper.builder()
+            .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+            .enable(JsonReadFeature.ALLOW_TRAILING_COMMA)
+            .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+            .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+            .build();
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -64,9 +81,7 @@ public class OpenRouterService implements AIService {
 
             String prompt = promptTemplates.buildAnalysisPrompt(codeContent, challenge, repository);
 
-            String response = callChatWithFallback(prompt);
-
-            return parseResponse(response);
+            return requestAnalysis(prompt);
 
         } catch (Exception e) {
             log.error("❌ Analyse OpenRouter échouée", e);
@@ -117,9 +132,11 @@ public class OpenRouterService implements AIService {
 
     /**
      * Essaie chaque modèle configuré, avec quelques tentatives par modèle :
-     * les endpoints gratuits renvoient parfois 429/503 quand ils sont saturés.
+     * les endpoints gratuits renvoient parfois 429/503 quand ils sont saturés,
+     * et certains modèles produisent de temps en temps une réponse non JSON.
+     * Une réponse non exploitable est donc traitée comme un échec et relancée.
      */
-    private String callChatWithFallback(String prompt) throws Exception {
+    private AIAnalysisResult requestAnalysis(String prompt) throws Exception {
         Exception lastException = null;
 
         for (String model : configuredModels()) {
@@ -127,10 +144,11 @@ public class OpenRouterService implements AIService {
                 try {
                     log.info("🔄 Appel OpenRouter avec le modèle {} (tentative {}/{})",
                             model, attempt, MAX_ATTEMPTS_PER_MODEL);
-                    return callChat(prompt, model);
+                    ChatResult chat = callChat(prompt, model);
+                    return parseResponse(chat.content());
                 } catch (Exception e) {
                     lastException = e;
-                    log.warn("⚠️ Appel OpenRouter échoué avec {} (tentative {} de {}): {}",
+                    log.warn("⚠️ Analyse OpenRouter échouée avec {} (tentative {} de {}): {}",
                             model, attempt, MAX_ATTEMPTS_PER_MODEL, e.getMessage());
                     if (attempt < MAX_ATTEMPTS_PER_MODEL) {
                         Thread.sleep(RETRY_DELAY_MS * attempt);
@@ -140,12 +158,13 @@ public class OpenRouterService implements AIService {
         }
 
         log.error("❌ Tous les modèles OpenRouter configurés ont échoué");
-        throw lastException == null
-                ? new IllegalStateException("Aucun modèle OpenRouter configuré")
-                : lastException;
+        throw new IllegalStateException(
+                "Aucune réponse JSON exploitable n'a été obtenue des modèles configurés : "
+                        + (lastException == null ? "aucun modèle disponible" : lastException.getMessage()),
+                lastException);
     }
 
-    private String callChat(String prompt, String model) throws Exception {
+    private ChatResult callChat(String prompt, String model) throws Exception {
         log.info("🌐 Appel de l'API OpenRouter (modèle: {}, prompt: {} caractères)", model, prompt.length());
 
         if (apiKey == null || apiKey.isBlank()) {
@@ -198,58 +217,133 @@ public class OpenRouterService implements AIService {
                     + choice.path("finish_reason").asText("inconnu") + ")");
         }
 
+        String finishReason = choice.path("finish_reason").asText("inconnu");
         log.info("📥 Réponse OpenRouter reçue ({} caractères, finish_reason: {})",
-                result.length(), choice.path("finish_reason").asText("inconnu"));
-        return result;
+                result.length(), finishReason);
+
+        if ("length".equals(finishReason)) {
+            log.warn("⚠️ Réponse tronquée par la limite de tokens (max_tokens={}) : le JSON peut être incomplet",
+                    maxTokens);
+        }
+
+        return new ChatResult(result, finishReason);
     }
 
-    private AIAnalysisResult parseResponse(String jsonResponse) {
+    private record ChatResult(String content, String finishReason) {
+    }
+
+    AIAnalysisResult parseResponse(String jsonResponse) {
+        String cleanedJson = extractJson(jsonResponse);
+
+        JsonNode root;
         try {
-            String cleanedJson = extractJson(jsonResponse);
-            JsonNode root = objectMapper.readTree(cleanedJson);
-
-            String summary = root.path("summary").asText("Analyse complétée");
-            String detailedFeedback = root.path("detailedFeedback").asText("Aucun détail fourni");
-            int score = Math.min(100, Math.max(0, root.path("score").asInt(0)));
-
-            String strengths = extractJsonArray(root, "strengths");
-            String weaknesses = extractJsonArray(root, "weaknesses");
-            String suggestions = extractJsonArray(root, "suggestions");
-
-            JsonNode metricsNode = root.path("codeQualityMetrics");
-            String codeQualityMetrics = metricsNode.isMissingNode()
-                    ? buildDefaultMetrics()
-                    : metricsNode.toString();
-
-            return new AIAnalysisResult(
-                summary,
-                detailedFeedback,
-                score,
-                strengths,
-                weaknesses,
-                suggestions,
-                codeQualityMetrics
-            );
-
+            root = MODEL_OUTPUT_MAPPER.readTree(cleanedJson);
         } catch (Exception e) {
-            log.error("Erreur lors du parsing de la réponse OpenRouter: {}", e.getMessage());
-            return getFallbackAnalysis("La réponse du modèle n'était pas un JSON exploitable.");
+            log.error("❌ JSON illisible dans la réponse du modèle ({} caractères) : {}",
+                    cleanedJson.length(), e.getMessage());
+            log.warn("📄 Extrait de la réponse non exploitable : {}", abbreviate(cleanedJson, 700));
+            throw new IllegalStateException("La réponse du modèle n'était pas un JSON exploitable.");
         }
+
+        if (root == null || !root.isObject()) {
+            log.warn("📄 Réponse sans objet JSON : {}", abbreviate(cleanedJson, 700));
+            throw new IllegalStateException("La réponse du modèle ne contient pas d'objet JSON.");
+        }
+
+        String summary = text(root, "summary", "Analyse complétée");
+        String detailedFeedback = text(root, "detailedFeedback", "Aucun détail fourni");
+        int score = readScore(root);
+
+        String strengths = extractJsonArray(root, "strengths");
+        String weaknesses = extractJsonArray(root, "weaknesses");
+        String suggestions = extractJsonArray(root, "suggestions");
+
+        JsonNode metricsNode = root.path("codeQualityMetrics");
+        String codeQualityMetrics = metricsNode.isMissingNode() || metricsNode.isNull()
+                ? buildDefaultMetrics()
+                : metricsNode.toString();
+
+        return new AIAnalysisResult(
+            summary,
+            detailedFeedback,
+            score,
+            strengths,
+            weaknesses,
+            suggestions,
+            codeQualityMetrics
+        );
+    }
+
+    private String text(JsonNode root, String fieldName, String fallback) {
+        JsonNode node = root.path(fieldName);
+        if (node.isMissingNode() || node.isNull()) {
+            return fallback;
+        }
+        String value = node.isValueNode() ? node.asText() : node.toString();
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private int readScore(JsonNode root) {
+        JsonNode node = root.path("score");
+        int raw;
+        if (node.isNumber()) {
+            raw = node.asInt(0);
+        } else if (node.isTextual()) {
+            raw = firstInteger(node.asText());
+        } else {
+            raw = 0;
+        }
+        return Math.min(100, Math.max(0, raw));
+    }
+
+    private int firstInteger(String value) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("-?\\d+(?:\\.\\d+)?")
+                .matcher(value == null ? "" : value.replace(',', '.'));
+        if (!matcher.find()) {
+            return 0;
+        }
+        try {
+            return (int) Math.round(Double.parseDouble(matcher.group()));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private String abbreviate(String value, int maxLength) {
+        if (value == null) {
+            return "";
+        }
+        String singleLine = value.replaceAll("\\s+", " ").trim();
+        return singleLine.length() <= maxLength
+                ? singleLine
+                : singleLine.substring(0, maxLength) + "…";
     }
 
     private String extractJson(String response) {
-        response = response.trim();
+        String cleaned = response == null ? "" : response.trim();
 
-        int jsonStart = response.indexOf('{');
-        int jsonEnd = response.lastIndexOf('}');
-
-        if (jsonStart >= 0 && jsonEnd > jsonStart) {
-            response = response.substring(jsonStart, jsonEnd + 1);
+        // 1. Bloc markdown ```json ... ```
+        int fenceStart = cleaned.indexOf("```");
+        if (fenceStart >= 0) {
+            int contentStart = cleaned.indexOf('\n', fenceStart);
+            int fenceEnd = cleaned.indexOf("```", fenceStart + 3);
+            if (contentStart > 0 && fenceEnd > contentStart) {
+                cleaned = cleaned.substring(contentStart, fenceEnd).trim();
+            } else {
+                cleaned = cleaned.replace("```json", "").replace("```", "").trim();
+            }
         }
 
-        response = response.replace("```json", "").replace("```", "").trim();
+        // 2. Isole le premier objet JSON complet
+        int jsonStart = cleaned.indexOf('{');
+        int jsonEnd = cleaned.lastIndexOf('}');
 
-        return response;
+        if (jsonStart >= 0 && jsonEnd > jsonStart) {
+            cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+        }
+
+        return cleaned.trim();
     }
 
     private String extractJsonArray(JsonNode root, String fieldName) {
