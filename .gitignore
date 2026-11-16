@@ -1,0 +1,20 @@
+# Logs et fichiers locaux
+*.log
+backend-run.log
+backend/frontend-run.log
+frontend/npm-debug.log*
+
+# Secrets / configuration locale
+.env
+.env.*
+!.env.example
+
+# Dépendances et builds
+node_modules/
+backend/target/
+frontend/.next/
+frontend/out/
+
+# Système
+.DS_Store
+Thumbs.db
